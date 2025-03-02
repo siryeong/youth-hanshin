@@ -1,59 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { getDbClient, getSupabaseClient, getDatabaseType } from './db-manager';
 
-// Supabase 클라이언트 생성
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// 타입 정의는 db-manager.ts로 이동했으므로 여기서는 재내보내기만 합니다.
+export type { Village, VillageMember, MenuCategory, MenuItem, Order } from './db-manager';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase URL과 Anon Key가 환경 변수에 설정되어 있지 않습니다.');
-}
+// 하위 호환성을 위해 supabase 객체 내보내기
+export const supabase = getSupabaseClient();
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// 현재 사용 중인 데이터베이스 타입 내보내기
+export const databaseType = getDatabaseType();
 
-// 타입 정의
-export type Village = {
-  id: number;
-  name: string;
-  created_at?: string;
-};
-
-export type VillageMember = {
-  id: number;
-  name: string;
-  village_id: number;
-  created_at?: string;
-};
-
-export type MenuCategory = {
-  id: number;
-  name: string;
-  created_at?: string;
-};
-
-export type MenuItem = {
-  id: number;
-  name: string;
-  description: string;
-  category_id: number;
-  image_path: string;
-  is_temperature_required: boolean;
-  created_at?: string;
-  updated_at?: string;
-  // 조인된 필드
-  category?: string;
-};
-
-export type Order = {
-  id: number;
-  village_id: number;
-  member_name: string;
-  is_custom_name: boolean;
-  menu_item_id: number;
-  temperature?: 'hot' | 'ice' | null;
-  status: 'pending' | 'completed' | 'cancelled';
-  created_at?: string;
-  updated_at?: string;
-  // 조인된 필드
-  village?: string;
-  menu_item?: string;
-};
+// 데이터베이스 클라이언트 내보내기
+export const dbClient = getDbClient();

@@ -1,15 +1,26 @@
 import { NextResponse } from 'next/server';
-import { supabase, type Village } from '@/lib/supabase';
+import { getDbClient, getDatabaseType, pgQuery, type Village } from '@/lib/db-manager';
 
 export async function GET() {
   try {
-    const { data, error } = await supabase.from('villages').select('id, name').order('name');
+    const databaseType = getDatabaseType();
+    const dbClient = getDbClient();
 
-    if (error) {
-      throw error;
+    if (databaseType === 'supabase') {
+      // Supabase 사용
+      const supabase = dbClient as ReturnType<typeof import('@supabase/supabase-js').createClient>;
+      const { data, error } = await supabase.from('villages').select('id, name').order('name');
+
+      if (error) {
+        throw error;
+      }
+
+      return NextResponse.json(data as Village[]);
+    } else {
+      // PostgreSQL 사용
+      const result = await pgQuery('SELECT id, name FROM villages ORDER BY name');
+      return NextResponse.json(result.rows as Village[]);
     }
-
-    return NextResponse.json(data as Village[]);
   } catch (error) {
     console.error('마을 목록 조회 오류:', error);
     return NextResponse.json(
