@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { supabase, type VillageMember } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -10,12 +10,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '마을 ID가 필요합니다.' }, { status: 400 });
     }
 
-    const result = await query(
-      'SELECT id, name FROM village_members WHERE village_id = $1 ORDER BY name',
-      [villageId],
-    );
+    const { data, error } = await supabase
+      .from('village_members')
+      .select('id, name')
+      .eq('village_id', villageId)
+      .order('name');
 
-    return NextResponse.json(result.rows);
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json(data as VillageMember[]);
   } catch (error) {
     console.error('마을 주민 목록 조회 오류:', error);
     return NextResponse.json(

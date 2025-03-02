@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { supabase, type Village } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const result = await query('SELECT id, name FROM villages ORDER BY name');
-    return NextResponse.json(result.rows);
+    const { data, error } = await supabase.from('villages').select('id, name').order('name');
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json(data as Village[]);
   } catch (error) {
     console.error('마을 목록 조회 오류:', error);
     return NextResponse.json(
