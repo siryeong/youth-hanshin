@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ type MenuItem = {
   description: string;
   category: 'coffee' | 'tea' | 'dessert';
   image: string;
+  requiresTemperature: boolean;
 };
 
 // 카트 아이템 타입 정의
@@ -23,72 +24,17 @@ type CartItem = MenuItem & {
   temperature?: 'hot' | 'ice';
 };
 
-// 마을 목록
-const villages = ['한신 1', '한신 2', '한신 3', '한신 4', '한신 5', '한신 6', '한신 7'];
-
-// 마을별 사람 목록
-const villageMembers: Record<string, string[]> = {
-  '한신 1': ['김영희', '이철수', '박지민'],
-  '한신 2': ['정민준', '최서연'],
-  '한신 3': ['강도현', '윤지우'],
-  '한신 4': ['장하은', '송민수'],
-  '한신 5': ['이지훈', '김하늘'],
-  '한신 6': ['박준호', '최유진'],
-  '한신 7': ['정다은', '김태민'],
+// 마을 타입 정의
+type Village = {
+  id: number;
+  name: string;
 };
 
-// 샘플 메뉴 데이터
-const menuItems: MenuItem[] = [
-  {
-    id: 1,
-    name: '아메리카노',
-    description: '깊고 풍부한 에스프레소에 물을 더한 클래식한 커피',
-    category: 'coffee',
-    image: '/images/americano.jpg',
-  },
-  {
-    id: 2,
-    name: '카페 라떼',
-    description: '에스프레소와 스팀 밀크의 완벽한 조화',
-    category: 'coffee',
-    image: '/images/latte.jpg',
-  },
-  {
-    id: 3,
-    name: '카푸치노',
-    description: '에스프레소, 스팀 밀크, 그리고 풍성한 우유 거품의 조화',
-    category: 'coffee',
-    image: '/images/cappuccino.jpg',
-  },
-  {
-    id: 4,
-    name: '녹차',
-    description: '향긋한 녹차의 풍미를 느낄 수 있는 차',
-    category: 'tea',
-    image: '/images/green-tea.jpg',
-  },
-  {
-    id: 5,
-    name: '얼그레이 티',
-    description: '베르가못 오일의 향이 특징인 홍차',
-    category: 'tea',
-    image: '/images/earl-grey.jpg',
-  },
-  {
-    id: 6,
-    name: '치즈케이크',
-    description: '부드럽고 크리미한 뉴욕 스타일 치즈케이크',
-    category: 'dessert',
-    image: '/images/cheesecake.jpg',
-  },
-  {
-    id: 7,
-    name: '초코 브라우니',
-    description: '진한 초콜릿의 맛이 일품인 브라우니',
-    category: 'dessert',
-    image: '/images/brownie.jpg',
-  },
-];
+// 마을 주민 타입 정의
+type VillageMember = {
+  id: number;
+  name: string;
+};
 
 export default function CafeMenuPage() {
   const [cart, setCart] = useState<CartItem | null>(null);
@@ -100,6 +46,86 @@ export default function CafeMenuPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedTemperature, setSelectedTemperature] = useState<'hot' | 'ice' | null>(null);
 
+  // 데이터 상태 추가
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [villageMembers, setVillageMembers] = useState<Record<string, VillageMember[]>>({});
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // 마을 목록 가져오기
+  useEffect(() => {
+    const fetchVillages = async () => {
+      try {
+        const response = await fetch('/api/villages');
+        if (!response.ok) {
+          throw new Error('마을 목록을 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setVillages(data);
+      } catch (err) {
+        console.error('마을 목록 조회 오류:', err);
+        setError('마을 목록을 불러오는데 문제가 발생했습니다.');
+        toast.error('마을 목록을 불러오는데 문제가 발생했습니다.');
+      }
+    };
+
+    fetchVillages();
+  }, []);
+
+  // 메뉴 아이템 가져오기
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const response = await fetch('/api/menu-items');
+        if (!response.ok) {
+          throw new Error('메뉴 목록을 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setMenuItems(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('메뉴 목록 조회 오류:', err);
+        setError('메뉴 목록을 불러오는데 문제가 발생했습니다.');
+        toast.error('메뉴 목록을 불러오는데 문제가 발생했습니다.');
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  // 선택된 마을의 주민 목록 가져오기
+  useEffect(() => {
+    if (!village) return;
+
+    const fetchVillageMembers = async () => {
+      try {
+        // 선택된 마을의 ID 찾기
+        const selectedVillage = villages.find((v) => v.name === village);
+        if (!selectedVillage) return;
+
+        const response = await fetch(`/api/village-members?villageId=${selectedVillage.id}`);
+        if (!response.ok) {
+          throw new Error('마을 주민 목록을 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+
+        setVillageMembers((prev) => ({
+          ...prev,
+          [village]: data,
+        }));
+      } catch (err) {
+        console.error('마을 주민 목록 조회 오류:', err);
+        toast.error('마을 주민 목록을 불러오는데 문제가 발생했습니다.');
+      }
+    };
+
+    if (!villageMembers[village]) {
+      fetchVillageMembers();
+    }
+  }, [village, villages, villageMembers]);
+
   // 메뉴 아이템 선택
   const selectMenuItem = (item: MenuItem) => {
     if (cart?.id === item.id) {
@@ -110,8 +136,8 @@ export default function CafeMenuPage() {
     } else {
       setSelectedItem(item);
       setSelectedTemperature(null);
-      // 디저트 카테고리는 온도 선택 없이 바로 카트에 추가
-      if (item.category === 'dessert') {
+      // 온도 선택이 필요 없는 메뉴는 바로 카트에 추가
+      if (!item.requiresTemperature) {
         setCart(item);
         toast.success(`${item.name} 메뉴가 선택되었습니다.`, {
           position: 'top-center',
@@ -193,7 +219,7 @@ export default function CafeMenuPage() {
   const isOrderInfoValid = () => village !== '' && name !== '';
 
   // 주문 처리
-  const handleOrder = () => {
+  const handleOrder = async () => {
     if (!isOrderInfoValid()) {
       toast.error('마을과 이름을 입력해주세요.', {
         position: 'top-center',
@@ -210,29 +236,52 @@ export default function CafeMenuPage() {
       return;
     }
 
-    // 주문 정보 출력
-    const orderDetails = {
-      village,
-      name,
-      isCustomName,
-      item: cart.name,
-      temperature: cart.temperature,
-    };
+    try {
+      // 주문 정보 생성
+      const orderData = {
+        village,
+        name,
+        isCustomName,
+        menuItemId: cart.id,
+        temperature: cart.temperature,
+      };
 
-    console.log('주문 정보:', orderDetails);
-    toast.success(`${village} ${name}님의 주문이 완료되었습니다!`, {
-      position: 'top-center',
-    });
+      // API 호출하여 주문 저장
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
 
-    // 주문 후 초기화
-    setCart(null);
-    setSelectedItem(null);
-    setSelectedTemperature(null);
-    setName('');
-    setVillage('');
-    setIsCustomName(false);
-    setCustomName('');
-    setOrderStep('info');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '주문 처리 중 오류가 발생했습니다.');
+      }
+
+      const result = await response.json();
+
+      console.log('주문 정보:', result);
+      toast.success(`${village} ${name}님의 주문이 완료되었습니다!`, {
+        position: 'top-center',
+      });
+
+      // 주문 후 초기화
+      setCart(null);
+      setSelectedItem(null);
+      setSelectedTemperature(null);
+      setName('');
+      setVillage('');
+      setIsCustomName(false);
+      setCustomName('');
+      setOrderStep('info');
+    } catch (err) {
+      console.error('주문 처리 오류:', err);
+      toast.error(err instanceof Error ? err.message : '주문 처리 중 오류가 발생했습니다.', {
+        position: 'top-center',
+      });
+    }
   };
 
   // 다음 단계로 이동
@@ -264,6 +313,31 @@ export default function CafeMenuPage() {
       setOrderStep('menu');
     }
   };
+
+  // 로딩 중 표시
+  if (loading) {
+    return (
+      <div className='container mx-auto py-8 flex items-center justify-center min-h-[60vh]'>
+        <div className='text-center'>
+          <p className='text-lg'>데이터를 불러오는 중입니다...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 오류 표시
+  if (error) {
+    return (
+      <div className='container mx-auto py-8 flex items-center justify-center min-h-[60vh]'>
+        <div className='text-center'>
+          <p className='text-lg text-red-500'>{error}</p>
+          <Button className='mt-4' onClick={() => window.location.reload()}>
+            새로고침
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className='container mx-auto py-8 pb-24'>
@@ -306,12 +380,12 @@ export default function CafeMenuPage() {
                 <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3'>
                   {villages.map((v) => (
                     <Card
-                      key={v}
-                      className={`cursor-pointer hover:shadow-md transition-shadow ${village === v ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => selectVillage(v)}
+                      key={v.id}
+                      className={`cursor-pointer hover:shadow-md transition-shadow ${village === v.name ? 'ring-2 ring-primary' : ''}`}
+                      onClick={() => selectVillage(v.name)}
                     >
                       <CardHeader className='p-3 text-center'>
-                        <CardTitle className='text-sm'>{v}마을</CardTitle>
+                        <CardTitle className='text-sm'>{v.name}마을</CardTitle>
                       </CardHeader>
                     </Card>
                   ))}
@@ -323,14 +397,14 @@ export default function CafeMenuPage() {
                 <div className='space-y-3'>
                   <Label>이름 선택</Label>
                   <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3'>
-                    {villageMembers[village]?.map((n) => (
+                    {villageMembers[village]?.map((member) => (
                       <Card
-                        key={n}
-                        className={`cursor-pointer hover:shadow-md transition-shadow ${!isCustomName && name === n ? 'ring-2 ring-primary' : ''}`}
-                        onClick={() => selectName(n)}
+                        key={member.id}
+                        className={`cursor-pointer hover:shadow-md transition-shadow ${!isCustomName && name === member.name ? 'ring-2 ring-primary' : ''}`}
+                        onClick={() => selectName(member.name)}
                       >
                         <CardHeader className='p-3 text-center'>
-                          <CardTitle className='text-sm'>{n}</CardTitle>
+                          <CardTitle className='text-sm'>{member.name}</CardTitle>
                         </CardHeader>
                       </Card>
                     ))}
@@ -399,7 +473,7 @@ export default function CafeMenuPage() {
               </div>
 
               {/* 아이스/핫 선택 옵션 */}
-              {selectedItem && selectedItem.category !== 'dessert' && (
+              {selectedItem && selectedItem.requiresTemperature && (
                 <div className='space-y-3'>
                   <Label>온도 선택</Label>
                   <div className='flex gap-4'>
@@ -423,13 +497,13 @@ export default function CafeMenuPage() {
                 </div>
               )}
 
-              {selectedItem && selectedItem.category === 'dessert' && (
+              {selectedItem && !selectedItem.requiresTemperature && (
                 <div className='mt-4'>
                   <p className='text-sm text-muted-foreground'>선택된 메뉴: {selectedItem.name}</p>
                 </div>
               )}
 
-              {selectedItem && selectedItem.category !== 'dessert' && selectedTemperature && (
+              {selectedItem && selectedItem.requiresTemperature && selectedTemperature && (
                 <div className='mt-4'>
                   <p className='text-sm text-muted-foreground'>
                     선택된 메뉴: {selectedTemperature === 'hot' ? '따뜻한' : '아이스'}{' '}
