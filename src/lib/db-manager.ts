@@ -94,10 +94,8 @@ const initSupabaseClient = () => {
 // 현재 환경에 맞는 데이터베이스 클라이언트 가져오기
 export const getDbClient = () => {
   if (useSupabase) {
-    console.log('Using Supabase client');
     return initSupabaseClient();
   } else {
-    console.log('Using PostgreSQL client');
     return initPgPool();
   }
 };

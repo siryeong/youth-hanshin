@@ -261,9 +261,6 @@ export default function CafeOrder() {
         throw new Error(errorData.error || '주문 처리 중 오류가 발생했습니다.');
       }
 
-      const result = await response.json();
-
-      console.log('주문 정보:', result);
       toast.success(`${village} ${name}님의 주문이 완료되었습니다!`, {
         position: 'top-center',
       });
@@ -465,50 +462,25 @@ export default function CafeOrder() {
             <CardContent className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
               <div className='space-y-3'>
                 <Label>메뉴</Label>
-                <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 sm:gap-4'>
+                <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-3'>
                   {menuItems.map((item) => (
                     <Card
                       key={item.id}
-                      className={`cursor-pointer overflow-hidden hover:shadow-md transition-shadow ${selectedItem?.id === item.id ? 'ring-2 ring-primary' : ''}`}
+                      className={`cursor-pointer overflow-hidden hover:shadow-md transition-shadow pt-0 ${selectedItem?.id === item.id ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectMenuItem(item)}
                     >
-                      <div className='h-24 sm:h-36 bg-gray-200 relative'>
+                      <div className='h-24 sm:h-24 bg-gray-200 relative'>
                         <div className='absolute inset-0 flex items-center justify-center text-gray-500 text-xs sm:text-sm'>
                           이미지 준비 중
                         </div>
                       </div>
                       <CardHeader className='p-2 sm:p-3 text-center'>
-                        <CardTitle className='text-sm sm:text-base'>{item.name}</CardTitle>
+                        <CardTitle className='text-xs sm:text-sm'>{item.name}</CardTitle>
                       </CardHeader>
                     </Card>
                   ))}
                 </div>
               </div>
-
-              {/* 아이스/핫 선택 옵션 */}
-              {selectedItem && selectedItem.requiresTemperature && (
-                <div className='space-y-3'>
-                  <Label>온도 선택</Label>
-                  <div className='flex gap-3 sm:gap-4'>
-                    <Card
-                      className={`cursor-pointer flex-1 hover:shadow-md transition-shadow ${selectedTemperature === 'hot' ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => selectTemperature('hot')}
-                    >
-                      <CardHeader className='p-3 sm:p-4 text-center'>
-                        <CardTitle className='text-sm sm:text-base'>따뜻하게</CardTitle>
-                      </CardHeader>
-                    </Card>
-                    <Card
-                      className={`cursor-pointer flex-1 hover:shadow-md transition-shadow ${selectedTemperature === 'ice' ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => selectTemperature('ice')}
-                    >
-                      <CardHeader className='p-3 sm:p-4 text-center'>
-                        <CardTitle className='text-sm sm:text-base'>차갑게</CardTitle>
-                      </CardHeader>
-                    </Card>
-                  </div>
-                </div>
-              )}
 
               {selectedItem && !selectedItem.requiresTemperature && (
                 <div className='mt-3 sm:mt-4'>
@@ -533,37 +505,39 @@ export default function CafeOrder() {
         {/* 주문 확인 */}
         {orderStep === 'cart' && (
           <Card>
-            <CardHeader className='p-4 sm:p-6'>
+            <CardHeader className='p-4 sm:p-6 pb-2 sm:pb-3'>
               <CardTitle>주문 확인</CardTitle>
               <CardDescription>주문 내용을 확인해주세요</CardDescription>
             </CardHeader>
-            <CardContent className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
-              <div className='space-y-3'>
-                <div className='space-y-2 p-3 sm:p-4 bg-muted/30 rounded-lg'>
-                  <div className='flex flex-col gap-1'>
-                    <span className='text-sm sm:text-base'>{village}마을</span>
-                  </div>
-
-                  <div className='flex flex-col gap-1 mt-2 sm:mt-3'>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm sm:text-base'>{name}</span>
-                      {isCustomName && (
-                        <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>
-                          직접 입력
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  {cart && (
-                    <div className='flex flex-col gap-1'>
-                      <span className='font-medium text-sm sm:text-base'>
-                        {cart.temperature === 'hot' && '따뜻한 '}
-                        {cart.temperature === 'ice' && '아이스 '}
-                        {cart.name}
-                      </span>
-                    </div>
-                  )}
+            <CardContent className='p-4 sm:p-6 pt-2 sm:pt-3 space-y-4'>
+              <div className='space-y-3 p-3 sm:p-4 bg-muted/30 rounded-lg'>
+                <div className='flex flex-col gap-1'>
+                  <span className='text-xs sm:text-sm text-muted-foreground'>마을</span>
+                  <span className='text-sm sm:text-base font-medium'>{village}마을</span>
                 </div>
+
+                <div className='flex flex-col gap-1'>
+                  <span className='text-xs sm:text-sm text-muted-foreground'>이름</span>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-sm sm:text-base font-medium'>{name}</span>
+                    {isCustomName && (
+                      <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>
+                        직접 입력
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {cart && (
+                  <div className='flex flex-col gap-1'>
+                    <span className='text-xs sm:text-sm text-muted-foreground'>메뉴</span>
+                    <span className='text-sm sm:text-base font-medium'>
+                      {cart.temperature === 'hot' && '따뜻한 '}
+                      {cart.temperature === 'ice' && '아이스 '}
+                      {cart.name}
+                    </span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -571,87 +545,115 @@ export default function CafeOrder() {
       </div>
 
       {/* 하단 고정 네비게이션 */}
-      <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg'>
-        <div className='container mx-auto p-3 sm:p-4'>
-          <div className='flex items-center justify-between'>
-            {/* 메뉴 선택 단계에서 선택된 메뉴 표시 */}
-            {orderStep === 'menu' && cart && (
-              <div className='flex items-center gap-2 sm:gap-4'>
-                <div className='bg-primary text-primary-foreground w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center'>
-                  <span className='text-sm sm:text-lg font-semibold'>1</span>
-                </div>
-                <div>
-                  <p className='font-medium text-xs sm:text-base truncate max-w-[120px] sm:max-w-none'>
-                    {cart.temperature === 'hot' && '따뜻한 '}
-                    {cart.temperature === 'ice' && '아이스 '}
-                    {cart.name}
-                  </p>
+      <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg flex justify-center'>
+        <div className='w-full max-w-screen-lg'>
+          {/* 온도 선택 영역 (메뉴 선택 단계에서 온도 선택이 필요한 메뉴가 선택된 경우) */}
+          {orderStep === 'menu' && selectedItem && selectedItem.requiresTemperature && (
+            <div className='px-3 sm:px-4 py-2 sm:py-3 border-b'>
+              <div className='flex flex-col gap-2'>
+                <p className='text-xs sm:text-sm text-muted-foreground'>온도를 선택해주세요</p>
+                <div className='grid grid-cols-2 gap-2 sm:gap-3'>
+                  <Button
+                    variant={selectedTemperature === 'hot' ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => selectTemperature('hot')}
+                    className='h-9 sm:h-10 text-sm sm:text-base w-full'
+                  >
+                    따뜻하게
+                  </Button>
+                  <Button
+                    variant={selectedTemperature === 'ice' ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => selectTemperature('ice')}
+                    className='h-9 sm:h-10 text-sm sm:text-base w-full'
+                  >
+                    차갑게
+                  </Button>
                 </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {/* 메뉴 선택 단계에서 메뉴가 선택되지 않았거나 다른 단계일 경우 현재 단계 표시 */}
-            {(orderStep !== 'menu' || !cart) && (
+          <div className='p-3 sm:p-4'>
+            <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
                 <div
                   className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xs sm:text-sm`}
                 >
                   {orderStep === 'info' ? '1' : orderStep === 'menu' ? '2' : '3'}
                 </div>
-                <span className='font-medium text-xs sm:text-sm'>
-                  {orderStep === 'info'
-                    ? '주문 정보'
-                    : orderStep === 'menu'
-                      ? '메뉴 선택'
-                      : '주문 확인'}
-                </span>
+
+                {/* 주문 정보 단계에서 마을이 선택된 경우 마을 이름 표시 */}
+                {orderStep === 'info' && village ? (
+                  <p className='font-medium text-xs sm:text-sm'>
+                    {village}마을 {name && `- ${name}`}
+                  </p>
+                ) : /* 메뉴 선택 단계에서 메뉴가 선택된 경우 메뉴 이름 표시 */
+                orderStep === 'menu' && selectedItem ? (
+                  <p className='font-medium text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none'>
+                    {selectedTemperature === 'hot' && '따뜻한 '}
+                    {selectedTemperature === 'ice' && '아이스 '}
+                    {selectedItem.name}
+                  </p>
+                ) : (
+                  /* 그 외의 경우 단계 이름 표시 */
+                  <span className='font-medium text-xs sm:text-sm'>
+                    {orderStep === 'info'
+                      ? '주문 정보'
+                      : orderStep === 'menu'
+                        ? '메뉴 선택'
+                        : '주문 확인'}
+                  </span>
+                )}
               </div>
-            )}
 
-            <div className='flex items-center gap-2'>
-              {/* 메뉴 선택 단계에서 메뉴가 선택된 경우 취소 버튼 표시 */}
-              {orderStep === 'menu' && cart && (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={clearCart}
-                  className='h-8 sm:h-9 text-xs sm:text-sm'
-                >
-                  취소
-                </Button>
-              )}
+              {/* 오른쪽: 버튼 영역 */}
+              <div className='flex items-center gap-2'>
+                {/* 메뉴 선택 단계에서 메뉴가 선택된 경우 취소 버튼 표시 */}
+                {orderStep === 'menu' && selectedItem && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={clearCart}
+                    className='h-8 sm:h-9 text-xs sm:text-sm'
+                  >
+                    취소
+                  </Button>
+                )}
 
-              {/* 이전 단계 버튼 (첫 단계가 아닐 경우) */}
-              {orderStep !== 'info' && (
-                <Button
-                  variant='outline'
-                  size='sm'
-                  onClick={goToPrevStep}
-                  className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
-                >
-                  <ChevronLeft className='mr-0 sm:mr-1 h-3 w-3 sm:h-4 sm:w-4' />
-                  <span>이전</span>
-                </Button>
-              )}
+                {/* 이전 단계 버튼 (첫 단계가 아닐 경우) */}
+                {orderStep !== 'info' && (
+                  <Button
+                    variant='outline'
+                    size='sm'
+                    onClick={goToPrevStep}
+                    className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
+                  >
+                    <ChevronLeft className='mr-0 sm:mr-1 h-3 w-3 sm:h-4 sm:w-4' />
+                    <span>이전</span>
+                  </Button>
+                )}
 
-              {/* 다음 단계 또는 주문 완료 버튼 */}
-              {orderStep === 'cart' ? (
-                <Button size='sm' onClick={handleOrder} className='h-8 sm:h-9 text-xs sm:text-sm'>
-                  주문 완료
-                </Button>
-              ) : (
-                <Button
-                  size='sm'
-                  onClick={goToNextStep}
-                  disabled={
-                    (orderStep === 'info' && !isOrderInfoValid()) || (orderStep === 'menu' && !cart)
-                  }
-                  className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
-                >
-                  <span>다음</span>
-                  <ChevronRight className='ml-0 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4' />
-                </Button>
-              )}
+                {/* 다음 단계 또는 주문 완료 버튼 */}
+                {orderStep === 'cart' ? (
+                  <Button size='sm' onClick={handleOrder} className='h-8 sm:h-9 text-xs sm:text-sm'>
+                    주문 완료
+                  </Button>
+                ) : (
+                  <Button
+                    size='sm'
+                    onClick={goToNextStep}
+                    disabled={
+                      (orderStep === 'info' && !isOrderInfoValid()) ||
+                      (orderStep === 'menu' && !cart)
+                    }
+                    className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
+                  >
+                    <span>다음</span>
+                    <ChevronRight className='ml-0 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4' />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
