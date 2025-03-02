@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import Link from 'next/link';
 
 // 메뉴 아이템 타입 정의
 type MenuItem = {
@@ -340,27 +341,37 @@ export default function CafeOrder() {
   }
 
   return (
-    <div className='container mx-auto py-8 pb-24'>
-      <h1 className='text-3xl font-bold mb-8 text-center'>카페 음료 주문</h1>
+    <div className='container mx-auto py-4 sm:py-8 pb-24'>
+      <div className='flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-2'>
+        <Link href='/'>
+          <Button variant='outline' size='sm' className='flex items-center gap-2'>
+            <Home className='h-4 w-4' />
+            홈으로
+          </Button>
+        </Link>
+        <h1 className='text-2xl sm:text-3xl font-bold text-center'>카페 음료 주문</h1>
+        <div className='hidden sm:block w-[85px]'></div>{' '}
+        {/* 데스크탑에서만 균형을 맞추기 위한 빈 공간 */}
+      </div>
 
-      <div className='flex flex-col gap-8'>
+      <div className='flex flex-col gap-6 sm:gap-8'>
         {/* 주문 단계 표시 */}
-        <div className='flex justify-center mb-4'>
+        <div className='flex justify-center mb-2 sm:mb-4'>
           <div className='flex items-center'>
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${orderStep === 'info' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${orderStep === 'info' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
             >
               1
             </div>
-            <div className='w-16 h-1 bg-muted'></div>
+            <div className='w-10 sm:w-16 h-1 bg-muted'></div>
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${orderStep === 'menu' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${orderStep === 'menu' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
             >
               2
             </div>
-            <div className='w-16 h-1 bg-muted'></div>
+            <div className='w-10 sm:w-16 h-1 bg-muted'></div>
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${orderStep === 'cart' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${orderStep === 'cart' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}
             >
               3
             </div>
@@ -370,41 +381,43 @@ export default function CafeOrder() {
         {/* 주문 정보 입력 */}
         {orderStep === 'info' && (
           <Card>
-            <CardHeader>
+            <CardHeader className='p-4 sm:p-6'>
               <CardTitle>주문 정보</CardTitle>
               <CardDescription>주문을 위한 정보를 입력해주세요</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-6'>
+            <CardContent className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
               <div className='space-y-3'>
                 <Label>마을 선택</Label>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3'>
+                <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-3'>
                   {villages.map((v) => (
                     <Card
                       key={v.id}
                       className={`cursor-pointer hover:shadow-md transition-shadow ${village === v.name ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectVillage(v.name)}
                     >
-                      <CardHeader className='p-3 text-center'>
-                        <CardTitle className='text-sm'>{v.name}마을</CardTitle>
+                      <CardHeader className='p-2 sm:p-3 text-center'>
+                        <CardTitle className='text-xs sm:text-sm'>{v.name}마을</CardTitle>
                       </CardHeader>
                     </Card>
                   ))}
                 </div>
-                {village && <p className='text-sm text-muted-foreground'>선택된 마을: {village}</p>}
+                {village && (
+                  <p className='text-xs sm:text-sm text-muted-foreground'>선택된 마을: {village}</p>
+                )}
               </div>
 
               {village && (
                 <div className='space-y-3'>
                   <Label>이름 선택</Label>
-                  <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3'>
+                  <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-3'>
                     {villageMembers[village]?.map((member) => (
                       <Card
                         key={member.id}
                         className={`cursor-pointer hover:shadow-md transition-shadow ${!isCustomName && name === member.name ? 'ring-2 ring-primary' : ''}`}
                         onClick={() => selectName(member.name)}
                       >
-                        <CardHeader className='p-3 text-center'>
-                          <CardTitle className='text-sm'>{member.name}</CardTitle>
+                        <CardHeader className='p-2 sm:p-3 text-center'>
+                          <CardTitle className='text-xs sm:text-sm'>{member.name}</CardTitle>
                         </CardHeader>
                       </Card>
                     ))}
@@ -412,8 +425,8 @@ export default function CafeOrder() {
                       className={`cursor-pointer hover:shadow-md transition-shadow ${isCustomName ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectName('직접 입력')}
                     >
-                      <CardHeader className='p-3 text-center'>
-                        <CardTitle className='text-sm'>직접 입력</CardTitle>
+                      <CardHeader className='p-2 sm:p-3 text-center'>
+                        <CardTitle className='text-xs sm:text-sm'>직접 입력</CardTitle>
                       </CardHeader>
                     </Card>
                   </div>
@@ -431,10 +444,10 @@ export default function CafeOrder() {
                   )}
 
                   {name && !isCustomName && (
-                    <p className='text-sm text-muted-foreground'>선택된 이름: {name}</p>
+                    <p className='text-xs sm:text-sm text-muted-foreground'>선택된 이름: {name}</p>
                   )}
                   {name && isCustomName && (
-                    <p className='text-sm text-muted-foreground'>입력된 이름: {name}</p>
+                    <p className='text-xs sm:text-sm text-muted-foreground'>입력된 이름: {name}</p>
                   )}
                 </div>
               )}
@@ -445,27 +458,27 @@ export default function CafeOrder() {
         {/* 메뉴 선택 */}
         {orderStep === 'menu' && (
           <Card>
-            <CardHeader>
+            <CardHeader className='p-4 sm:p-6'>
               <CardTitle>메뉴 선택</CardTitle>
               <CardDescription>원하시는 메뉴를 선택해주세요</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-6'>
+            <CardContent className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
               <div className='space-y-3'>
                 <Label>메뉴</Label>
-                <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
+                <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 sm:gap-4'>
                   {menuItems.map((item) => (
                     <Card
                       key={item.id}
                       className={`cursor-pointer overflow-hidden hover:shadow-md transition-shadow ${selectedItem?.id === item.id ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectMenuItem(item)}
                     >
-                      <div className='h-36 bg-gray-200 relative'>
-                        <div className='absolute inset-0 flex items-center justify-center text-gray-500'>
+                      <div className='h-24 sm:h-36 bg-gray-200 relative'>
+                        <div className='absolute inset-0 flex items-center justify-center text-gray-500 text-xs sm:text-sm'>
                           이미지 준비 중
                         </div>
                       </div>
-                      <CardHeader className='p-3 text-center'>
-                        <CardTitle className='text-base'>{item.name}</CardTitle>
+                      <CardHeader className='p-2 sm:p-3 text-center'>
+                        <CardTitle className='text-sm sm:text-base'>{item.name}</CardTitle>
                       </CardHeader>
                     </Card>
                   ))}
@@ -476,21 +489,21 @@ export default function CafeOrder() {
               {selectedItem && selectedItem.requiresTemperature && (
                 <div className='space-y-3'>
                   <Label>온도 선택</Label>
-                  <div className='flex gap-4'>
+                  <div className='flex gap-3 sm:gap-4'>
                     <Card
                       className={`cursor-pointer flex-1 hover:shadow-md transition-shadow ${selectedTemperature === 'hot' ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectTemperature('hot')}
                     >
-                      <CardHeader className='p-4 text-center'>
-                        <CardTitle className='text-base'>따뜻하게</CardTitle>
+                      <CardHeader className='p-3 sm:p-4 text-center'>
+                        <CardTitle className='text-sm sm:text-base'>따뜻하게</CardTitle>
                       </CardHeader>
                     </Card>
                     <Card
                       className={`cursor-pointer flex-1 hover:shadow-md transition-shadow ${selectedTemperature === 'ice' ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectTemperature('ice')}
                     >
-                      <CardHeader className='p-4 text-center'>
-                        <CardTitle className='text-base'>차갑게</CardTitle>
+                      <CardHeader className='p-3 sm:p-4 text-center'>
+                        <CardTitle className='text-sm sm:text-base'>차갑게</CardTitle>
                       </CardHeader>
                     </Card>
                   </div>
@@ -498,14 +511,16 @@ export default function CafeOrder() {
               )}
 
               {selectedItem && !selectedItem.requiresTemperature && (
-                <div className='mt-4'>
-                  <p className='text-sm text-muted-foreground'>선택된 메뉴: {selectedItem.name}</p>
+                <div className='mt-3 sm:mt-4'>
+                  <p className='text-xs sm:text-sm text-muted-foreground'>
+                    선택된 메뉴: {selectedItem.name}
+                  </p>
                 </div>
               )}
 
               {selectedItem && selectedItem.requiresTemperature && selectedTemperature && (
-                <div className='mt-4'>
-                  <p className='text-sm text-muted-foreground'>
+                <div className='mt-3 sm:mt-4'>
+                  <p className='text-xs sm:text-sm text-muted-foreground'>
                     선택된 메뉴: {selectedTemperature === 'hot' ? '따뜻한' : '아이스'}{' '}
                     {selectedItem.name}
                   </p>
@@ -518,20 +533,20 @@ export default function CafeOrder() {
         {/* 주문 확인 */}
         {orderStep === 'cart' && (
           <Card>
-            <CardHeader>
+            <CardHeader className='p-4 sm:p-6'>
               <CardTitle>주문 확인</CardTitle>
               <CardDescription>주문 내용을 확인해주세요</CardDescription>
             </CardHeader>
-            <CardContent className='space-y-6'>
+            <CardContent className='p-4 sm:p-6 space-y-4 sm:space-y-6'>
               <div className='space-y-3'>
-                <div className='space-y-2 p-4 bg-muted/30 rounded-lg'>
+                <div className='space-y-2 p-3 sm:p-4 bg-muted/30 rounded-lg'>
                   <div className='flex flex-col gap-1'>
-                    <span>{village}마을</span>
+                    <span className='text-sm sm:text-base'>{village}마을</span>
                   </div>
 
-                  <div className='flex flex-col gap-1 mt-3'>
+                  <div className='flex flex-col gap-1 mt-2 sm:mt-3'>
                     <div className='flex items-center gap-2'>
-                      <span>{name}</span>
+                      <span className='text-sm sm:text-base'>{name}</span>
                       {isCustomName && (
                         <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>
                           직접 입력
@@ -541,7 +556,7 @@ export default function CafeOrder() {
                   </div>
                   {cart && (
                     <div className='flex flex-col gap-1'>
-                      <span className='font-medium'>
+                      <span className='font-medium text-sm sm:text-base'>
                         {cart.temperature === 'hot' && '따뜻한 '}
                         {cart.temperature === 'ice' && '아이스 '}
                         {cart.name}
@@ -550,7 +565,6 @@ export default function CafeOrder() {
                   )}
                 </div>
               </div>
-              <div className='space-y-3'></div>
             </CardContent>
           </Card>
         )}
@@ -558,16 +572,16 @@ export default function CafeOrder() {
 
       {/* 하단 고정 네비게이션 */}
       <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg'>
-        <div className='container mx-auto p-4'>
+        <div className='container mx-auto p-3 sm:p-4'>
           <div className='flex items-center justify-between'>
             {/* 메뉴 선택 단계에서 선택된 메뉴 표시 */}
             {orderStep === 'menu' && cart && (
-              <div className='flex items-center gap-4'>
-                <div className='bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center'>
-                  <span className='text-lg font-semibold'>1</span>
+              <div className='flex items-center gap-2 sm:gap-4'>
+                <div className='bg-primary text-primary-foreground w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center'>
+                  <span className='text-sm sm:text-lg font-semibold'>1</span>
                 </div>
                 <div>
-                  <p className='font-medium'>
+                  <p className='font-medium text-xs sm:text-base truncate max-w-[120px] sm:max-w-none'>
                     {cart.temperature === 'hot' && '따뜻한 '}
                     {cart.temperature === 'ice' && '아이스 '}
                     {cart.name}
@@ -580,11 +594,11 @@ export default function CafeOrder() {
             {(orderStep !== 'menu' || !cart) && (
               <div className='flex items-center gap-2'>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground`}
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xs sm:text-sm`}
                 >
                   {orderStep === 'info' ? '1' : orderStep === 'menu' ? '2' : '3'}
                 </div>
-                <span className='font-medium'>
+                <span className='font-medium text-xs sm:text-sm'>
                   {orderStep === 'info'
                     ? '주문 정보'
                     : orderStep === 'menu'
@@ -597,22 +611,32 @@ export default function CafeOrder() {
             <div className='flex items-center gap-2'>
               {/* 메뉴 선택 단계에서 메뉴가 선택된 경우 취소 버튼 표시 */}
               {orderStep === 'menu' && cart && (
-                <Button variant='outline' size='sm' onClick={clearCart} className='h-9'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={clearCart}
+                  className='h-8 sm:h-9 text-xs sm:text-sm'
+                >
                   취소
                 </Button>
               )}
 
               {/* 이전 단계 버튼 (첫 단계가 아닐 경우) */}
               {orderStep !== 'info' && (
-                <Button variant='outline' size='sm' onClick={goToPrevStep} className='h-9 px-3'>
-                  <ChevronLeft className='mr-1 h-4 w-4' />
-                  이전
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={goToPrevStep}
+                  className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
+                >
+                  <ChevronLeft className='mr-0 sm:mr-1 h-3 w-3 sm:h-4 sm:w-4' />
+                  <span>이전</span>
                 </Button>
               )}
 
               {/* 다음 단계 또는 주문 완료 버튼 */}
               {orderStep === 'cart' ? (
-                <Button size='sm' onClick={handleOrder} className='h-9'>
+                <Button size='sm' onClick={handleOrder} className='h-8 sm:h-9 text-xs sm:text-sm'>
                   주문 완료
                 </Button>
               ) : (
@@ -622,10 +646,10 @@ export default function CafeOrder() {
                   disabled={
                     (orderStep === 'info' && !isOrderInfoValid()) || (orderStep === 'menu' && !cart)
                   }
-                  className='h-9 px-3'
+                  className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
                 >
-                  다음
-                  <ChevronRight className='ml-1 h-4 w-4' />
+                  <span>다음</span>
+                  <ChevronRight className='ml-0 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4' />
                 </Button>
               )}
             </div>

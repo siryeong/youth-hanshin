@@ -10,7 +10,7 @@ export default function Home() {
       <div className='container mx-auto px-4 py-8 pb-24'>
         <h1 className='text-3xl font-bold mb-8 text-center'>분당 한신교회 청년부</h1>
 
-        <Card className='mx-auto max-w-3xl mb-8'>
+        <Card className='mx-auto max-w-xl mb-8'>
           <CardHeader className='flex flex-col items-center space-y-6'>
             <div className='transform hover:scale-105 transition-transform duration-300 flex justify-center'>
               <Image
@@ -28,13 +28,15 @@ export default function Home() {
           </CardHeader>
           <CardContent className='flex flex-col items-center space-y-6'>
             <p className='text-center text-muted-foreground max-w-xl'>
-              분당 한신교회 청년부에 오신 것을 환영합니다. 우리는 함께 믿음 안에서 성장하고, 서로를
-              격려하며, 하나님의 사랑을 나누는 공동체입니다.
+              분당한신교회 청년부에 오신 것을 환영합니다.
+              <br />
+              우리는 함께 믿음 안에서 성장하고, 서로를 격려하며, 하나님의 사랑을 나누는
+              공동체입니다.
             </p>
           </CardContent>
         </Card>
 
-        <div className='w-full max-w-md mx-auto'>
+        <div className='w-full max-w-xl mx-auto'>
           <Card className='hover:shadow-md transition-all'>
             <CardHeader>
               <CardTitle className='text-xl flex items-center justify-center gap-2'>
