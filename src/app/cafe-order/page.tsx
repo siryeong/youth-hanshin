@@ -36,7 +36,7 @@ type VillageMember = {
   name: string;
 };
 
-export default function CafeMenuPage() {
+export default function CafeOrder() {
   const [cart, setCart] = useState<CartItem | null>(null);
   const [village, setVillage] = useState<string>('');
   const [name, setName] = useState<string>('');
@@ -341,7 +341,7 @@ export default function CafeMenuPage() {
 
   return (
     <div className='container mx-auto py-8 pb-24'>
-      <h1 className='text-3xl font-bold mb-8 text-center'>카페 메뉴</h1>
+      <h1 className='text-3xl font-bold mb-8 text-center'>카페 음료 주문</h1>
 
       <div className='flex flex-col gap-8'>
         {/* 주문 단계 표시 */}
