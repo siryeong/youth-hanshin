@@ -467,12 +467,11 @@ export default function CafeMenuPage() {
                   </div>
                   {cart && (
                     <div className='flex flex-col gap-1'>
-                      <span className='font-medium'>{cart.name}</span>
-                      {cart.temperature && (
-                        <span className='text-sm text-muted-foreground'>
-                          {cart.temperature === 'hot' ? '따뜻하게' : '차갑게'}
-                        </span>
-                      )}
+                      <span className='font-medium'>
+                        {cart.temperature === 'hot' && '따뜻한 '}
+                        {cart.temperature === 'ice' && '아이스 '}
+                        {cart.name}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -494,12 +493,11 @@ export default function CafeMenuPage() {
                   <span className='text-lg font-semibold'>1</span>
                 </div>
                 <div>
-                  <p className='font-medium'>{cart.name}</p>
-                  {cart.temperature && (
-                    <p className='text-sm text-muted-foreground'>
-                      {cart.temperature === 'hot' ? '따뜻하게' : '차갑게'}
-                    </p>
-                  )}
+                  <p className='font-medium'>
+                    {cart.temperature === 'hot' && '따뜻한 '}
+                    {cart.temperature === 'ice' && '아이스 '}
+                    {cart.name}
+                  </p>
                 </div>
               </div>
             )}

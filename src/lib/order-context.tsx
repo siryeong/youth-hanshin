@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { MenuItem } from './menu-data';
@@ -23,14 +23,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   const addToOrder = (menuItem: MenuItem) => {
-    setOrderItems(prevItems => {
-      const existingItem = prevItems.find(item => item.menuItem.id === menuItem.id);
-      
+    setOrderItems((prevItems) => {
+      const existingItem = prevItems.find((item) => item.menuItem.id === menuItem.id);
+
       if (existingItem) {
-        return prevItems.map(item => 
-          item.menuItem.id === menuItem.id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
+        return prevItems.map((item) =>
+          item.menuItem.id === menuItem.id ? { ...item, quantity: item.quantity + 1 } : item,
         );
       } else {
         return [...prevItems, { menuItem, quantity: 1 }];
@@ -39,7 +37,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   };
 
   const removeFromOrder = (menuItemId: string) => {
-    setOrderItems(prevItems => prevItems.filter(item => item.menuItem.id !== menuItemId));
+    setOrderItems((prevItems) => prevItems.filter((item) => item.menuItem.id !== menuItemId));
   };
 
   const updateQuantity = (menuItemId: string, quantity: number) => {
@@ -47,13 +45,9 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       removeFromOrder(menuItemId);
       return;
     }
-    
-    setOrderItems(prevItems => 
-      prevItems.map(item => 
-        item.menuItem.id === menuItemId 
-          ? { ...item, quantity } 
-          : item
-      )
+
+    setOrderItems((prevItems) =>
+      prevItems.map((item) => (item.menuItem.id === menuItemId ? { ...item, quantity } : item)),
     );
   };
 
@@ -62,19 +56,21 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   };
 
   const totalAmount = orderItems.reduce(
-    (total, item) => total + (item.menuItem.price * item.quantity), 
-    0
+    (total, item) => total + item.menuItem.price * item.quantity,
+    0,
   );
 
   return (
-    <OrderContext.Provider value={{ 
-      orderItems, 
-      addToOrder, 
-      removeFromOrder, 
-      updateQuantity, 
-      clearOrder, 
-      totalAmount 
-    }}>
+    <OrderContext.Provider
+      value={{
+        orderItems,
+        addToOrder,
+        removeFromOrder,
+        updateQuantity,
+        clearOrder,
+        totalAmount,
+      }}
+    >
       {children}
     </OrderContext.Provider>
   );
@@ -86,4 +82,4 @@ export function useOrder() {
     throw new Error('useOrder must be used within an OrderProvider');
   }
   return context;
-} 
+}
