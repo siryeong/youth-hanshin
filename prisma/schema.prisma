@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 마을 모델
+model Village {
+  id        Int             @id @default(autoincrement())
+  name      String
+  createdAt DateTime        @default(now()) @map("created_at")
+  members   VillageMember[]
+  orders    Order[]
+
+  @@map("villages")
+}
+
+// 마을 구성원 모델
+model VillageMember {
+  id        Int      @id @default(autoincrement())
+  name      String
+  villageId Int      @map("village_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  village   Village  @relation(fields: [villageId], references: [id])
+
+  @@map("village_members")
+}
+
+// 메뉴 카테고리 모델
+model MenuCategory {
+  id        Int        @id @default(autoincrement())
+  name      String
+  createdAt DateTime   @default(now()) @map("created_at")
+  menuItems MenuItem[]
+
+  @@map("menu_categories")
+}
+
+// 메뉴 아이템 모델
+model MenuItem {
+  id                   Int          @id @default(autoincrement())
+  name                 String
+  description          String
+  categoryId           Int          @map("category_id")
+  imagePath            String       @map("image_path")
+  isTemperatureRequired Boolean      @map("is_temperature_required")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+  category             MenuCategory @relation(fields: [categoryId], references: [id])
+  orders               Order[]
+
+  @@map("menu_items")
+}
+
+// 주문 모델
+model Order {
+  id           Int       @id @default(autoincrement())
+  villageId    Int       @map("village_id")
+  memberName   String    @map("member_name")
+  isCustomName Boolean   @map("is_custom_name")
+  menuItemId   Int       @map("menu_item_id")
+  temperature  String?
+  status       String    @default("pending")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  village      Village   @relation(fields: [villageId], references: [id])
+  menuItem     MenuItem  @relation(fields: [menuItemId], references: [id])
+
+  @@map("orders")
+}
