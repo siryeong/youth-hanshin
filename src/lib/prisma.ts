@@ -9,12 +9,20 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-// 개발 환경에서는 핫 리로딩으로 인한 여러 인스턴스 생성 방지
-export const prisma =
-  global.prisma ||
+// Vercel의 서버리스 환경에서 최적화된 Prisma 클라이언트 설정
+const prismaClientSingleton = () =>
   new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    // Vercel 서버리스 환경에서 연결 제한 시간 설정
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL,
+      },
+    },
   });
+
+// 개발 환경에서는 핫 리로딩으로 인한 여러 인스턴스 생성 방지
+export const prisma = global.prisma ?? prismaClientSingleton();
 
 // 개발 환경에서만 전역 객체에 할당
 if (process.env.NODE_ENV !== 'production') {

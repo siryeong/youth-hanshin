@@ -170,3 +170,33 @@ npm run db:down
 Next.js 앱을 배포하는 가장 쉬운 방법은 Next.js 제작자가 만든 [Vercel 플랫폼](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)을 사용하는 것입니다.
 
 자세한 내용은 [Next.js 배포 문서](https://nextjs.org/docs/app/building-your-application/deploying)를 확인하세요.
+
+### Vercel에 Prisma 배포하기
+
+Vercel에 Prisma를 사용하는 애플리케이션을 배포할 때 다음 설정이 필요합니다:
+
+1. **환경 변수 설정**:
+   Vercel 프로젝트 설정에서 다음 환경 변수를 추가하세요:
+
+   - `DATABASE_URL`: PostgreSQL 또는 Supabase 데이터베이스 연결 문자열
+   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase URL (Supabase 사용 시)
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anon Key (Supabase 사용 시)
+   - `USE_SUPABASE`: Supabase 사용 여부 (`true` 또는 `false`)
+
+2. **빌드 설정**:
+   이 프로젝트는 이미 Vercel 배포를 위한 빌드 설정이 포함되어 있습니다:
+
+   - `package.json`의 `build` 스크립트에 `prisma generate` 명령이 포함되어 있습니다.
+   - `postinstall` 스크립트에도 `prisma generate` 명령이 포함되어 있습니다.
+   - `prisma/schema.prisma` 파일에 Vercel 환경을 위한 `binaryTargets` 설정이 포함되어 있습니다.
+
+3. **데이터베이스 연결 문자열**:
+   Supabase를 사용하는 경우, Supabase 대시보드에서 연결 문자열을 찾을 수 있습니다:
+
+   - Supabase 프로젝트 > 설정 > 데이터베이스 > 연결 문자열 > URI
+
+4. **배포 후 확인**:
+   배포 후 Vercel 로그를 확인하여 Prisma 클라이언트가 올바르게 생성되었는지 확인하세요.
+   문제가 발생하면 다음을 시도해 보세요:
+   - Vercel 대시보드에서 프로젝트를 선택하고 "Redeploy" 버튼을 클릭하세요.
+   - "Clear Cache and Redeploy" 옵션을 사용하여 캐시를 지우고 다시 배포하세요.

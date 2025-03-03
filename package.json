@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "db:up": "docker-compose -f .youth_hanshin_local/docker-compose.yml up -d",
     "db:down": "docker-compose -f .youth_hanshin_local/docker-compose.yml down",
-    "db:restart": "npm run db:down && npm run db:up"
+    "db:restart": "npm run db:down && npm run db:up",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
