@@ -16,7 +16,7 @@ const prismaClientSingleton = () =>
     // Vercel 서버리스 환경에서 연결 제한 시간 설정
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: process.env.POSTGRES_URL,
       },
     },
   });
