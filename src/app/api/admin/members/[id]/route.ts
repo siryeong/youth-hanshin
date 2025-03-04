@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
+
+interface DbVillageMember {
+  id: number;
+  name: string;
+  village_id: number;
+}
 
 // 관리자 전용 멤버 상세 조회
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,27 +16,46 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 멤버 ID입니다.' }, { status: 400 });
     }
 
-    const member = await prisma.villageMember.findUnique({
-      where: { id },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const client = getSupabaseClient();
+
+    // 멤버 정보 조회
+    const { data: member, error } = await client
+      .from('village_members')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     if (!member) {
       return NextResponse.json({ error: '해당 ID의 멤버를 찾을 수 없습니다.' }, { status: 404 });
     }
 
+    // 타입 안전하게 처리
+    const typedMember = member as unknown as DbVillageMember;
+
+    // 마을 정보 조회
+    const { data: village, error: villageError } = await client
+      .from('villages')
+      .select('name')
+      .eq('id', typedMember.village_id)
+      .single();
+
+    if (villageError) {
+      throw villageError;
+    }
+
+    // 타입 안전하게 처리
+    const typedVillage = village as unknown as { name: string };
+
     // 응답 형식 변환
     const formattedMember = {
-      id: member.id,
-      name: member.name,
-      villageId: member.villageId,
-      villageName: member.village.name,
+      id: typedMember.id,
+      name: typedMember.name,
+      villageId: typedMember.village_id,
+      villageName: typedVillage.name,
     };
 
     return NextResponse.json(formattedMember);
@@ -63,46 +88,74 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
+    const client = getSupabaseClient();
+
     // 마을 존재 여부 확인
-    const village = await prisma.village.findUnique({
-      where: { id: villageId },
-    });
+    const { data: village, error: villageError } = await client
+      .from('villages')
+      .select('id')
+      .eq('id', villageId)
+      .single();
+
+    if (villageError && villageError.code !== 'PGRST116') {
+      // PGRST116: 결과가 없음
+      throw villageError;
+    }
 
     if (!village) {
       return NextResponse.json({ error: '존재하지 않는 마을입니다.' }, { status: 400 });
     }
 
     // 멤버 존재 여부 확인
-    const existingMember = await prisma.villageMember.findUnique({
-      where: { id },
-    });
+    const { data: existingMember, error: memberError } = await client
+      .from('village_members')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (memberError && memberError.code !== 'PGRST116') {
+      throw memberError;
+    }
 
     if (!existingMember) {
       return NextResponse.json({ error: '해당 ID의 멤버를 찾을 수 없습니다.' }, { status: 404 });
     }
 
     // 멤버 수정
-    const updatedMember = await prisma.villageMember.update({
-      where: { id },
-      data: {
-        name,
-        villageId,
-      },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const { data: updatedMember, error: updateError } = await client
+      .from('village_members')
+      .update({ name, village_id: villageId })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // 타입 안전하게 처리
+    const typedMember = updatedMember as unknown as DbVillageMember;
+
+    // 업데이트된 마을 정보 조회
+    const { data: updatedVillage, error: updatedVillageError } = await client
+      .from('villages')
+      .select('name')
+      .eq('id', typedMember.village_id)
+      .single();
+
+    if (updatedVillageError) {
+      throw updatedVillageError;
+    }
+
+    // 타입 안전하게 처리
+    const typedVillage = updatedVillage as unknown as { name: string };
 
     // 응답 형식 변환
     const formattedMember = {
-      id: updatedMember.id,
-      name: updatedMember.name,
-      villageId: updatedMember.villageId,
-      villageName: updatedMember.village.name,
+      id: typedMember.id,
+      name: typedMember.name,
+      villageId: typedMember.village_id,
+      villageName: typedVillage.name,
     };
 
     return NextResponse.json(formattedMember);
@@ -124,19 +177,29 @@ export async function DELETE(
       return NextResponse.json({ error: '유효하지 않은 멤버 ID입니다.' }, { status: 400 });
     }
 
+    const client = getSupabaseClient();
+
     // 멤버 존재 여부 확인
-    const existingMember = await prisma.villageMember.findUnique({
-      where: { id },
-    });
+    const { data: existingMember, error: memberError } = await client
+      .from('village_members')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (memberError && memberError.code !== 'PGRST116') {
+      throw memberError;
+    }
 
     if (!existingMember) {
       return NextResponse.json({ error: '해당 ID의 멤버를 찾을 수 없습니다.' }, { status: 404 });
     }
 
     // 멤버 삭제
-    await prisma.villageMember.delete({
-      where: { id },
-    });
+    const { error: deleteError } = await client.from('village_members').delete().eq('id', id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

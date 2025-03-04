@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabase, getSupabaseClient } from '@/lib/supabase';
 
 // 일반 사용자용 주문 생성
 export async function POST(request: NextRequest) {
@@ -15,47 +15,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 마을 존재 여부 확인
-    const village = await prisma.village.findUnique({
-      where: { id: villageId },
-    });
+    // Supabase 클라이언트 가져오기
+    const client = getSupabaseClient();
 
-    if (!village) {
+    // 마을 존재 여부 확인
+    const { data: village, error: villageError } = await client
+      .from('villages')
+      .select('*')
+      .eq('id', villageId)
+      .single();
+
+    if (villageError || !village) {
       return NextResponse.json({ error: '존재하지 않는 마을입니다.' }, { status: 400 });
     }
 
     // 메뉴 항목 존재 여부 확인
-    const menuItem = await prisma.menuItem.findUnique({
-      where: { id: menuItemId },
-    });
+    const { data: menuItem, error: menuItemError } = await client
+      .from('menu_items')
+      .select('*')
+      .eq('id', menuItemId)
+      .single();
 
-    if (!menuItem) {
+    if (menuItemError || !menuItem) {
       return NextResponse.json({ error: '존재하지 않는 메뉴 항목입니다.' }, { status: 400 });
     }
 
     // 주문 생성
-    const newOrder = await prisma.order.create({
-      data: {
-        villageId,
-        memberName,
-        isCustomName: isCustomName || false,
-        menuItemId,
-        temperature: temperature || null,
-        status: 'pending',
-      },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-        menuItem: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const orderData = {
+      villageId,
+      menuItemId,
+      memberName,
+      isCustomName: isCustomName || false,
+      temperature: temperature || null,
+    };
+
+    const newOrder = await supabase.createOrder(orderData);
 
     // 응답 형식 변환
     const formattedOrder = {

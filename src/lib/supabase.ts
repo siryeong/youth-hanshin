@@ -1,17 +1,226 @@
-import { getDbClient, getSupabaseClient, getDatabaseType } from './db-manager';
-import { prisma } from './prisma';
+import { createClient } from '@supabase/supabase-js';
 
-// 타입 정의는 db-manager.ts로 이동했으므로 여기서는 재내보내기만 합니다.
-export type { Village, VillageMember, MenuCategory, MenuItem, Order } from './db-manager';
+// Supabase 설정
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// 하위 호환성을 위해 supabase 객체 내보내기
-export const supabase = getSupabaseClient();
+// 타입 정의
+export type Village = {
+  id: number;
+  name: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
-// 현재 사용 중인 데이터베이스 타입 내보내기
-export const databaseType = getDatabaseType();
+export type VillageMember = {
+  id: number;
+  villageId: number;
+  name: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
-// 데이터베이스 클라이언트 내보내기
-export const dbClient = getDbClient();
+export type MenuCategory = {
+  id: number;
+  name: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+};
 
-// Prisma 클라이언트 내보내기
-export { prisma };
+export type MenuItem = {
+  id: number;
+  name: string;
+  description: string;
+  categoryId: number;
+  imagePath: string;
+  isTemperatureRequired: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+  category: {
+    name: string;
+  };
+};
+
+export type Order = {
+  id: number;
+  villageId: number;
+  menuItemId: number;
+  memberName: string;
+  isCustomName: boolean;
+  temperature: string | null;
+  status: string;
+  createdAt: Date;
+  updatedAt: Date;
+  village: {
+    id: number;
+    name: string;
+  };
+  menuItem: {
+    id: number;
+    name: string;
+  };
+};
+
+// 주문 생성 데이터 타입
+export type CreateOrderData = {
+  villageId: number;
+  menuItemId: number;
+  memberName: string;
+  isCustomName: boolean;
+  temperature?: string | null;
+  status?: string;
+};
+
+// Supabase 클라이언트 싱글톤
+let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+// Supabase 클라이언트 초기화
+export const getSupabaseClient = () => {
+  if (!supabaseClient) {
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Supabase URL과 Anon Key가 환경 변수에 설정되어 있지 않습니다.');
+    }
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseClient;
+};
+
+// 데이터베이스 API
+export const supabase = {
+  // 마을 관련 메서드
+  async getVillages(): Promise<Village[]> {
+    const client = getSupabaseClient();
+    const { data, error } = await client.from('villages').select('*').order('name');
+
+    if (error) throw error;
+    return data as Village[];
+  },
+
+  async getVillageMembers(villageId: number): Promise<VillageMember[]> {
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from('village_members')
+      .select('*')
+      .eq('village_id', villageId)
+      .order('name');
+
+    if (error) throw error;
+    return data as VillageMember[];
+  },
+
+  // 메뉴 관련 메서드
+  async getMenuItems(categoryId?: number): Promise<MenuItem[]> {
+    const client = getSupabaseClient();
+    let query = client.from('menu_items').select('*, category:menu_categories(name)');
+
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
+    }
+
+    const { data, error } = await query.order('name');
+
+    if (error) throw error;
+
+    // Supabase 결과를 일관된 형식으로 변환
+    return (data as unknown[]).map((item) => {
+      const typedItem = item as Record<string, unknown>;
+      return {
+        id: typedItem.id as number,
+        name: typedItem.name as string,
+        description: typedItem.description as string,
+        categoryId: typedItem.category_id as number,
+        imagePath: typedItem.image_path as string,
+        isTemperatureRequired: typedItem.is_temperature_required as boolean,
+        createdAt: new Date(typedItem.created_at as string),
+        updatedAt: new Date(typedItem.updated_at as string),
+        category: {
+          name: ((typedItem.category as Record<string, unknown>) || {}).name as string,
+        },
+      };
+    }) as MenuItem[];
+  },
+
+  // 주문 관련 메서드
+  async getOrders(): Promise<Order[]> {
+    const client = getSupabaseClient();
+    const { data, error } = await client
+      .from('orders')
+      .select('*, village:villages(id, name), menuItem:menu_items(id, name)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Supabase 결과를 일관된 형식으로 변환
+    return (data as unknown[]).map((item) => {
+      const order = item as Record<string, unknown>;
+      const village = (order.village as Record<string, unknown>) || {};
+      const menuItem = (order.menuItem as Record<string, unknown>) || {};
+
+      return {
+        id: order.id as number,
+        villageId: order.village_id as number,
+        menuItemId: order.menu_item_id as number,
+        memberName: order.member_name as string,
+        isCustomName: order.is_custom_name as boolean,
+        temperature: order.temperature as string | null,
+        status: order.status as string,
+        createdAt: new Date(order.created_at as string),
+        updatedAt: new Date(order.updated_at as string),
+        village: {
+          id: village.id as number,
+          name: village.name as string,
+        },
+        menuItem: {
+          id: menuItem.id as number,
+          name: menuItem.name as string,
+        },
+      };
+    }) as Order[];
+  },
+
+  async createOrder(orderData: CreateOrderData): Promise<Order> {
+    const client = getSupabaseClient();
+    // Supabase 형식으로 변환
+    const supabaseData = {
+      village_id: orderData.villageId,
+      menu_item_id: orderData.menuItemId,
+      member_name: orderData.memberName,
+      is_custom_name: orderData.isCustomName,
+      temperature: orderData.temperature,
+      status: orderData.status || 'pending',
+    };
+
+    const { data, error } = await client
+      .from('orders')
+      .insert(supabaseData)
+      .select('*, village:villages(id, name), menuItem:menu_items(id, name)')
+      .single();
+
+    if (error) throw error;
+
+    const orderResult = data as unknown as Record<string, unknown>;
+    const village = (orderResult.village as Record<string, unknown>) || {};
+    const menuItem = (orderResult.menuItem as Record<string, unknown>) || {};
+
+    // 일관된 형식으로 변환
+    return {
+      id: orderResult.id as number,
+      villageId: orderResult.village_id as number,
+      menuItemId: orderResult.menu_item_id as number,
+      memberName: orderResult.member_name as string,
+      isCustomName: orderResult.is_custom_name as boolean,
+      temperature: orderResult.temperature as string | null,
+      status: orderResult.status as string,
+      createdAt: new Date(orderResult.created_at as string),
+      updatedAt: new Date(orderResult.updated_at as string),
+      village: {
+        id: village.id as number,
+        name: village.name as string,
+      },
+      menuItem: {
+        id: menuItem.id as number,
+        name: menuItem.name as string,
+      },
+    } as Order;
+  },
+};

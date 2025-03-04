@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
 
 // 관리자 전용 메뉴 카테고리 상세 조회
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,14 +10,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
 
-    const category = await prisma.menuCategory.findUnique({
-      where: { id },
-      include: {
-        menuItems: true,
-      },
-    });
+    const client = getSupabaseClient();
+    const { data: category, error } = await client
+      .from('menu_categories')
+      .select('*, menuItems:menu_items(*)')
+      .eq('id', id)
+      .single();
 
-    if (!category) {
+    if (error) {
       return NextResponse.json(
         { error: '해당 ID의 카테고리를 찾을 수 없습니다.' },
         { status: 404 },
@@ -50,12 +50,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효한 카테고리 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    // 카테고리 존재 여부 확인
-    const existingCategory = await prisma.menuCategory.findUnique({
-      where: { id },
-    });
+    const client = getSupabaseClient();
 
-    if (!existingCategory) {
+    // 카테고리 존재 여부 확인
+    const { error: findError } = await client
+      .from('menu_categories')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (findError) {
       return NextResponse.json(
         { error: '해당 ID의 카테고리를 찾을 수 없습니다.' },
         { status: 404 },
@@ -63,10 +67,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 카테고리 수정
-    const updatedCategory = await prisma.menuCategory.update({
-      where: { id },
-      data: { name: name.trim() },
-    });
+    const { data: updatedCategory, error: updateError } = await client
+      .from('menu_categories')
+      .update({ name: name.trim() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json(updatedCategory);
   } catch (error) {
@@ -87,12 +97,16 @@ export async function DELETE(
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
 
-    // 카테고리 존재 여부 확인
-    const existingCategory = await prisma.menuCategory.findUnique({
-      where: { id },
-    });
+    const client = getSupabaseClient();
 
-    if (!existingCategory) {
+    // 카테고리 존재 여부 확인
+    const { error: findError } = await client
+      .from('menu_categories')
+      .select('id')
+      .eq('id', id)
+      .single();
+
+    if (findError) {
       return NextResponse.json(
         { error: '해당 ID의 카테고리를 찾을 수 없습니다.' },
         { status: 404 },
@@ -100,11 +114,16 @@ export async function DELETE(
     }
 
     // 카테고리에 속한 메뉴 아이템이 있는지 확인
-    const menuItemCount = await prisma.menuItem.count({
-      where: { categoryId: id },
-    });
+    const { count: menuItemCount, error: countError } = await client
+      .from('menu_items')
+      .select('*', { count: 'exact', head: true })
+      .eq('category_id', id);
 
-    if (menuItemCount > 0) {
+    if (countError) {
+      throw countError;
+    }
+
+    if (menuItemCount && menuItemCount > 0) {
       return NextResponse.json(
         {
           error:
@@ -115,9 +134,11 @@ export async function DELETE(
     }
 
     // 카테고리 삭제
-    await prisma.menuCategory.delete({
-      where: { id },
-    });
+    const { error: deleteError } = await client.from('menu_categories').delete().eq('id', id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

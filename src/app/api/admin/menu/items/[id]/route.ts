@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
 
 // 관리자 전용 메뉴 아이템 상세 조회
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -10,18 +10,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 메뉴 아이템 ID입니다.' }, { status: 400 });
     }
 
-    const menuItem = await prisma.menuItem.findUnique({
-      where: { id },
-      include: {
-        category: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const client = getSupabaseClient();
+    const { data: menuItem, error } = await client
+      .from('menu_items')
+      .select('*, category:menu_categories(name)')
+      .eq('id', id)
+      .single();
 
-    if (!menuItem) {
+    if (error) {
       return NextResponse.json(
         { error: '해당 ID의 메뉴 아이템을 찾을 수 없습니다.' },
         { status: 404 },
@@ -58,12 +54,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    // 메뉴 아이템 존재 여부 확인
-    const existingMenuItem = await prisma.menuItem.findUnique({
-      where: { id },
-    });
+    const client = getSupabaseClient();
 
-    if (!existingMenuItem) {
+    // 메뉴 아이템 존재 여부 확인
+    const { error: findError } = await client.from('menu_items').select('id').eq('id', id).single();
+
+    if (findError) {
       return NextResponse.json(
         { error: '해당 ID의 메뉴 아이템을 찾을 수 없습니다.' },
         { status: 404 },
@@ -71,32 +67,36 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // 카테고리 존재 여부 확인
-    const category = await prisma.menuCategory.findUnique({
-      where: { id: categoryId },
-    });
+    const { error: categoryError } = await client
+      .from('menu_categories')
+      .select('id')
+      .eq('id', categoryId)
+      .single();
 
-    if (!category) {
+    if (categoryError) {
       return NextResponse.json({ error: '존재하지 않는 카테고리입니다.' }, { status: 400 });
     }
 
+    // Supabase 형식으로 변환
+    const updateData = {
+      name,
+      description,
+      category_id: categoryId,
+      image_path: imagePath || '',
+      is_temperature_required: isTemperatureRequired || false,
+    };
+
     // 메뉴 아이템 수정
-    const updatedMenuItem = await prisma.menuItem.update({
-      where: { id },
-      data: {
-        name,
-        description,
-        categoryId,
-        imagePath: imagePath || '',
-        isTemperatureRequired: isTemperatureRequired || false,
-      },
-      include: {
-        category: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const { data: updatedMenuItem, error: updateError } = await client
+      .from('menu_items')
+      .update(updateData)
+      .eq('id', id)
+      .select('*, category:menu_categories(name)')
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
 
     return NextResponse.json(updatedMenuItem);
   } catch (error) {
@@ -117,12 +117,12 @@ export async function DELETE(
       return NextResponse.json({ error: '유효하지 않은 메뉴 아이템 ID입니다.' }, { status: 400 });
     }
 
-    // 메뉴 아이템 존재 여부 확인
-    const existingMenuItem = await prisma.menuItem.findUnique({
-      where: { id },
-    });
+    const client = getSupabaseClient();
 
-    if (!existingMenuItem) {
+    // 메뉴 아이템 존재 여부 확인
+    const { error: findError } = await client.from('menu_items').select('id').eq('id', id).single();
+
+    if (findError) {
       return NextResponse.json(
         { error: '해당 ID의 메뉴 아이템을 찾을 수 없습니다.' },
         { status: 404 },
@@ -130,11 +130,16 @@ export async function DELETE(
     }
 
     // 주문에서 사용 중인지 확인
-    const orderCount = await prisma.order.count({
-      where: { menuItemId: id },
-    });
+    const { count: orderCount, error: countError } = await client
+      .from('orders')
+      .select('*', { count: 'exact', head: true })
+      .eq('menu_item_id', id);
 
-    if (orderCount > 0) {
+    if (countError) {
+      throw countError;
+    }
+
+    if (orderCount && orderCount > 0) {
       return NextResponse.json(
         {
           error: '이 메뉴 아이템은 주문에서 사용 중이므로 삭제할 수 없습니다.',
@@ -144,9 +149,11 @@ export async function DELETE(
     }
 
     // 메뉴 아이템 삭제
-    await prisma.menuItem.delete({
-      where: { id },
-    });
+    const { error: deleteError } = await client.from('menu_items').delete().eq('id', id);
+
+    if (deleteError) {
+      throw deleteError;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db-manager';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const categoryId = category ? parseInt(category) : undefined;
 
-    const menuItems = await db.getMenuItems(categoryId);
+    const menuItems = await supabase.getMenuItems(categoryId);
 
     // 결과를 프론트엔드에서 사용하기 쉬운 형태로 변환
     const formattedResults = menuItems.map((item) => ({

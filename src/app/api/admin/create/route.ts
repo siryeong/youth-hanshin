@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
 import { hash } from 'bcrypt';
 
 export async function POST(req: NextRequest) {
@@ -12,10 +12,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '관리자 시크릿 키가 올바르지 않습니다.' }, { status: 401 });
     }
 
+    const client = getSupabaseClient();
+
     // 이메일 중복 확인
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
+    const { data: existingUser, error: findError } = await client
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+
+    if (findError && findError.code !== 'PGRST116') {
+      // PGRST116는 결과가 없을 때 발생하는 에러 코드
+      throw findError;
+    }
 
     if (existingUser) {
       return NextResponse.json({ error: '이미 등록된 이메일입니다.' }, { status: 400 });
@@ -25,21 +34,27 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await hash(password, 10);
 
     // 관리자 계정 생성
-    const user = await prisma.user.create({
-      data: {
+    const { data: user, error: createError } = await client
+      .from('users')
+      .insert({
         name,
         email,
         password: hashedPassword,
-        isAdmin: true,
-      },
-    });
+        is_admin: true,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      throw createError;
+    }
 
     // 비밀번호를 제외한 사용자 정보 추출
     const userWithoutPassword = {
       id: user.id,
       name: user.name,
       email: user.email,
-      isAdmin: user.isAdmin,
+      isAdmin: user.is_admin,
     };
 
     return NextResponse.json(

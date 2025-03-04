@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db-manager';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '마을 ID가 필요합니다.' }, { status: 400 });
     }
 
-    const members = await db.getVillageMembers(parseInt(villageId));
+    const members = await supabase.getVillageMembers(parseInt(villageId));
     return NextResponse.json(members);
   } catch (error) {
     console.error('마을 주민 목록 조회 오류:', error);

@@ -4,16 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:up": "docker-compose -f .youth_hanshin_local/docker-compose.yml up -d",
-    "db:down": "docker-compose -f .youth_hanshin_local/docker-compose.yml down",
-    "db:restart": "npm run db:down && npm run db:up",
-    "postinstall": "prisma generate"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.1",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-select": "^2.1.6",
@@ -31,7 +26,6 @@
     "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "pg": "^8.13.3",
-    "prisma": "^6.4.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sonner": "^2.0.1",

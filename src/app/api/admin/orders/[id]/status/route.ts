@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
+
+// 데이터베이스 모델 인터페이스 정의
+interface DbOrder {
+  id: number;
+  village_id: number;
+  member_name: string;
+  menu_item_id: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  village: {
+    name: string;
+  };
+  menuItem: {
+    name: string;
+  };
+}
 
 // 관리자 전용 주문 상태 변경
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -29,56 +46,44 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    // 주문 존재 여부 확인
-    const existingOrder = await prisma.order.findUnique({
-      where: { id },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-        menuItem: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const client = getSupabaseClient();
 
-    if (!existingOrder) {
-      return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
+    // 주문 존재 여부 확인
+    const { error: findError } = await client.from('orders').select('id').eq('id', id).single();
+
+    if (findError) {
+      if (findError.code === 'PGRST116') {
+        return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      throw findError;
     }
 
     // 주문 상태 업데이트
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: { status },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-        menuItem: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const { data: updatedOrderData, error: updateError } = await client
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .select('*, village:villages(name), menuItem:menu_items(name)')
+      .single();
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    // 타입 안전하게 처리
+    const updatedOrder = updatedOrderData as unknown as DbOrder;
 
     // 응답 형식 변환
     const formattedOrder = {
       id: updatedOrder.id,
-      villageId: updatedOrder.villageId,
+      villageId: updatedOrder.village_id,
       villageName: updatedOrder.village.name,
-      memberName: updatedOrder.memberName,
-      menuItemId: updatedOrder.menuItemId,
+      memberName: updatedOrder.member_name,
+      menuItemId: updatedOrder.menu_item_id,
       menuItemName: updatedOrder.menuItem.name,
       status: updatedOrder.status,
-      createdAt: updatedOrder.createdAt,
-      updatedAt: updatedOrder.updatedAt,
+      createdAt: updatedOrder.created_at,
+      updatedAt: updatedOrder.updated_at,
     };
 
     return NextResponse.json(formattedOrder);

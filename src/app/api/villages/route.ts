@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 
 // 마을 목록 조회
 export async function GET() {
   try {
-    const villages = await prisma.village.findMany({
-      orderBy: {
-        name: 'asc',
-      },
-    });
-
+    const villages = await supabase.getVillages();
     return NextResponse.json(villages);
   } catch (error) {
     console.error('마을 목록 조회 오류:', error);

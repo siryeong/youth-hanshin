@@ -1,36 +1,45 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
+
+// 데이터베이스 모델 인터페이스 정의
+interface DbMenuItem {
+  id: number;
+  name: string;
+  description: string;
+  category_id: number;
+  image_path: string;
+  is_temperature_required: boolean;
+  category: {
+    name: string;
+  };
+}
 
 // 메뉴 아이템 목록 조회
 export async function GET() {
   try {
-    const menuItems = await prisma.menuItem.findMany({
-      include: {
-        category: {
-          select: {
-            name: true,
-          },
-        },
-      },
-      orderBy: [
-        {
-          categoryId: 'asc',
-        },
-        {
-          name: 'asc',
-        },
-      ],
-    });
+    const client = getSupabaseClient();
+    const { data: menuItems, error } = await client
+      .from('menu_items')
+      .select('*, category:menu_categories(name)')
+      .order('category_id')
+      .order('name');
+
+    if (error) {
+      throw error;
+    }
+
+    // 타입 안전하게 처리
+    const typedMenuItems = menuItems as unknown as DbMenuItem[];
 
     // 응답 형식 변환
-    const formattedMenuItems = menuItems.map((item) => ({
+    const formattedMenuItems = typedMenuItems.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,
-      categoryId: item.categoryId,
+      categoryId: item.category_id,
       categoryName: item.category.name,
-      imagePath: item.imagePath,
-      isTemperatureRequired: item.isTemperatureRequired,
+      imagePath: item.image_path,
+      isTemperatureRequired: item.is_temperature_required,
     }));
 
     return NextResponse.json(formattedMenuItems);

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
 
 interface Params {
   params: Promise<{
@@ -17,18 +17,36 @@ export async function GET(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
     }
 
-    const village = await prisma.village.findUnique({
-      where: { id },
-      include: {
-        members: true,
-      },
-    });
+    const client = getSupabaseClient();
 
-    if (!village) {
+    // 마을 정보 조회
+    const { data: village, error: villageError } = await client
+      .from('villages')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (villageError) {
       return NextResponse.json({ error: '마을을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    return NextResponse.json(village);
+    // 마을 멤버 조회
+    const { data: members, error: membersError } = await client
+      .from('village_members')
+      .select('*')
+      .eq('village_id', id);
+
+    if (membersError) {
+      console.error('마을 멤버 조회 오류:', membersError);
+    }
+
+    // 결과 조합
+    const result = {
+      ...village,
+      members: members || [],
+    };
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error('마을 상세 조회 오류:', error);
     return NextResponse.json(

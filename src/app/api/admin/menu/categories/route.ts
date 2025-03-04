@@ -1,23 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getSupabaseClient } from '@/lib/supabase';
 
 // 관리자 전용 메뉴 카테고리 목록 조회
 export async function GET() {
   try {
-    const categories = await prisma.menuCategory.findMany({
-      orderBy: {
-        name: 'asc',
-      },
-      include: {
-        _count: {
-          select: {
-            menuItems: true,
-          },
-        },
-      },
-    });
+    const client = getSupabaseClient();
 
-    return NextResponse.json(categories);
+    // 카테고리 목록 조회
+    const { data: categories, error } = await client
+      .from('menu_categories')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      throw error;
+    }
+
+    // 각 카테고리별 메뉴 아이템 개수 조회
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        // 타입 단언을 사용하여 안전하게 처리
+        const categoryId = category.id as number;
+        const { count, error: countError } = await client
+          .from('menu_items')
+          .select('*', { count: 'exact' })
+          .eq('category_id', categoryId)
+          .limit(0);
+
+        if (countError) {
+          throw countError;
+        }
+
+        return {
+          ...category,
+          _count: {
+            menuItems: count || 0,
+          },
+        };
+      }),
+    );
+
+    return NextResponse.json(categoriesWithCount);
   } catch (error) {
     console.error('카테고리 목록 조회 오류:', error);
     return NextResponse.json(
@@ -37,11 +60,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효한 카테고리 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const category = await prisma.menuCategory.create({
-      data: {
-        name: name.trim(),
-      },
-    });
+    const client = getSupabaseClient();
+    const { data: category, error } = await client
+      .from('menu_categories')
+      .insert({ name: name.trim() })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
 
     return NextResponse.json(category);
   } catch (error) {
