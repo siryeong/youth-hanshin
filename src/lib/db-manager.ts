@@ -4,7 +4,10 @@ import { Prisma } from '@prisma/client';
 
 // 환경 변수
 const isProduction = process.env.NODE_ENV === 'production';
-const useSupabase = isProduction || process.env.USE_SUPABASE === 'true';
+// Vercel 환경에서는 항상 Supabase를 사용하도록 설정
+// 이렇게 하면 Prisma 연결 문제를 우회할 수 있습니다
+const isVercel = process.env.VERCEL === '1';
+const useSupabase = isProduction || isVercel || process.env.USE_SUPABASE === 'true';
 
 // Supabase 설정
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -61,65 +64,69 @@ interface DbAdapter {
 
 // Prisma 어댑터 구현
 class PrismaAdapter implements DbAdapter {
-  async getVillages(): Promise<Village[]> {
+  // 연결 풀 문제를 감지하고 로깅하기 위한 오류 처리 헬퍼
+  private async handlePrismaOperation<T>(operation: () => Promise<T>): Promise<T> {
     try {
       await connectPrisma();
-      const result = await prisma.village.findMany({
-        orderBy: { name: 'asc' },
-      });
-      return result;
+      return await operation();
+    } catch (error) {
+      // prepared statement 오류 감지
+      if (
+        error instanceof Error &&
+        error.message.includes('prepared statement') &&
+        error.message.includes('already exists')
+      ) {
+        console.error('Prisma 연결 풀 오류 감지됨:', error);
+        console.warn('Supabase 어댑터로 전환하는 것을 고려하세요.');
+      }
+      throw error;
     } finally {
       await disconnectPrisma();
     }
+  }
+
+  async getVillages(): Promise<Village[]> {
+    return this.handlePrismaOperation(() =>
+      prisma.village.findMany({
+        orderBy: { name: 'asc' },
+      }),
+    );
   }
 
   async getVillageMembers(villageId: number): Promise<VillageMember[]> {
-    try {
-      await connectPrisma();
-      const result = await prisma.villageMember.findMany({
+    return this.handlePrismaOperation(() =>
+      prisma.villageMember.findMany({
         where: { villageId },
         orderBy: { name: 'asc' },
-      });
-      return result;
-    } finally {
-      await disconnectPrisma();
-    }
+      }),
+    );
   }
 
   async getMenuItems(categoryId?: number): Promise<MenuItem[]> {
-    try {
-      await connectPrisma();
-      const result = await prisma.menuItem.findMany({
+    return this.handlePrismaOperation(() =>
+      prisma.menuItem.findMany({
         where: categoryId ? { categoryId } : undefined,
         include: { category: true },
         orderBy: { name: 'asc' },
-      });
-      return result;
-    } finally {
-      await disconnectPrisma();
-    }
+      }),
+    );
   }
 
   async getOrders(): Promise<Order[]> {
-    try {
-      await connectPrisma();
-      const result = await prisma.order.findMany({
+    return this.handlePrismaOperation(() =>
+      prisma.order.findMany({
         include: {
           village: true,
           menuItem: true,
         },
         orderBy: { createdAt: 'desc' },
-      });
-      return result;
-    } finally {
-      await disconnectPrisma();
-    }
+      }),
+    );
   }
 
   async createOrder(orderData: CreateOrderData): Promise<Order> {
-    try {
-      await connectPrisma();
-      const result = await prisma.order.create({
+    return this.handlePrismaOperation(() =>
+      prisma.order.create({
         data: {
           villageId: orderData.villageId,
           menuItemId: orderData.menuItemId,
@@ -132,11 +139,8 @@ class PrismaAdapter implements DbAdapter {
           village: true,
           menuItem: true,
         },
-      });
-      return result;
-    } finally {
-      await disconnectPrisma();
-    }
+      }),
+    );
   }
 }
 

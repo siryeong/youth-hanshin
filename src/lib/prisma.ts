@@ -10,8 +10,12 @@ declare global {
 }
 
 // Vercel의 서버리스 환경에서 최적화된 Prisma 클라이언트 설정
-const prismaClientSingleton = () =>
-  new PrismaClient({
+const prismaClientSingleton = () => {
+  // 서버리스 환경에서 연결 풀 문제를 해결하기 위한 환경 변수 설정
+  // 이 설정은 "prepared statement already exists" 오류를 방지합니다.
+  process.env.DATABASE_URL = process.env.POSTGRES_URL;
+
+  return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     // Vercel 서버리스 환경에서 연결 제한 시간 설정
     datasources: {
@@ -20,6 +24,7 @@ const prismaClientSingleton = () =>
       },
     },
   });
+};
 
 // 개발 환경에서는 핫 리로딩으로 인한 여러 인스턴스 생성 방지
 export const prisma = global.prisma ?? prismaClientSingleton();
