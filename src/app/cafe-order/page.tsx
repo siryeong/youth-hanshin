@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
-import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, Coffee, CupSoda } from 'lucide-react';
 import Link from 'next/link';
 
 // 메뉴 아이템 타입 정의
@@ -15,7 +15,7 @@ type MenuItem = {
   id: number;
   name: string;
   description: string;
-  category: 'coffee' | 'tea' | 'dessert';
+  category: 'coffee' | 'non coffee';
   image: string;
   requiresTemperature: boolean;
 };
@@ -466,17 +466,22 @@ export default function CafeOrder() {
                   {menuItems.map((item) => (
                     <Card
                       key={item.id}
-                      className={`cursor-pointer overflow-hidden hover:shadow-md transition-shadow pt-0 ${selectedItem?.id === item.id ? 'ring-2 ring-primary' : ''}`}
+                      className={`cursor-pointer hover:shadow-md transition-shadow ${selectedItem?.id === item.id ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectMenuItem(item)}
                     >
-                      <div className='h-24 sm:h-24 bg-gray-200 relative'>
-                        <div className='absolute inset-0 flex items-center justify-center text-gray-500 text-xs sm:text-sm'>
-                          이미지 준비 중
+                      <div className='flex items-center p-1.5 sm:p-2'>
+                        <div className='w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center overflow-hidden'>
+                          <div className='text-gray-500'>
+                            {item.category === 'coffee' && (
+                              <Coffee className='w-5 h-5 sm:w-6 sm:h-6' />
+                            )}
+                            {item.category === 'non coffee' && (
+                              <CupSoda className='w-5 h-5 sm:w-6 sm:h-6' />
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <CardHeader className='p-2 sm:p-3 text-center'>
                         <CardTitle className='text-xs sm:text-sm'>{item.name}</CardTitle>
-                      </CardHeader>
+                      </div>
                     </Card>
                   ))}
                 </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db-manager';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -43,28 +44,47 @@ export async function POST(request: Request) {
   }
 }
 
+// 주문 목록 조회
 export async function GET() {
   try {
-    const orders = await db.getOrders();
+    const orders = await prisma.order.findMany({
+      include: {
+        village: {
+          select: {
+            name: true,
+          },
+        },
+        menuItem: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          createdAt: 'desc',
+        },
+      ],
+    });
 
-    // 결과를 프론트엔드에서 사용하기 쉬운 형태로 변환
-    const formattedResults = orders.map((order) => ({
+    // 응답 형식 변환
+    const formattedOrders = orders.map((order) => ({
       id: order.id,
-      member_name: order.memberName,
-      is_custom_name: order.isCustomName,
+      villageId: order.villageId,
+      villageName: order.village.name,
+      memberName: order.memberName,
+      isCustomName: order.isCustomName,
+      menuItemId: order.menuItemId,
+      menuItemName: order.menuItem.name,
       temperature: order.temperature,
       status: order.status,
-      created_at: order.createdAt,
-      village: order.village.name,
-      menu_item: order.menuItem.name,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
     }));
 
-    return NextResponse.json(formattedResults);
+    return NextResponse.json(formattedOrders);
   } catch (error) {
     console.error('주문 목록 조회 오류:', error);
-    return NextResponse.json(
-      { error: '주문 목록을 가져오는 중 오류가 발생했습니다.' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: '주문 목록을 불러오는데 실패했습니다.' }, { status: 500 });
   }
 }
