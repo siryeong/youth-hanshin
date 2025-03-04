@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
-
 // 일반 사용자용 주문 상세 조회
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {

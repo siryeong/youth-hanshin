@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
-
 // 관리자 전용 메뉴 카테고리 상세 조회
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -40,7 +34,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 // 관리자 전용 메뉴 카테고리 수정
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -66,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       );
     }
 
-    // 카테고리 업데이트
+    // 카테고리 수정
     const updatedCategory = await prisma.menuCategory.update({
       where: { id },
       data: { name: name.trim() },
@@ -80,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 // 관리자 전용 메뉴 카테고리 삭제
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -100,11 +94,11 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     // 카테고리에 속한 메뉴 아이템이 있는지 확인
-    const menuItems = await prisma.menuItem.findMany({
+    const menuItemCount = await prisma.menuItem.count({
       where: { categoryId: id },
     });
 
-    if (menuItems.length > 0) {
+    if (menuItemCount > 0) {
       return NextResponse.json(
         {
           error:

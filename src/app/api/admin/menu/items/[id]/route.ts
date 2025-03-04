@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-interface Params {
-  params: {
-    id: string;
-  };
-}
-
 // 관리자 전용 메뉴 아이템 상세 조회
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -33,18 +27,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       );
     }
 
-    // 응답 형식 변환
-    const formattedMenuItem = {
-      id: menuItem.id,
-      name: menuItem.name,
-      description: menuItem.description,
-      categoryId: menuItem.categoryId,
-      categoryName: menuItem.category.name,
-      imagePath: menuItem.imagePath,
-      isTemperatureRequired: menuItem.isTemperatureRequired,
-    };
-
-    return NextResponse.json(formattedMenuItem);
+    return NextResponse.json(menuItem);
   } catch (error) {
     console.error('메뉴 아이템 상세 조회 오류:', error);
     return NextResponse.json(
@@ -55,7 +38,7 @@ export async function GET(request: NextRequest, { params }: Params) {
 }
 
 // 관리자 전용 메뉴 아이템 수정
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -65,16 +48,12 @@ export async function PUT(request: NextRequest, { params }: Params) {
     const body = await request.json();
     const { name, description, categoryId, imagePath, isTemperatureRequired } = body;
 
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      return NextResponse.json({ error: '유효한 메뉴 이름을 입력해주세요.' }, { status: 400 });
-    }
-
-    if (!description || typeof description !== 'string') {
-      return NextResponse.json({ error: '유효한 메뉴 설명을 입력해주세요.' }, { status: 400 });
-    }
-
-    if (!categoryId || typeof categoryId !== 'number') {
-      return NextResponse.json({ error: '유효한 카테고리 ID를 입력해주세요.' }, { status: 400 });
+    // 필수 필드 검증
+    if (!name || !description || !categoryId) {
+      return NextResponse.json(
+        { error: '이름, 설명, 카테고리 ID는 필수 입력 사항입니다.' },
+        { status: 400 },
+      );
     }
 
     // 메뉴 아이템 존재 여부 확인
@@ -95,18 +74,15 @@ export async function PUT(request: NextRequest, { params }: Params) {
     });
 
     if (!category) {
-      return NextResponse.json(
-        { error: '해당 ID의 카테고리를 찾을 수 없습니다.' },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: '존재하지 않는 카테고리입니다.' }, { status: 400 });
     }
 
-    // 메뉴 아이템 업데이트
+    // 메뉴 아이템 수정
     const updatedMenuItem = await prisma.menuItem.update({
       where: { id },
       data: {
-        name: name.trim(),
-        description: description.trim(),
+        name,
+        description,
         categoryId,
         imagePath: imagePath || '',
         isTemperatureRequired: isTemperatureRequired || false,
@@ -120,18 +96,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
       },
     });
 
-    // 응답 형식 변환
-    const formattedMenuItem = {
-      id: updatedMenuItem.id,
-      name: updatedMenuItem.name,
-      description: updatedMenuItem.description,
-      categoryId: updatedMenuItem.categoryId,
-      categoryName: updatedMenuItem.category.name,
-      imagePath: updatedMenuItem.imagePath,
-      isTemperatureRequired: updatedMenuItem.isTemperatureRequired,
-    };
-
-    return NextResponse.json(formattedMenuItem);
+    return NextResponse.json(updatedMenuItem);
   } catch (error) {
     console.error('메뉴 아이템 수정 오류:', error);
     return NextResponse.json({ error: '메뉴 아이템 수정에 실패했습니다.' }, { status: 500 });
@@ -139,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
 }
 
 // 관리자 전용 메뉴 아이템 삭제
-export async function DELETE(request: NextRequest, { params }: Params) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
@@ -159,13 +124,15 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     }
 
     // 주문에서 사용 중인지 확인
-    const orders = await prisma.order.findMany({
+    const orderCount = await prisma.order.count({
       where: { menuItemId: id },
     });
 
-    if (orders.length > 0) {
+    if (orderCount > 0) {
       return NextResponse.json(
-        { error: '이 메뉴 아이템은 주문에서 사용 중이므로 삭제할 수 없습니다.' },
+        {
+          error: '이 메뉴 아이템은 주문에서 사용 중이므로 삭제할 수 없습니다.',
+        },
         { status: 400 },
       );
     }

@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE "users" (
 );
 
 -- CreateTable
-CREATE TABLE "villages" (
+CREATE TABLE IF NOT EXISTS "villages" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -21,7 +21,7 @@ CREATE TABLE "villages" (
 );
 
 -- CreateTable
-CREATE TABLE "village_members" (
+CREATE TABLE IF NOT EXISTS "village_members" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "village_id" INTEGER NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE "village_members" (
 );
 
 -- CreateTable
-CREATE TABLE "menu_categories" (
+CREATE TABLE IF NOT EXISTS "menu_categories" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -40,7 +40,7 @@ CREATE TABLE "menu_categories" (
 );
 
 -- CreateTable
-CREATE TABLE "menu_items" (
+CREATE TABLE IF NOT EXISTS "menu_items" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE "menu_items" (
 );
 
 -- CreateTable
-CREATE TABLE "orders" (
+CREATE TABLE IF NOT EXISTS "orders" (
     "id" SERIAL NOT NULL,
     "village_id" INTEGER NOT NULL,
     "member_name" TEXT NOT NULL,
