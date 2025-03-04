@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
 import { ChevronLeft, ChevronRight, Home, Coffee, CupSoda } from 'lucide-react';
 import Link from 'next/link';
+import { useLoading } from '@/contexts/LoadingContext';
 
 // 메뉴 아이템 타입 정의
 type MenuItem = {
@@ -51,12 +52,15 @@ export default function CafeOrder() {
   const [villages, setVillages] = useState<Village[]>([]);
   const [villageMembers, setVillageMembers] = useState<Record<string, VillageMember[]>>({});
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // 전역 로딩 상태 사용
+  const { setLoadingWithMessage } = useLoading();
 
   // 마을 목록 가져오기
   useEffect(() => {
     const fetchVillages = async () => {
+      setLoadingWithMessage(true, '마을 목록을 불러오고 있습니다...');
       try {
         const response = await fetch('/api/villages');
         if (!response.ok) {
@@ -68,6 +72,8 @@ export default function CafeOrder() {
         console.error('마을 목록 조회 오류:', err);
         setError('마을 목록을 불러오는데 문제가 발생했습니다.');
         toast.error('마을 목록을 불러오는데 문제가 발생했습니다.');
+      } finally {
+        setLoadingWithMessage(false);
       }
     };
 
@@ -77,6 +83,7 @@ export default function CafeOrder() {
   // 메뉴 아이템 가져오기
   useEffect(() => {
     const fetchMenuItems = async () => {
+      setLoadingWithMessage(true, '메뉴 정보를 불러오고 있습니다...');
       try {
         const response = await fetch('/api/menu-items');
         if (!response.ok) {
@@ -84,12 +91,12 @@ export default function CafeOrder() {
         }
         const data = await response.json();
         setMenuItems(data);
-        setLoading(false);
       } catch (err) {
         console.error('메뉴 목록 조회 오류:', err);
         setError('메뉴 목록을 불러오는데 문제가 발생했습니다.');
         toast.error('메뉴 목록을 불러오는데 문제가 발생했습니다.');
-        setLoading(false);
+      } finally {
+        setLoadingWithMessage(false);
       }
     };
 
@@ -101,6 +108,7 @@ export default function CafeOrder() {
     if (!village) return;
 
     const fetchVillageMembers = async () => {
+      setLoadingWithMessage(true, `${village.name} 마을의 주민 목록을 불러오고 있습니다...`);
       try {
         // 선택된 마을의 ID 찾기
         const selectedVillage = villages.find((v) => v.id === village.id);
@@ -119,6 +127,8 @@ export default function CafeOrder() {
       } catch (err) {
         console.error('마을 주민 목록 조회 오류:', err);
         toast.error('마을 주민 목록을 불러오는데 문제가 발생했습니다.');
+      } finally {
+        setLoadingWithMessage(false);
       }
     };
 
@@ -238,6 +248,7 @@ export default function CafeOrder() {
     }
 
     try {
+      setLoadingWithMessage(true, `${village?.name} ${memberName}님의 주문을 처리하고 있습니다...`);
       // 주문 정보 생성
       const orderData = {
         villageId: village?.id,
@@ -279,6 +290,8 @@ export default function CafeOrder() {
       toast.error(err instanceof Error ? err.message : '주문 처리 중 오류가 발생했습니다.', {
         position: 'top-center',
       });
+    } finally {
+      setLoadingWithMessage(false);
     }
   };
 
@@ -312,25 +325,14 @@ export default function CafeOrder() {
     }
   };
 
-  // 로딩 중 표시
-  if (loading) {
-    return (
-      <div className='container mx-auto py-8 flex items-center justify-center min-h-[60vh]'>
-        <div className='text-center'>
-          <p className='text-lg'>데이터를 불러오는 중입니다...</p>
-        </div>
-      </div>
-    );
-  }
-
   // 오류 표시
   if (error) {
     return (
       <div className='container mx-auto py-8 flex items-center justify-center min-h-[60vh]'>
         <div className='text-center'>
           <p className='text-lg text-red-500'>{error}</p>
-          <Button className='mt-4' onClick={() => window.location.reload()}>
-            새로고침
+          <Button onClick={() => window.location.reload()} className='mt-4'>
+            다시 시도
           </Button>
         </div>
       </div>
