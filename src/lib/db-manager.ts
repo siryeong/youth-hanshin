@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { prisma } from './prisma';
+import { prisma, connectPrisma, disconnectPrisma } from './prisma';
 import { Prisma } from '@prisma/client';
 
 // 환경 변수
@@ -62,51 +62,81 @@ interface DbAdapter {
 // Prisma 어댑터 구현
 class PrismaAdapter implements DbAdapter {
   async getVillages(): Promise<Village[]> {
-    return prisma.village.findMany({
-      orderBy: { name: 'asc' },
-    });
+    try {
+      await connectPrisma();
+      const result = await prisma.village.findMany({
+        orderBy: { name: 'asc' },
+      });
+      return result;
+    } finally {
+      await disconnectPrisma();
+    }
   }
 
   async getVillageMembers(villageId: number): Promise<VillageMember[]> {
-    return prisma.villageMember.findMany({
-      where: { villageId },
-      orderBy: { name: 'asc' },
-    });
+    try {
+      await connectPrisma();
+      const result = await prisma.villageMember.findMany({
+        where: { villageId },
+        orderBy: { name: 'asc' },
+      });
+      return result;
+    } finally {
+      await disconnectPrisma();
+    }
   }
 
   async getMenuItems(categoryId?: number): Promise<MenuItem[]> {
-    return prisma.menuItem.findMany({
-      where: categoryId ? { categoryId } : undefined,
-      include: { category: true },
-      orderBy: { name: 'asc' },
-    });
+    try {
+      await connectPrisma();
+      const result = await prisma.menuItem.findMany({
+        where: categoryId ? { categoryId } : undefined,
+        include: { category: true },
+        orderBy: { name: 'asc' },
+      });
+      return result;
+    } finally {
+      await disconnectPrisma();
+    }
   }
 
   async getOrders(): Promise<Order[]> {
-    return prisma.order.findMany({
-      include: {
-        village: true,
-        menuItem: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    try {
+      await connectPrisma();
+      const result = await prisma.order.findMany({
+        include: {
+          village: true,
+          menuItem: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+      return result;
+    } finally {
+      await disconnectPrisma();
+    }
   }
 
   async createOrder(orderData: CreateOrderData): Promise<Order> {
-    return prisma.order.create({
-      data: {
-        villageId: orderData.villageId,
-        menuItemId: orderData.menuItemId,
-        memberName: orderData.memberName,
-        isCustomName: orderData.isCustomName,
-        temperature: orderData.temperature,
-        status: orderData.status || 'pending',
-      },
-      include: {
-        village: true,
-        menuItem: true,
-      },
-    });
+    try {
+      await connectPrisma();
+      const result = await prisma.order.create({
+        data: {
+          villageId: orderData.villageId,
+          menuItemId: orderData.menuItemId,
+          memberName: orderData.memberName,
+          isCustomName: orderData.isCustomName,
+          temperature: orderData.temperature,
+          status: orderData.status || 'pending',
+        },
+        include: {
+          village: true,
+          menuItem: true,
+        },
+      });
+      return result;
+    } finally {
+      await disconnectPrisma();
+    }
   }
 }
 

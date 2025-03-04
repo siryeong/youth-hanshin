@@ -28,3 +28,23 @@ export const prisma = global.prisma ?? prismaClientSingleton();
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma;
 }
+
+// 연결 관리 헬퍼 함수
+export async function connectPrisma() {
+  try {
+    await prisma.$connect();
+    return prisma;
+  } catch (error) {
+    console.error('Prisma 연결 오류:', error);
+    throw error;
+  }
+}
+
+// 연결 해제 헬퍼 함수
+export async function disconnectPrisma() {
+  try {
+    await prisma.$disconnect();
+  } catch (error) {
+    console.error('Prisma 연결 해제 오류:', error);
+  }
+}
