@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 관리자 전용 API 접근 제한 (/api/admin/*)
-  if (pathname.startsWith('/api/admin/')) {
+  if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/create') {
     // 관리자 권한 확인
     const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
     const isAdmin = !!token?.isAdmin;
