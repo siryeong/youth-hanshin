@@ -1,8 +1,10 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Coffee, Settings } from 'lucide-react';
+import { Coffee } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -51,25 +53,6 @@ export default function Home() {
               <Link href='/cafe-order'>
                 <Button size='lg' className='w-full'>
                   음료 주문하기
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className='hover:shadow-md transition-all'>
-            <CardHeader>
-              <CardTitle className='text-xl flex items-center justify-center gap-2'>
-                <Settings className='h-5 w-5' />
-                관리자 페이지
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='text-center pb-6'>
-              <p className='text-muted-foreground mb-6'>
-                마을, 마을 멤버, 카페 메뉴 등을 관리할 수 있는 관리자 페이지입니다.
-              </p>
-              <Link href='/admin'>
-                <Button size='lg' className='w-full' variant='outline'>
-                  관리자 페이지 이동
                 </Button>
               </Link>
             </CardContent>

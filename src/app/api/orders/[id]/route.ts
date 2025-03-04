@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 interface Params {
@@ -7,31 +7,61 @@ interface Params {
   };
 }
 
-// 주문 삭제
-export async function DELETE(request: Request, { params }: Params) {
+// 일반 사용자용 주문 상세 조회
+export async function GET(request: NextRequest, { params }: Params) {
   try {
     const id = parseInt(params.id);
     if (isNaN(id)) {
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    // 주문 존재 여부 확인
-    const existingOrder = await prisma.order.findUnique({
+    const order = await prisma.order.findUnique({
       where: { id },
+      include: {
+        village: {
+          select: {
+            name: true,
+          },
+        },
+        menuItem: {
+          select: {
+            name: true,
+            category: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
 
-    if (!existingOrder) {
+    if (!order) {
       return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    // 주문 삭제
-    await prisma.order.delete({
-      where: { id },
-    });
+    // 응답 형식 변환
+    const formattedOrder = {
+      id: order.id,
+      villageId: order.villageId,
+      villageName: order.village.name,
+      memberName: order.memberName,
+      isCustomName: order.isCustomName,
+      menuItemId: order.menuItemId,
+      menuItemName: order.menuItem.name,
+      menuCategoryName: order.menuItem.category.name,
+      temperature: order.temperature,
+      status: order.status,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    };
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(formattedOrder);
   } catch (error) {
-    console.error('주문 삭제 오류:', error);
-    return NextResponse.json({ error: '주문 삭제에 실패했습니다.' }, { status: 500 });
+    console.error('주문 상세 조회 오류:', error);
+    return NextResponse.json(
+      { error: '주문 상세 정보를 불러오는데 실패했습니다.' },
+      { status: 500 },
+    );
   }
 }

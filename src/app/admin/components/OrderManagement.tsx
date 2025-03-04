@@ -49,7 +49,7 @@ export default function OrderManagement() {
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/orders');
+      const response = await fetch('/api/admin/orders');
       if (!response.ok) throw new Error('주문 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setOrders(data);
@@ -63,7 +63,7 @@ export default function OrderManagement() {
   // 마을 목록 불러오기
   const fetchVillages = async () => {
     try {
-      const response = await fetch('/api/villages');
+      const response = await fetch('/api/admin/villages');
       if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setVillages(data);
@@ -75,7 +75,7 @@ export default function OrderManagement() {
   // 메뉴 아이템 목록 불러오기
   const fetchMenuItems = async () => {
     try {
-      const response = await fetch('/api/menu/items');
+      const response = await fetch('/api/admin/menu/items');
       if (!response.ok) throw new Error('메뉴 아이템 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setMenuItems(data);
@@ -95,7 +95,7 @@ export default function OrderManagement() {
   const updateOrderStatus = async (id: number, status: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/orders/${id}/status`, {
+      const response = await fetch(`/api/admin/orders/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
@@ -117,7 +117,7 @@ export default function OrderManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/orders/${id}`, {
+      const response = await fetch(`/api/admin/orders/${id}`, {
         method: 'DELETE',
       });
 
@@ -238,10 +238,11 @@ export default function OrderManagement() {
               <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-4'>
                 <div>
                   <div className='flex items-center gap-2'>
-                    <span className='text-lg font-medium'>{getMenuItemName(order.menuItemId)}</span>
-                    {order.temperature && (
-                      <span className='text-sm text-muted-foreground'>({order.temperature})</span>
-                    )}
+                    <span className='text-lg font-medium'>
+                      {order.temperature && order.temperature === 'ice' && '아이스 '}
+                      {order.temperature && order.temperature === 'hot' && '따뜻한 '}
+                      {getMenuItemName(order.menuItemId)}
+                    </span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass(order.status)}`}
                     >
@@ -249,7 +250,7 @@ export default function OrderManagement() {
                     </span>
                   </div>
                   <p className='text-sm text-muted-foreground'>
-                    {getVillageName(order.villageId)} - {order.memberName}
+                    {getVillageName(order.villageId)}마을 - {order.memberName}
                     {order.isCustomName && ' (직접 입력)'}
                   </p>
                 </div>

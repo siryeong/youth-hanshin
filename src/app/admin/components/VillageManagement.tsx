@@ -20,7 +20,7 @@ export default function VillageManagement() {
   const fetchVillages = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/villages');
+      const response = await fetch('/api/admin/villages');
       if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setVillages(data);
@@ -42,7 +42,7 @@ export default function VillageManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/villages', {
+      const response = await fetch('/api/admin/villages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newVillageName }),
@@ -65,7 +65,7 @@ export default function VillageManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/villages/${editingVillage.id}`, {
+      const response = await fetch(`/api/admin/villages/${editingVillage.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingVillage.name }),
@@ -88,7 +88,7 @@ export default function VillageManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/villages/${id}`, {
+      const response = await fetch(`/api/admin/villages/${id}`, {
         method: 'DELETE',
       });
 

@@ -39,8 +39,8 @@ type VillageMember = {
 
 export default function CafeOrder() {
   const [cart, setCart] = useState<CartItem | null>(null);
-  const [village, setVillage] = useState<string>('');
-  const [name, setName] = useState<string>('');
+  const [village, setVillage] = useState<Village | null>(null);
+  const [memberName, setMemberName] = useState<string>('');
   const [isCustomName, setIsCustomName] = useState<boolean>(false);
   const [customName, setCustomName] = useState<string>('');
   const [orderStep, setOrderStep] = useState<'info' | 'menu' | 'cart'>('info');
@@ -103,7 +103,7 @@ export default function CafeOrder() {
     const fetchVillageMembers = async () => {
       try {
         // 선택된 마을의 ID 찾기
-        const selectedVillage = villages.find((v) => v.name === village);
+        const selectedVillage = villages.find((v) => v.id === village.id);
         if (!selectedVillage) return;
 
         const response = await fetch(`/api/village-members?villageId=${selectedVillage.id}`);
@@ -114,7 +114,7 @@ export default function CafeOrder() {
 
         setVillageMembers((prev) => ({
           ...prev,
-          [village]: data,
+          [village.id]: data,
         }));
       } catch (err) {
         console.error('마을 주민 목록 조회 오류:', err);
@@ -122,7 +122,7 @@ export default function CafeOrder() {
       }
     };
 
-    if (!villageMembers[village]) {
+    if (!villageMembers[village.id]) {
       fetchVillageMembers();
     }
   }, [village, villages, villageMembers]);
@@ -174,11 +174,11 @@ export default function CafeOrder() {
   };
 
   // 마을 선택 처리
-  const selectVillage = (selectedVillage: string) => {
+  const selectVillage = (selectedVillage: Village) => {
     setVillage(selectedVillage);
-    setName(''); // 마을이 변경되면 이름 초기화
+    setMemberName(''); // 마을이 변경되면 이름 초기화
     setIsCustomName(false);
-    toast.success(`${selectedVillage} 마을이 선택되었습니다.`, {
+    toast.success(`${selectedVillage.name} 마을이 선택되었습니다.`, {
       position: 'top-center',
     });
   };
@@ -187,10 +187,10 @@ export default function CafeOrder() {
   const selectName = (selectedName: string) => {
     if (selectedName === '직접 입력') {
       setIsCustomName(true);
-      setName('');
+      setMemberName('');
     } else {
       setIsCustomName(false);
-      setName(selectedName);
+      setMemberName(selectedName);
       toast.success(`${selectedName}님으로 선택되었습니다.`, {
         position: 'top-center',
       });
@@ -205,7 +205,7 @@ export default function CafeOrder() {
   // 직접 입력한 이름 적용
   const applyCustomName = () => {
     if (customName.trim()) {
-      setName(customName.trim());
+      setMemberName(customName.trim());
       toast.success(`${customName.trim()}님으로 입력되었습니다.`, {
         position: 'top-center',
       });
@@ -217,7 +217,7 @@ export default function CafeOrder() {
   };
 
   // 주문 정보 유효성 검사
-  const isOrderInfoValid = () => village !== '' && name !== '';
+  const isOrderInfoValid = () => village !== null && memberName !== '';
 
   // 주문 처리
   const handleOrder = async () => {
@@ -240,8 +240,8 @@ export default function CafeOrder() {
     try {
       // 주문 정보 생성
       const orderData = {
-        village,
-        name,
+        villageId: village?.id,
+        memberName: memberName,
         isCustomName,
         menuItemId: cart.id,
         temperature: cart.temperature,
@@ -261,7 +261,7 @@ export default function CafeOrder() {
         throw new Error(errorData.error || '주문 처리 중 오류가 발생했습니다.');
       }
 
-      toast.success(`${village} ${name}님의 주문이 완료되었습니다!`, {
+      toast.success(`${village?.name} ${memberName}님의 주문이 완료되었습니다!`, {
         position: 'top-center',
       });
 
@@ -269,8 +269,8 @@ export default function CafeOrder() {
       setCart(null);
       setSelectedItem(null);
       setSelectedTemperature(null);
-      setName('');
-      setVillage('');
+      setMemberName('');
+      setVillage(null);
       setIsCustomName(false);
       setCustomName('');
       setOrderStep('info');
@@ -389,8 +389,8 @@ export default function CafeOrder() {
                   {villages.map((v) => (
                     <Card
                       key={v.id}
-                      className={`cursor-pointer hover:shadow-md transition-shadow ${village === v.name ? 'ring-2 ring-primary' : ''}`}
-                      onClick={() => selectVillage(v.name)}
+                      className={`cursor-pointer hover:shadow-md transition-shadow ${village?.id === v.id ? 'ring-2 ring-primary' : ''}`}
+                      onClick={() => selectVillage(v)}
                     >
                       <CardHeader className='p-2 sm:p-3 text-center'>
                         <CardTitle className='text-xs sm:text-sm'>{v.name}마을</CardTitle>
@@ -399,7 +399,9 @@ export default function CafeOrder() {
                   ))}
                 </div>
                 {village && (
-                  <p className='text-xs sm:text-sm text-muted-foreground'>선택된 마을: {village}</p>
+                  <p className='text-xs sm:text-sm text-muted-foreground'>
+                    선택된 마을: {village.name}
+                  </p>
                 )}
               </div>
 
@@ -407,10 +409,10 @@ export default function CafeOrder() {
                 <div className='space-y-3'>
                   <Label>이름 선택</Label>
                   <div className='grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 sm:gap-3'>
-                    {villageMembers[village]?.map((member) => (
+                    {villageMembers[village.id]?.map((member) => (
                       <Card
                         key={member.id}
-                        className={`cursor-pointer hover:shadow-md transition-shadow ${!isCustomName && name === member.name ? 'ring-2 ring-primary' : ''}`}
+                        className={`cursor-pointer hover:shadow-md transition-shadow ${!isCustomName && memberName === member.name ? 'ring-2 ring-primary' : ''}`}
                         onClick={() => selectName(member.name)}
                       >
                         <CardHeader className='p-2 sm:p-3 text-center'>
@@ -440,11 +442,15 @@ export default function CafeOrder() {
                     </div>
                   )}
 
-                  {name && !isCustomName && (
-                    <p className='text-xs sm:text-sm text-muted-foreground'>선택된 이름: {name}</p>
+                  {memberName && !isCustomName && (
+                    <p className='text-xs sm:text-sm text-muted-foreground'>
+                      선택된 이름: {memberName}
+                    </p>
                   )}
-                  {name && isCustomName && (
-                    <p className='text-xs sm:text-sm text-muted-foreground'>입력된 이름: {name}</p>
+                  {memberName && isCustomName && (
+                    <p className='text-xs sm:text-sm text-muted-foreground'>
+                      입력된 이름: {memberName}
+                    </p>
                   )}
                 </div>
               )}
@@ -518,13 +524,13 @@ export default function CafeOrder() {
               <div className='space-y-3 p-3 sm:p-4 bg-muted/30 rounded-lg'>
                 <div className='flex flex-col gap-1'>
                   <span className='text-xs sm:text-sm text-muted-foreground'>마을</span>
-                  <span className='text-sm sm:text-base font-medium'>{village}마을</span>
+                  <span className='text-sm sm:text-base font-medium'>{village?.name}마을</span>
                 </div>
 
                 <div className='flex flex-col gap-1'>
                   <span className='text-xs sm:text-sm text-muted-foreground'>이름</span>
                   <div className='flex items-center gap-2'>
-                    <span className='text-sm sm:text-base font-medium'>{name}</span>
+                    <span className='text-sm sm:text-base font-medium'>{memberName}</span>
                     {isCustomName && (
                       <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>
                         직접 입력
@@ -591,7 +597,7 @@ export default function CafeOrder() {
                 {/* 주문 정보 단계에서 마을이 선택된 경우 마을 이름 표시 */}
                 {orderStep === 'info' && village ? (
                   <p className='font-medium text-xs sm:text-sm'>
-                    {village}마을 {name && `- ${name}`}
+                    {village.name}마을 {memberName && `- ${memberName}`}
                   </p>
                 ) : /* 메뉴 선택 단계에서 메뉴가 선택된 경우 메뉴 이름 표시 */
                 orderStep === 'menu' && selectedItem ? (

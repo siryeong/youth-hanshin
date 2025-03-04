@@ -36,7 +36,7 @@ export default function MemberManagement() {
   // 마을 목록 불러오기
   const fetchVillages = async () => {
     try {
-      const response = await fetch('/api/villages');
+      const response = await fetch('/api/admin/villages');
       if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setVillages(data);
@@ -49,7 +49,7 @@ export default function MemberManagement() {
   const fetchMembers = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/members');
+      const response = await fetch('/api/admin/members');
       if (!response.ok) throw new Error('멤버 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setMembers(data);
@@ -72,7 +72,7 @@ export default function MemberManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/members', {
+      const response = await fetch('/api/admin/members', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -99,7 +99,7 @@ export default function MemberManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/members/${editingMember.id}`, {
+      const response = await fetch(`/api/admin/members/${editingMember.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +125,7 @@ export default function MemberManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/members/${id}`, {
+      const response = await fetch(`/api/admin/members/${id}`, {
         method: 'DELETE',
       });
 

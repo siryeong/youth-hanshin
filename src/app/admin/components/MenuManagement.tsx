@@ -51,7 +51,7 @@ export default function MenuManagement() {
   // 카테고리 목록 불러오기
   const fetchCategories = async () => {
     try {
-      const response = await fetch('/api/menu/categories');
+      const response = await fetch('/api/admin/menu/categories');
       if (!response.ok) throw new Error('카테고리 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setCategories(data);
@@ -64,7 +64,7 @@ export default function MenuManagement() {
   const fetchMenuItems = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/menu/items');
+      const response = await fetch('/api/admin/menu/items');
       if (!response.ok) throw new Error('메뉴 아이템 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setMenuItems(data);
@@ -87,7 +87,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/menu/categories', {
+      const response = await fetch('/api/admin/menu/categories', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newCategoryName }),
@@ -110,7 +110,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/menu/categories/${editingCategory.id}`, {
+      const response = await fetch(`/api/admin/menu/categories/${editingCategory.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: editingCategory.name }),
@@ -142,7 +142,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/menu/categories/${id}`, {
+      const response = await fetch(`/api/admin/menu/categories/${id}`, {
         method: 'DELETE',
       });
 
@@ -163,7 +163,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/menu/items', {
+      const response = await fetch('/api/admin/menu/items', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMenuItem),
@@ -193,7 +193,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/menu/items/${editingMenuItem.id}`, {
+      const response = await fetch(`/api/admin/menu/items/${editingMenuItem.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingMenuItem),
@@ -216,7 +216,7 @@ export default function MenuManagement() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/menu/items/${id}`, {
+      const response = await fetch(`/api/admin/menu/items/${id}`, {
         method: 'DELETE',
       });
 
