@@ -1,6 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/lib/supabase';
 
+// 마을 데이터 인터페이스 정의
+interface DbVillage {
+  id: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  members?: Array<{ count: number }>;
+}
+
+// 포맷된 마을 데이터 인터페이스
+interface FormattedVillage {
+  id: number;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+  _count?: {
+    members: number;
+  };
+}
+
 // 관리자 전용 마을 목록 조회
 export async function GET() {
   try {
@@ -16,12 +36,14 @@ export async function GET() {
 
     // 결과 형식 변환
     const formattedVillages = villages.map((village) => {
-      const villageData = village as any; // 타입 단언
-      return {
+      // 먼저 unknown으로 변환 후 타입 단언
+      const villageData = village as unknown as DbVillage;
+
+      const formattedVillage: FormattedVillage = {
         id: villageData.id,
         name: villageData.name,
-        createdAt: new Date(villageData.created_at as string),
-        updatedAt: new Date(villageData.updated_at as string),
+        createdAt: new Date(villageData.created_at),
+        updatedAt: new Date(villageData.updated_at),
         _count: {
           members:
             Array.isArray(villageData.members) && villageData.members.length > 0
@@ -29,6 +51,8 @@ export async function GET() {
               : 0,
         },
       };
+
+      return formattedVillage;
     });
 
     return NextResponse.json(formattedVillages);
@@ -62,12 +86,14 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
 
     // 결과 형식 변환
-    const villageData = village as any; // 타입 단언
-    const formattedVillage = {
+    // 먼저 unknown으로 변환 후 타입 단언
+    const villageData = village as unknown as DbVillage;
+
+    const formattedVillage: FormattedVillage = {
       id: villageData.id,
       name: villageData.name,
-      createdAt: new Date(villageData.created_at as string),
-      updatedAt: new Date(villageData.updated_at as string),
+      createdAt: new Date(villageData.created_at),
+      updatedAt: new Date(villageData.updated_at),
     };
 
     return NextResponse.json(formattedVillage, { status: 201 });

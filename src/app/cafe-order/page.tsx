@@ -78,7 +78,7 @@ export default function CafeOrder() {
     };
 
     fetchVillages();
-  }, []);
+  }, [setLoadingWithMessage]);
 
   // 메뉴 아이템 가져오기
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function CafeOrder() {
     };
 
     fetchMenuItems();
-  }, []);
+  }, [setLoadingWithMessage]);
 
   // 선택된 마을의 주민 목록 가져오기
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function CafeOrder() {
     if (!villageMembers[village.id]) {
       fetchVillageMembers();
     }
-  }, [village, villages, villageMembers]);
+  }, [village, villages, villageMembers, setLoadingWithMessage]);
 
   // 메뉴 아이템 선택
   const selectMenuItem = (item: MenuItem) => {
