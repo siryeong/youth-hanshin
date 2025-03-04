@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // 마을 상세 조회 (관리자 전용)
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
@@ -32,9 +33,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // 마을 수정 (관리자 전용)
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
     if (isNaN(id)) {
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
     }
@@ -59,9 +61,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 // 마을 삭제 (관리자 전용)
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
     if (isNaN(id)) {
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
     }

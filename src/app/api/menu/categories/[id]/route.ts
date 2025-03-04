@@ -2,15 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 interface Params {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 // 메뉴 카테고리 상세 조회 (모든 사용자 접근 가능)
 export async function GET(request: NextRequest, { params }: Params) {
   try {
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
     if (isNaN(id)) {
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
