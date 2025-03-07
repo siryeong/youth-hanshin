@@ -87,9 +87,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 // PATCH: 주문 업데이트
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     // 요청 본문 파싱
     const body = await request.json();
@@ -181,9 +182,10 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 // DELETE: 주문 삭제
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = params.id;
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     // Supabase 클라이언트 가져오기
     const client = getSupabaseClient();
