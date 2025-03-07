@@ -178,7 +178,7 @@ export default function OrderStatusPage() {
         </Button>
       </div>
 
-      <div className='text-sm text-muted-foreground text-right mb-4'>
+      <div className='text-sm text-muted-foreground text-center sm:text-right mb-4'>
         마지막 업데이트: {lastUpdated.toLocaleTimeString('ko-KR')}
         <span className='text-xs ml-2'>(30초마다 자동 업데이트)</span>
       </div>
