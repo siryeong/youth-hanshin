@@ -61,6 +61,16 @@ export type Order = {
   };
 };
 
+// 카페 설정 타입
+export type CafeSetting = {
+  id: number;
+  openingHour: number;
+  closingHour: number;
+  openDays: number[];
+  createdAt?: Date;
+  updatedAt?: Date;
+};
+
 // 주문 생성 데이터 타입
 export type CreateOrderData = {
   villageId: number;
@@ -222,5 +232,80 @@ export const supabase = {
         name: menuItem.name as string,
       },
     } as Order;
+  },
+
+  // 카페 설정 관련 메서드
+  async getCafeSettings(): Promise<CafeSetting | null> {
+    const client = getSupabaseClient();
+    const { data, error } = await client.from('cafe_settings').select('*').single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // 데이터가 없는 경우
+        return null;
+      }
+      throw error;
+    }
+
+    // Supabase 결과를 일관된 형식으로 변환
+    return {
+      id: data.id as number,
+      openingHour: data.opening_hour as number,
+      closingHour: data.closing_hour as number,
+      openDays: data.open_days as number[],
+      createdAt: new Date(data.created_at as string),
+      updatedAt: new Date(data.updated_at as string),
+    } as CafeSetting;
+  },
+
+  async updateCafeSettings(
+    settings: Omit<CafeSetting, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<CafeSetting> {
+    const client = getSupabaseClient();
+
+    // 기존 설정 확인
+    const { data: existingData } = await client.from('cafe_settings').select('id');
+
+    // Supabase 형식으로 변환
+    const supabaseData = {
+      opening_hour: settings.openingHour,
+      closing_hour: settings.closingHour,
+      open_days: settings.openDays,
+    };
+
+    let result;
+
+    if (existingData && existingData.length > 0) {
+      // 기존 설정 업데이트
+      const { data, error } = await client
+        .from('cafe_settings')
+        .update(supabaseData)
+        .eq('id', existingData[0].id as number)
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    } else {
+      // 새 설정 생성
+      const { data, error } = await client
+        .from('cafe_settings')
+        .insert(supabaseData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    }
+
+    // 일관된 형식으로 변환
+    return {
+      id: result.id as number,
+      openingHour: result.opening_hour as number,
+      closingHour: result.closing_hour as number,
+      openDays: result.open_days as number[],
+      createdAt: new Date(result.created_at as string),
+      updatedAt: new Date(result.updated_at as string),
+    } as CafeSetting;
   },
 };

@@ -7,9 +7,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
-import { ChevronLeft, ChevronRight, Home, Coffee, CupSoda } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Home,
+  Coffee,
+  CupSoda,
+  CheckCircle,
+  AlertTriangle,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useLoading } from '@/contexts/LoadingContext';
+import { useRouter } from 'next/navigation';
 
 // 메뉴 아이템 타입 정의
 type MenuItem = {
@@ -38,6 +47,16 @@ type VillageMember = {
   name: string;
 };
 
+// 카페 영업 시간 정의 (24시간 형식)
+// 이 값들은 초기값으로만 사용되고, 실제 값은 API에서 가져옵니다.
+const DEFAULT_CAFE_OPENING_HOURS = {
+  start: 10, // 오전 10시
+  end: 14, // 오후 2시
+};
+
+// 요일별 영업 여부 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+const DEFAULT_CAFE_OPEN_DAYS = [0];
+
 export default function CafeOrder() {
   const [cart, setCart] = useState<CartItem | null>(null);
   const [village, setVillage] = useState<Village | null>(null);
@@ -47,6 +66,26 @@ export default function CafeOrder() {
   const [orderStep, setOrderStep] = useState<'info' | 'menu' | 'cart'>('info');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedTemperature, setSelectedTemperature] = useState<'hot' | 'ice' | null>(null);
+  const [isCafeOpen, setIsCafeOpen] = useState<boolean>(false);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [cafeSettings, setCafeSettings] = useState({
+    openingHour: DEFAULT_CAFE_OPENING_HOURS.start,
+    closingHour: DEFAULT_CAFE_OPENING_HOURS.end,
+    openDays: DEFAULT_CAFE_OPEN_DAYS,
+  });
+  const [showOrderComplete, setShowOrderComplete] = useState(false);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateOrderInfo, setDuplicateOrderInfo] = useState<{
+    id: number;
+    menuName: string;
+    temperature?: string;
+  } | null>(null);
+  const [completedOrderInfo, setCompletedOrderInfo] = useState<{
+    villageName: string;
+    memberName: string;
+    menuName: string;
+    temperature?: string;
+  } | null>(null);
 
   // 데이터 상태 추가
   const [villages, setVillages] = useState<Village[]>([]);
@@ -56,6 +95,55 @@ export default function CafeOrder() {
 
   // 전역 로딩 상태 사용
   const { setLoadingWithMessage } = useLoading();
+
+  const router = useRouter();
+
+  // 카페 설정 가져오기
+  useEffect(() => {
+    const fetchCafeSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/cafe-settings');
+        if (!response.ok) {
+          throw new Error('카페 설정을 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setCafeSettings(data);
+      } catch (error) {
+        console.error('카페 설정 조회 오류:', error);
+        // 기본값 사용
+      }
+    };
+
+    fetchCafeSettings();
+  }, []);
+
+  // 카페 영업 시간 확인
+  useEffect(() => {
+    const checkCafeOpenStatus = () => {
+      const now = new Date();
+      setCurrentTime(now);
+
+      const currentHour = now.getHours();
+      const currentDay = now.getDay();
+
+      // 요일 체크 (영업일인지 확인)
+      const isDayOpen = cafeSettings.openDays.includes(currentDay);
+
+      // 시간 체크 (영업 시간인지 확인)
+      const isHourOpen =
+        currentHour >= cafeSettings.openingHour && currentHour < cafeSettings.closingHour;
+
+      setIsCafeOpen(isDayOpen && isHourOpen);
+    };
+
+    // 초기 확인
+    checkCafeOpenStatus();
+
+    // 5초마다 영업 상태 업데이트
+    const interval = setInterval(checkCafeOpenStatus, 5000);
+
+    return () => clearInterval(interval);
+  }, [cafeSettings]);
 
   // 마을 목록 가져오기
   useEffect(() => {
@@ -229,33 +317,130 @@ export default function CafeOrder() {
   // 주문 정보 유효성 검사
   const isOrderInfoValid = () => village !== null && memberName !== '';
 
-  // 주문 처리
-  const handleOrder = async () => {
-    if (!isOrderInfoValid()) {
-      toast.error('마을과 이름을 입력해주세요.', {
-        position: 'top-center',
-      });
-      setOrderStep('info');
-      return;
-    }
-
-    if (!cart) {
-      toast.error('메뉴를 선택해주세요.', {
-        position: 'top-center',
-      });
-      setOrderStep('menu');
-      return;
-    }
+  // 중복 주문 확인
+  const checkDuplicateOrder = async (): Promise<boolean> => {
+    if (!village || !memberName) return false;
 
     try {
-      setLoadingWithMessage(true, `${village?.name} ${memberName}님의 주문을 처리하고 있습니다...`);
+      // 오늘 날짜의 시작 시간 (00:00:00)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // API 호출하여 오늘 주문 확인
+      const response = await fetch(
+        `/api/orders/check-duplicate?villageId=${village.id}&memberName=${encodeURIComponent(memberName)}&date=${today.toISOString()}`,
+      );
+
+      if (!response.ok) {
+        throw new Error('주문 확인 중 오류가 발생했습니다.');
+      }
+
+      const data = await response.json();
+
+      // 중복 주문이 있는 경우
+      if (data.hasDuplicate && data.order) {
+        setDuplicateOrderInfo({
+          id: data.order.id,
+          menuName: data.order.menuItemName || '알 수 없는 메뉴',
+          temperature: data.order.temperature,
+        });
+        setShowDuplicateWarning(true);
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('중복 주문 확인 오류:', error);
+      return false;
+    }
+  };
+
+  // 기존 주문 업데이트
+  const updateExistingOrder = async () => {
+    if (!duplicateOrderInfo || !cart || !village) return;
+
+    try {
+      setLoadingWithMessage(true, '기존 주문을 업데이트하고 있습니다...');
+
+      // 주문 정보 생성
+      const orderData = {
+        menuItemId: cart.id,
+        temperature: cart.temperature,
+      };
+
+      // API 호출하여 주문 업데이트
+      const response = await fetch(`/api/orders/${duplicateOrderInfo.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '주문 업데이트 중 오류가 발생했습니다.');
+      }
+
+      // 주문 완료 정보 저장
+      setCompletedOrderInfo({
+        villageName: village.name,
+        memberName: memberName,
+        menuName: cart.name,
+        temperature: cart.temperature,
+      });
+
+      // 주문 완료 모달 표시
+      setShowDuplicateWarning(false);
+      setShowOrderComplete(true);
+
+      // 주문 후 초기화
+      setCart(null);
+      setSelectedItem(null);
+      setSelectedTemperature(null);
+      setMemberName('');
+      setVillage(null);
+      setIsCustomName(false);
+      setCustomName('');
+      setOrderStep('info');
+
+      toast.success('기존 주문이 성공적으로 업데이트되었습니다.', {
+        position: 'top-center',
+      });
+    } catch (error) {
+      console.error('주문 업데이트 오류:', error);
+      toast.error(
+        error instanceof Error ? error.message : '주문 업데이트 중 오류가 발생했습니다.',
+        {
+          position: 'top-center',
+        },
+      );
+    } finally {
+      setLoadingWithMessage(false);
+    }
+  };
+
+  // 새 주문 생성 (중복 무시)
+  const createNewOrderAnyway = async () => {
+    setShowDuplicateWarning(false);
+    await processOrder();
+  };
+
+  // 주문 처리 로직 (중복 체크 이후)
+  const processOrder = async () => {
+    try {
+      setLoadingWithMessage(
+        true,
+        `${village?.name}마을 ${memberName}님의 주문을 처리하고 있습니다...`,
+      );
+
       // 주문 정보 생성
       const orderData = {
         villageId: village?.id,
         memberName: memberName,
         isCustomName,
-        menuItemId: cart.id,
-        temperature: cart.temperature,
+        menuItemId: cart?.id,
+        temperature: cart?.temperature,
       };
 
       // API 호출하여 주문 저장
@@ -272,9 +457,16 @@ export default function CafeOrder() {
         throw new Error(errorData.error || '주문 처리 중 오류가 발생했습니다.');
       }
 
-      toast.success(`${village?.name} ${memberName}님의 주문이 완료되었습니다!`, {
-        position: 'top-center',
+      // 주문 완료 정보 저장
+      setCompletedOrderInfo({
+        villageName: village?.name || '',
+        memberName: memberName,
+        menuName: cart?.name || '',
+        temperature: cart?.temperature,
       });
+
+      // 주문 완료 모달 표시
+      setShowOrderComplete(true);
 
       // 주문 후 초기화
       setCart(null);
@@ -285,9 +477,9 @@ export default function CafeOrder() {
       setIsCustomName(false);
       setCustomName('');
       setOrderStep('info');
-    } catch (err) {
-      console.error('주문 처리 오류:', err);
-      toast.error(err instanceof Error ? err.message : '주문 처리 중 오류가 발생했습니다.', {
+    } catch (error) {
+      console.error('주문 처리 오류:', error);
+      toast.error(error instanceof Error ? error.message : '주문 처리 중 오류가 발생했습니다.', {
         position: 'top-center',
       });
     } finally {
@@ -295,8 +487,63 @@ export default function CafeOrder() {
     }
   };
 
+  // 주문 처리
+  const handleOrder = async () => {
+    // 카페가 닫혀있으면 주문 불가
+    if (!isCafeOpen) {
+      toast.error('카페 영업 시간이 아닙니다. 영업 시간에 다시 시도해주세요.', {
+        position: 'top-center',
+      });
+      return;
+    }
+
+    if (!isOrderInfoValid()) {
+      toast.error('마을과 이름을 입력해주세요.', {
+        position: 'top-center',
+      });
+      setOrderStep('info');
+      return;
+    }
+
+    if (!cart) {
+      toast.error('메뉴를 선택해주세요.', {
+        position: 'top-center',
+      });
+      setOrderStep('menu');
+      return;
+    }
+
+    // 중복 주문 확인
+    const hasDuplicate = await checkDuplicateOrder();
+
+    // 중복이 없으면 바로 주문 처리
+    if (!hasDuplicate) {
+      await processOrder();
+    }
+    // 중복이 있으면 경고 모달이 표시되고, 사용자 선택에 따라 처리됨
+  };
+
+  // 새 주문 시작
+  const startNewOrder = () => {
+    setShowOrderComplete(false);
+    // 이미 초기화되어 있으므로 추가 작업 필요 없음
+  };
+
+  // 홈으로 이동
+  const goToHome = () => {
+    router.push('/');
+  };
+
   // 다음 단계로 이동
   const goToNextStep = () => {
+    // 카페가 닫혀있으면 진행 불가
+    if (!isCafeOpen) {
+      toast.error('카페 영업 시간이 아닙니다. 영업 시간에 다시 시도해주세요.', {
+        position: 'top-center',
+      });
+      return;
+    }
+
     if (orderStep === 'info') {
       if (isOrderInfoValid()) {
         setOrderStep('menu');
@@ -339,6 +586,46 @@ export default function CafeOrder() {
     );
   }
 
+  // 카페 영업 시간 표시 함수
+  const renderOpeningHours = () => {
+    const formatHour = (hour: number) => {
+      if (hour === 12) return '오후 12시';
+      if (hour < 12) return `오전 ${hour}시`;
+      return `오후 ${hour - 12}시`;
+    };
+
+    // 영업일 표시
+    const formatOpenDays = () => {
+      if (cafeSettings.openDays.length === 7) return '매일';
+      if (cafeSettings.openDays.length === 0) return '영업일 없음';
+
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      return cafeSettings.openDays.map((day) => dayNames[day]).join(', ');
+    };
+
+    return (
+      <div
+        className={`mb-4 p-3 rounded-lg text-sm ${isCafeOpen ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
+      >
+        <div className='flex items-center justify-between'>
+          <div>
+            <p className='font-medium'>{isCafeOpen ? '영업 중' : '영업 종료'}</p>
+            <p className='text-xs mt-1'>
+              주문 가능 시간: {formatOpenDays()} {formatHour(cafeSettings.openingHour)} -{' '}
+              {formatHour(cafeSettings.closingHour)}
+            </p>
+          </div>
+          <div className='text-right'>
+            <p className='text-xs'>
+              현재 시간:{' '}
+              {currentTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className='container mx-auto py-4 sm:py-8 pb-24'>
       <div className='flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-2'>
@@ -352,6 +639,9 @@ export default function CafeOrder() {
         <div className='hidden sm:block w-[85px]'></div>{' '}
         {/* 데스크탑에서만 균형을 맞추기 위한 빈 공간 */}
       </div>
+
+      {/* 카페 영업 시간 정보 표시 */}
+      {renderOpeningHours()}
 
       <div className='flex flex-col gap-6 sm:gap-8'>
         {/* 주문 단계 표시 */}
@@ -423,7 +713,7 @@ export default function CafeOrder() {
                       </Card>
                     ))}
                     <Card
-                      className={`cursor-pointer hover:shadow-md transition-shadow ${isCustomName ? 'ring-2 ring-primary' : ''}`}
+                      className={`bg-gray-50 cursor-pointer hover:shadow-md transition-shadow ${isCustomName ? 'ring-2 ring-primary' : ''}`}
                       onClick={() => selectName('직접 입력')}
                     >
                       <CardHeader className='p-2 sm:p-3 text-center'>
@@ -649,20 +939,26 @@ export default function CafeOrder() {
 
                 {/* 다음 단계 또는 주문 완료 버튼 */}
                 {orderStep === 'cart' ? (
-                  <Button size='sm' onClick={handleOrder} className='h-8 sm:h-9 text-xs sm:text-sm'>
-                    주문 완료
+                  <Button
+                    size='sm'
+                    onClick={handleOrder}
+                    disabled={!isCafeOpen}
+                    className='h-8 sm:h-9 text-xs sm:text-sm'
+                  >
+                    <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '주문 완료'}</span>
                   </Button>
                 ) : (
                   <Button
                     size='sm'
                     onClick={goToNextStep}
                     disabled={
+                      !isCafeOpen ||
                       (orderStep === 'info' && !isOrderInfoValid()) ||
                       (orderStep === 'menu' && !cart)
                     }
                     className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
                   >
-                    <span>다음</span>
+                    <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '다음'}</span>
                     <ChevronRight className='ml-0 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4' />
                   </Button>
                 )}
@@ -671,6 +967,69 @@ export default function CafeOrder() {
           </div>
         </div>
       </div>
+
+      {/* 중복 주문 경고 모달 */}
+      {showDuplicateWarning && duplicateOrderInfo && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4 text-center'>
+            <div className='flex justify-center mb-4'>
+              <AlertTriangle className='h-16 w-16 text-amber-500' />
+            </div>
+            <h2 className='text-xl font-bold mb-2'>중복 주문 감지됨</h2>
+            <p className='mb-4'>
+              {village?.name}마을 {memberName}님은 오늘 이미 주문하셨습니다.
+            </p>
+            <div className='bg-amber-50 p-3 rounded-md mb-6'>
+              <p className='font-medium'>기존 주문 내역</p>
+              <p>
+                {duplicateOrderInfo.temperature === 'ice' && '아이스 '}
+                {duplicateOrderInfo.temperature === 'hot' && '따뜻한 '}
+                {duplicateOrderInfo.menuName}
+              </p>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <Button onClick={updateExistingOrder} className='w-full' variant='outline'>
+                기존 주문 변경하기
+              </Button>
+              <Button onClick={createNewOrderAnyway} className='w-full'>
+                새로운 주문으로 추가하기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 주문 완료 모달 */}
+      {showOrderComplete && completedOrderInfo && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg p-6 max-w-md w-full mx-4 text-center'>
+            <div className='flex justify-center mb-4'>
+              <CheckCircle className='h-16 w-16 text-green-500' />
+            </div>
+            <h2 className='text-2xl font-bold mb-2'>주문 완료!</h2>
+            <p className='mb-4'>
+              {completedOrderInfo.villageName}마을 {completedOrderInfo.memberName}님의 주문이
+              완료되었습니다.
+            </p>
+            <div className='bg-slate-50 p-3 rounded-md mb-6'>
+              <p className='font-medium'>주문 내역</p>
+              <p>
+                {completedOrderInfo.temperature === 'ice' && '아이스 '}
+                {completedOrderInfo.temperature === 'hot' && '따뜻한 '}
+                {completedOrderInfo.menuName}
+              </p>
+            </div>
+            <div className='flex flex-col gap-3'>
+              <Button onClick={startNewOrder} className='w-full' variant='outline'>
+                새로운 주문 작성하기
+              </Button>
+              <Button onClick={goToHome} className='w-full'>
+                홈으로 이동하기
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Toaster position='top-center' />
     </div>
