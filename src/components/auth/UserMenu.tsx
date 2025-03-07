@@ -19,13 +19,13 @@ export default function UserMenu() {
     return (
       <div className='flex items-center gap-2'>
         <Link href='/login'>
-          <Button variant='outline' size='sm'>
-            로그인
+          <Button variant='ghost' size='sm' className='text-xs text-muted-foreground'>
+            관리자 로그인
           </Button>
         </Link>
         <Link href='/create-admin'>
           <Button variant='ghost' size='sm' className='text-xs text-muted-foreground'>
-            관리자 생성
+            관리자 가입
           </Button>
         </Link>
       </div>

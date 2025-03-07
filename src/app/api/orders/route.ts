@@ -72,3 +72,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '주문 생성에 실패했습니다.' }, { status: 500 });
   }
 }
+
+// 모든 주문 목록 가져오기 (일반 사용자용)
+export async function GET() {
+  try {
+    // 주문 데이터 가져오기
+    const orders = await supabase.getOrders();
+
+    // 민감한 정보 필터링 없이 모든 주문 정보 반환
+    return NextResponse.json(orders);
+  } catch (error) {
+    console.error('주문 목록 조회 오류:', error);
+    return NextResponse.json({ error: '주문 목록을 불러오는데 실패했습니다.' }, { status: 500 });
+  }
+}

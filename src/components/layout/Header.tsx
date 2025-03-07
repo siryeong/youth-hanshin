@@ -21,6 +21,12 @@ export default function Header() {
             >
               카페 주문
             </Link>
+            <Link
+              href='/order-status'
+              className='text-sm font-medium transition-colors hover:text-primary'
+            >
+              주문 현황
+            </Link>
           </nav>
         </div>
         <UserMenu />
