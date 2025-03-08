@@ -103,28 +103,20 @@ BEFORE UPDATE ON "orders"
 FOR EACH ROW
 EXECUTE FUNCTION update_updated_at_column(); 
 
-
 -- 카페 설정 테이블
+DROP TABLE IF EXISTS "cafe_settings";
 CREATE TABLE IF NOT EXISTS "cafe_settings" (
     "id" SERIAL PRIMARY KEY,
-    "opening_hour" INTEGER NOT NULL DEFAULT 10,
-    "closing_hour" INTEGER NOT NULL DEFAULT 14,
+    "opening_time" TIME NOT NULL DEFAULT '10:00:00',
+    "closing_time" TIME NOT NULL DEFAULT '14:00:00',
     "open_days" INTEGER[] NOT NULL DEFAULT '{0}',
     "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
 -- 타임스탬프 자동 업데이트 트리거 설정
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = now();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- 카페 설정 테이블에 대한 트리거 설정
+DROP TRIGGER IF EXISTS update_cafe_settings_updated_at ON "cafe_settings";
 CREATE TRIGGER update_cafe_settings_updated_at
 BEFORE UPDATE ON "cafe_settings"
 FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column(); 
+EXECUTE FUNCTION update_updated_at_column();

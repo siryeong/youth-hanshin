@@ -10,15 +10,15 @@ export async function GET() {
     // 설정이 없으면 기본값 반환
     if (!cafeSettings) {
       return NextResponse.json({
-        openingHour: 10,
-        closingHour: 14,
+        openingTime: '10:00:00',
+        closingTime: '14:00:00',
         openDays: [0], // 일요일만 영업
       });
     }
 
     return NextResponse.json({
-      openingHour: cafeSettings.openingHour,
-      closingHour: cafeSettings.closingHour,
+      openingTime: cafeSettings.openingTime,
+      closingTime: cafeSettings.closingTime,
       openDays: cafeSettings.openDays,
     });
   } catch (error) {

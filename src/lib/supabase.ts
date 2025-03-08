@@ -64,8 +64,8 @@ export type Order = {
 // 카페 설정 타입
 export type CafeSetting = {
   id: number;
-  openingHour: number;
-  closingHour: number;
+  openingTime: string; // HH:MM:SS 형식의 시간
+  closingTime: string; // HH:MM:SS 형식의 시간
   openDays: number[];
   createdAt?: Date;
   updatedAt?: Date;
@@ -250,8 +250,8 @@ export const supabase = {
     // Supabase 결과를 일관된 형식으로 변환
     return {
       id: data.id as number,
-      openingHour: data.opening_hour as number,
-      closingHour: data.closing_hour as number,
+      openingTime: data.opening_time as string,
+      closingTime: data.closing_time as string,
       openDays: data.open_days as number[],
       createdAt: new Date(data.created_at as string),
       updatedAt: new Date(data.updated_at as string),
@@ -268,8 +268,8 @@ export const supabase = {
 
     // Supabase 형식으로 변환
     const supabaseData = {
-      opening_hour: settings.openingHour,
-      closing_hour: settings.closingHour,
+      opening_time: settings.openingTime,
+      closing_time: settings.closingTime,
       open_days: settings.openDays,
     };
 
@@ -301,8 +301,8 @@ export const supabase = {
     // 일관된 형식으로 변환
     return {
       id: result.id as number,
-      openingHour: result.opening_hour as number,
-      closingHour: result.closing_hour as number,
+      openingTime: result.opening_time as string,
+      closingTime: result.closing_time as string,
       openDays: result.open_days as number[],
       createdAt: new Date(result.created_at as string),
       updatedAt: new Date(result.updated_at as string),

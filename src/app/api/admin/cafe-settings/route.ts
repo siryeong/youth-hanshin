@@ -10,15 +10,15 @@ export async function GET() {
     // 설정이 없으면 기본값 반환
     if (!cafeSettings) {
       return NextResponse.json({
-        openingHour: 10,
-        closingHour: 14,
+        openingTime: '10:00:00',
+        closingTime: '14:00:00',
         openDays: [0], // 일요일만 영업
       });
     }
 
     return NextResponse.json({
-      openingHour: cafeSettings.openingHour,
-      closingHour: cafeSettings.closingHour,
+      openingTime: cafeSettings.openingTime,
+      closingTime: cafeSettings.closingTime,
       openDays: cafeSettings.openDays,
     });
   } catch (error) {
@@ -30,21 +30,22 @@ export async function GET() {
 // 카페 설정 업데이트
 export async function PUT(request: Request) {
   try {
-    const { openingHour, closingHour, openDays } = await request.json();
+    const { openingTime, closingTime, openDays } = await request.json();
 
     // 유효성 검사
     if (
-      typeof openingHour !== 'number' ||
-      typeof closingHour !== 'number' ||
+      typeof openingTime !== 'string' ||
+      typeof closingTime !== 'string' ||
       !Array.isArray(openDays)
     ) {
       return NextResponse.json({ error: '잘못된 입력 형식입니다.' }, { status: 400 });
     }
 
-    // 시간 범위 검사
-    if (openingHour < 0 || openingHour > 23 || closingHour < 0 || closingHour > 23) {
+    // 시간 형식 검사 (HH:MM:SS 또는 HH:MM)
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
+    if (!timeRegex.test(openingTime) || !timeRegex.test(closingTime)) {
       return NextResponse.json(
-        { error: '영업 시간은 0-23 사이의 값이어야 합니다.' },
+        { error: '시간 형식이 올바르지 않습니다. HH:MM:SS 또는 HH:MM 형식이어야 합니다.' },
         { status: 400 },
       );
     }
@@ -56,8 +57,8 @@ export async function PUT(request: Request) {
 
     // 설정 업데이트
     const updatedSettings = await supabase.updateCafeSettings({
-      openingHour,
-      closingHour,
+      openingTime,
+      closingTime,
       openDays,
     });
 
