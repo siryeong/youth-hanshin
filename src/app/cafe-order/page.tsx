@@ -86,6 +86,7 @@ export default function CafeOrder() {
     menuName: string;
     temperature?: string;
   } | null>(null);
+  const [isProcessingOrder, setIsProcessingOrder] = useState<boolean>(false);
 
   // 데이터 상태 추가
   const [villages, setVillages] = useState<Village[]>([]);
@@ -102,7 +103,7 @@ export default function CafeOrder() {
   useEffect(() => {
     const fetchCafeSettings = async () => {
       try {
-        const response = await fetch('/api/admin/cafe-settings');
+        const response = await fetch('/api/cafe-settings');
         if (!response.ok) {
           throw new Error('카페 설정을 가져오는데 실패했습니다.');
         }
@@ -114,7 +115,13 @@ export default function CafeOrder() {
       }
     };
 
+    // 초기 설정 가져오기
     fetchCafeSettings();
+
+    // 1분마다 카페 설정 업데이트 (영업시간 변경 확인)
+    const settingsInterval = setInterval(fetchCafeSettings, 60000);
+
+    return () => clearInterval(settingsInterval);
   }, []);
 
   // 카페 영업 시간 확인
@@ -322,6 +329,7 @@ export default function CafeOrder() {
     if (!village || !memberName) return false;
 
     try {
+      setIsProcessingOrder(true);
       // 오늘 날짜의 시작 시간 (00:00:00)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -352,6 +360,11 @@ export default function CafeOrder() {
     } catch (error) {
       console.error('중복 주문 확인 오류:', error);
       return false;
+    } finally {
+      // 중복 주문 확인 후 처리 중 상태 해제 (중복 주문 경고 모달이 표시되는 경우는 제외)
+      if (!showDuplicateWarning) {
+        setIsProcessingOrder(false);
+      }
     }
   };
 
@@ -360,6 +373,7 @@ export default function CafeOrder() {
     if (!duplicateOrderInfo || !cart || !village) return;
 
     try {
+      setIsProcessingOrder(true);
       setLoadingWithMessage(true, '기존 주문을 업데이트하고 있습니다...');
 
       // 주문 정보 생성
@@ -417,6 +431,7 @@ export default function CafeOrder() {
       );
     } finally {
       setLoadingWithMessage(false);
+      setIsProcessingOrder(false);
     }
   };
 
@@ -426,9 +441,16 @@ export default function CafeOrder() {
     await processOrder();
   };
 
+  // 중복 주문 경고 모달 닫기
+  const closeDuplicateWarning = () => {
+    setShowDuplicateWarning(false);
+    setIsProcessingOrder(false);
+  };
+
   // 주문 처리 로직 (중복 체크 이후)
   const processOrder = async () => {
     try {
+      setIsProcessingOrder(true);
       setLoadingWithMessage(
         true,
         `${village?.name}마을 ${memberName}님의 주문을 처리하고 있습니다...`,
@@ -484,11 +506,17 @@ export default function CafeOrder() {
       });
     } finally {
       setLoadingWithMessage(false);
+      setIsProcessingOrder(false);
     }
   };
 
   // 주문 처리
   const handleOrder = async () => {
+    // 이미 주문 처리 중이면 중복 요청 방지
+    if (isProcessingOrder) {
+      return;
+    }
+
     // 카페가 닫혀있으면 주문 불가
     if (!isCafeOpen) {
       toast.error('카페 영업 시간이 아닙니다. 영업 시간에 다시 시도해주세요.', {
@@ -993,6 +1021,9 @@ export default function CafeOrder() {
               </Button>
               <Button onClick={createNewOrderAnyway} className='w-full'>
                 새로운 주문으로 추가하기
+              </Button>
+              <Button onClick={closeDuplicateWarning} className='w-full mt-2' variant='ghost'>
+                취소
               </Button>
             </div>
           </div>
