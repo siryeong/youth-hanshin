@@ -22,17 +22,6 @@ NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 ```
 
-2. 배포 환경을 위한 `.env.production` 파일 생성:
-
-```bash
-# 환경 설정
-NODE_ENV=production
-
-# Supabase 연결 정보
-NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
-```
-
 ### 로컬 개발 환경 실행
 
 1. 개발 서버 실행:
