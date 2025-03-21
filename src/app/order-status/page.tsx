@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ type VillageSummary = {
   total: number;
 };
 
-export default function OrderStatusPage() {
+function OrderStatusContent() {
   const [villageSummaries, setVillageSummaries] = useState<VillageSummary[]>([]);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -87,7 +87,7 @@ export default function OrderStatusPage() {
   };
 
   // 데이터 가져오기
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -96,6 +96,7 @@ export default function OrderStatusPage() {
       if (!ordersResponse.ok) {
         throw new Error('주문 데이터를 불러오는데 실패했습니다.');
       }
+
       const ordersData = await ordersResponse.json();
 
       // 오늘 주문만 필터링
@@ -106,6 +107,7 @@ export default function OrderStatusPage() {
       if (!villagesResponse.ok) {
         throw new Error('마을 데이터를 불러오는데 실패했습니다.');
       }
+
       const villagesData = await villagesResponse.json();
 
       // 마을별 주문 요약 생성
@@ -161,7 +163,7 @@ export default function OrderStatusPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
@@ -170,7 +172,7 @@ export default function OrderStatusPage() {
     // 30초마다 자동 새로고침
     const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchData]);
 
   return (
     <div className='container mx-auto py-6'>
@@ -361,5 +363,13 @@ export default function OrderStatusPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function OrderStatusPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OrderStatusContent />
+    </Suspense>
   );
 }
