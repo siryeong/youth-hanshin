@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, RefreshCw } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Home, RefreshCw, PersonStanding, GlassWater } from 'lucide-react';
 
 import { Order } from '@/lib/supabase';
 
@@ -21,6 +23,16 @@ type VillageSummary = {
 
 export default function OrderStatusPage() {
   const [villageSummaries, setVillageSummaries] = useState<VillageSummary[]>([]);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [view, setView] = useState<'status' | 'menu'>(
+    searchParams.get('view') === 'menu' ? 'menu' : 'status',
+  );
+
+  const handleViewChange = (value: 'status' | 'menu') => {
+    setView(value);
+    router.replace(`?view=${value}`);
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
@@ -135,6 +147,12 @@ export default function OrderStatusPage() {
         return b.total - a.total;
       });
 
+      // 메뉴별 주문 집계
+      const menuCounts: { [key: string]: number } = {};
+      todayOrders.forEach((order: Order) => {
+        const menuName = order.menuItem.name;
+        menuCounts[menuName] = (menuCounts[menuName] || 0) + 1;
+      });
       setVillageSummaries(summaries);
       setLastUpdated(new Date());
     } catch (err) {
@@ -165,17 +183,46 @@ export default function OrderStatusPage() {
             </Button>
           </Link>
         </div>
-        <h1 className='text-2xl sm:text-3xl font-bold'>오늘의 마을별 주문 현황</h1>
-        <Button
-          variant='outline'
-          size='sm'
-          onClick={fetchData}
-          disabled={isLoading}
-          className='flex items-center gap-2'
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          새로고침
-        </Button>
+        <h1 className='text-2xl sm:text-3xl font-bold'>오늘의 주문 현황</h1>
+        <div className='flex items-center gap-2'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={fetchData}
+            disabled={isLoading}
+            className='flex items-center gap-2'
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            새로고침
+          </Button>
+          <ToggleGroup
+            type='single'
+            value={view}
+            onValueChange={handleViewChange}
+            className='rounded-md border'
+          >
+            {view === 'status' && (
+              <ToggleGroupItem
+                size='sm'
+                value='menu'
+                className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs'
+                aria-label='마을별 현황'
+              >
+                <PersonStanding className='mx-1.5' />
+              </ToggleGroupItem>
+            )}
+            {view === 'menu' && (
+              <ToggleGroupItem
+                size='sm'
+                value='status'
+                className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs'
+                aria-label='메뉴별 통계'
+              >
+                <GlassWater className='mx-1.5' />
+              </ToggleGroupItem>
+            )}
+          </ToggleGroup>
+        </div>
       </div>
 
       <div className='text-sm text-muted-foreground text-center sm:text-right mb-4'>
@@ -190,79 +237,129 @@ export default function OrderStatusPage() {
         </div>
       )}
 
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {villageSummaries.map((village) => (
-          <Card key={village.id} className={village.total > 0 ? 'border-primary/20' : ''}>
-            <CardContent className='p-6'>
-              <div className='flex justify-between items-start mb-4'>
-                <div>
-                  <h2 className='text-xl font-bold'>{village.name}마을</h2>
-                  <p className='text-sm text-muted-foreground'>총 {village.total}건의 주문</p>
+      {view === 'status' && (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {villageSummaries.map((village) => (
+            <Card key={village.id} className={village.total > 0 ? 'border-primary/20' : ''}>
+              <CardContent className='p-6'>
+                <div className='flex justify-between items-start mb-4'>
+                  <div>
+                    <h2 className='text-xl font-bold'>{village.name}마을</h2>
+                    <p className='text-sm text-muted-foreground'>총 {village.total}건의 주문</p>
+                  </div>
+                  {village.total > 0 && (
+                    <div className='flex gap-1'>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('pending')}`}
+                      >
+                        {village.pending}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('processing')}`}
+                      >
+                        {village.processing}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('completed')}`}
+                      >
+                        {village.completed}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {village.total > 0 && (
-                  <div className='flex gap-1'>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('pending')}`}
-                    >
-                      {village.pending}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('processing')}`}
-                    >
-                      {village.processing}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('completed')}`}
-                    >
-                      {village.completed}
-                    </span>
+
+                {village.total > 0 ? (
+                  <div className='space-y-3 max-h-80 overflow-y-auto pr-1'>
+                    {village.orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className={`p-3 rounded-md border ${
+                          order.status === 'completed'
+                            ? 'bg-green-50/50'
+                            : order.status === 'cancelled'
+                              ? 'bg-red-50/50'
+                              : order.status === 'processing'
+                                ? 'bg-blue-50/50'
+                                : 'bg-yellow-50/50'
+                        }`}
+                      >
+                        <div className='flex justify-between'>
+                          <span className='font-medium'>{order.memberName}</span>
+                          <span
+                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusColorClass(order.status)}`}
+                          >
+                            {getStatusText(order.status)}
+                          </span>
+                        </div>
+                        <div className='mt-1 text-sm'>
+                          {order.temperature === 'ice' && '아이스 '}
+                          {order.temperature === 'hot' && '따뜻한 '}
+                          {order.menuItem.name}
+                        </div>
+                        <div className='mt-1 text-xs text-muted-foreground'>
+                          {formatTime(order.createdAt.toString())} 주문
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className='py-8 text-center text-muted-foreground'>
+                    오늘 주문 내역이 없습니다.
                   </div>
                 )}
-              </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-              {village.total > 0 ? (
-                <div className='space-y-3 max-h-80 overflow-y-auto pr-1'>
-                  {village.orders.map((order) => (
-                    <div
-                      key={order.id}
-                      className={`p-3 rounded-md border ${
-                        order.status === 'completed'
-                          ? 'bg-green-50/50'
-                          : order.status === 'cancelled'
-                            ? 'bg-red-50/50'
-                            : order.status === 'processing'
-                              ? 'bg-blue-50/50'
-                              : 'bg-yellow-50/50'
-                      }`}
-                    >
-                      <div className='flex justify-between'>
-                        <span className='font-medium'>{order.memberName}</span>
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${getStatusColorClass(order.status)}`}
-                        >
-                          {getStatusText(order.status)}
-                        </span>
-                      </div>
-                      <div className='mt-1 text-sm'>
-                        {order.temperature === 'ice' && '아이스 '}
-                        {order.temperature === 'hot' && '따뜻한 '}
-                        {order.menuItem.name}
-                      </div>
-                      <div className='mt-1 text-xs text-muted-foreground'>
-                        {formatTime(order.createdAt.toString())} 주문
-                      </div>
-                    </div>
-                  ))}
+      {view === 'menu' && (
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          {villageSummaries.map((village) => (
+            <Card key={village.id} className={village.total > 0 ? 'border-primary/20' : ''}>
+              <CardContent className='p-6'>
+                <div className='flex justify-between items-start mb-4'>
+                  <div>
+                    <h2 className='text-xl font-bold'>{village.name}마을</h2>
+                    <p className='text-sm text-muted-foreground'>총 {village.total}건의 주문</p>
+                  </div>
                 </div>
-              ) : (
-                <div className='py-8 text-center text-muted-foreground'>
-                  오늘 주문 내역이 없습니다.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+
+                {village.total > 0 ? (
+                  <div className='space-y-3 sm:max-h-80 overflow-y-auto pr-1'>
+                    {village.orders
+                      .reduce(
+                        (acc, order) => {
+                          const menuKey = `${order.temperature === 'ice' ? '아이스 ' : ''}${order.temperature === 'hot' ? '따뜻한 ' : ''}${order.menuItem.name}`;
+                          const existing = acc.find((item) => item.name === menuKey);
+                          if (existing) {
+                            existing.count++;
+                          } else {
+                            acc.push({ name: menuKey, count: 1 });
+                          }
+                          return acc;
+                        },
+                        [] as { name: string; count: number }[],
+                      )
+                      .map((menu) => (
+                        <div key={menu.name} className='p-3 rounded-md bg-gray-50'>
+                          <div className='flex justify-between items-center'>
+                            <span className='font-medium'>{menu.name}</span>
+                            <span className='text-sm text-muted-foreground'>{menu.count}개</span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className='py-8 text-center text-muted-foreground'>
+                    오늘 주문 내역이 없습니다.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

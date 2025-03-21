@@ -963,7 +963,7 @@ export default function CafeOrder() {
                     variant='outline'
                     size='sm'
                     onClick={clearCart}
-                    className='h-8 sm:h-9 text-xs sm:text-sm'
+                    className='h-10 sm:h-11 px-4 sm:px-5 text-sm sm:text-base'
                   >
                     취소
                   </Button>
@@ -973,11 +973,11 @@ export default function CafeOrder() {
                 {orderStep !== 'info' && (
                   <Button
                     variant='outline'
-                    size='sm'
+                    size='default'
                     onClick={goToPrevStep}
-                    className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
+                    className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
                   >
-                    <ChevronLeft className='mr-0 sm:mr-1 h-3 w-3 sm:h-4 sm:w-4' />
+                    <ChevronLeft className='h-4 w-4 sm:h-5 sm:w-5' />
                     <span>이전</span>
                   </Button>
                 )}
@@ -985,26 +985,26 @@ export default function CafeOrder() {
                 {/* 다음 단계 또는 주문 완료 버튼 */}
                 {orderStep === 'cart' ? (
                   <Button
-                    size='sm'
+                    size='default'
                     onClick={handleOrder}
                     disabled={!isCafeOpen}
-                    className='h-8 sm:h-9 text-xs sm:text-sm'
+                    className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
                   >
                     <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '주문 완료'}</span>
                   </Button>
                 ) : (
                   <Button
-                    size='sm'
+                    size='default'
                     onClick={goToNextStep}
                     disabled={
                       !isCafeOpen ||
                       (orderStep === 'info' && !isOrderInfoValid()) ||
                       (orderStep === 'menu' && !cart)
                     }
-                    className='h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm'
+                    className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
                   >
                     <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '다음'}</span>
-                    <ChevronRight className='ml-0 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4' />
+                    <ChevronRight className='h-4 w-4 sm:h-5 sm:w-5' />
                   </Button>
                 )}
               </div>
