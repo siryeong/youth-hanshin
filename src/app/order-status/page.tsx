@@ -297,6 +297,7 @@ function OrderStatusContent() {
                           {order.temperature === 'ice' && '아이스 '}
                           {order.temperature === 'hot' && '따뜻한 '}
                           {order.menuItem.name}
+                          {order.isMild && ' 연하게 '}
                         </div>
                         <div className='mt-1 text-xs text-muted-foreground'>
                           {formatTime(order.createdAt.toString())} 주문
@@ -332,7 +333,7 @@ function OrderStatusContent() {
                     {village.orders
                       .reduce(
                         (acc, order) => {
-                          const menuKey = `${order.temperature === 'ice' ? '아이스 ' : ''}${order.temperature === 'hot' ? '따뜻한 ' : ''}${order.menuItem.name}`;
+                          const menuKey = `${order.temperature === 'ice' ? '아이스 ' : ''}${order.temperature === 'hot' ? '따뜻한 ' : ''}${order.menuItem.name}${order.isMild ? ' 연하게 ' : ''}`;
                           const existing = acc.find((item) => item.name === menuKey);
                           if (existing) {
                             existing.count++;

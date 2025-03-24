@@ -48,6 +48,7 @@ export type Order = {
   memberName: string;
   isCustomName: boolean;
   temperature: string | null;
+  isMild: boolean;
   status: string;
   createdAt: Date;
   updatedAt: Date;
@@ -78,6 +79,7 @@ export type CreateOrderData = {
   memberName: string;
   isCustomName: boolean;
   temperature?: string | null;
+  isMild?: boolean;
   status?: string;
 };
 
@@ -173,6 +175,7 @@ export const supabase = {
         memberName: order.member_name as string,
         isCustomName: order.is_custom_name as boolean,
         temperature: order.temperature as string | null,
+        isMild: order.is_mild as boolean,
         status: order.status as string,
         createdAt: new Date(order.created_at as string),
         updatedAt: new Date(order.updated_at as string),
@@ -197,6 +200,7 @@ export const supabase = {
       member_name: orderData.memberName,
       is_custom_name: orderData.isCustomName,
       temperature: orderData.temperature,
+      is_mild: orderData.isMild,
       status: orderData.status || 'pending',
     };
 
@@ -220,6 +224,7 @@ export const supabase = {
       memberName: orderResult.member_name as string,
       isCustomName: orderResult.is_custom_name as boolean,
       temperature: orderResult.temperature as string | null,
+      isMild: orderResult.is_mild as boolean,
       status: orderResult.status as string,
       createdAt: new Date(orderResult.created_at as string),
       updatedAt: new Date(orderResult.updated_at as string),

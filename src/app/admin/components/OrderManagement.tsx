@@ -21,6 +21,7 @@ interface Order {
   isCustomName: boolean;
   menuItemId: number;
   menuItemName?: string;
+  isMild: boolean;
   temperature?: string;
   status: string;
   createdAt: string;
@@ -237,6 +238,7 @@ export default function OrderManagement() {
         memberName: order.memberName,
         menuItemName: getMenuItemName(order.menuItemId),
         temperature: order.temperature,
+        isMild: order.isMild,
         status: order.status,
         createdAt: order.createdAt,
       });
@@ -256,6 +258,7 @@ export default function OrderManagement() {
           id: number;
           memberName: string;
           menuItemName: string;
+          isMild: boolean;
           temperature?: string;
           status: string;
           createdAt: string;
@@ -280,12 +283,11 @@ export default function OrderManagement() {
       const menuName = getMenuItemName(order.menuItemId);
 
       // 온도 정보 추가
-      const menuWithTemp =
-        order.temperature === 'ice'
-          ? `아이스 ${menuName}`
-          : order.temperature === 'hot'
-            ? `따뜻한 ${menuName}`
-            : menuName;
+      let menuWithTemp = '';
+      menuWithTemp += order.temperature === 'ice' ? '아이스 ' : '';
+      menuWithTemp += order.temperature === 'hot' ? '따뜻한 ' : '';
+      menuWithTemp += menuName;
+      menuWithTemp += order.isMild ? ' 연하게' : '';
 
       if (!menuSummary[villageId]) {
         menuSummary[villageId] = {};
@@ -332,12 +334,11 @@ export default function OrderManagement() {
       );
 
       sortedOrders.forEach((order) => {
-        const menuWithTemp =
-          order.temperature === 'ice'
-            ? `아이스 ${order.menuItemName}`
-            : order.temperature === 'hot'
-              ? `따뜻한 ${order.menuItemName}`
-              : order.menuItemName;
+        let menuWithTemp = '';
+        menuWithTemp += order.temperature === 'ice' ? '아이스 ' : '';
+        menuWithTemp += order.temperature === 'hot' ? '따뜻한 ' : '';
+        menuWithTemp += order.menuItemName;
+        menuWithTemp += order.isMild ? ' 연하게' : '';
 
         orderListText += `${order.memberName} - ${menuWithTemp}\n`;
       });
@@ -491,6 +492,7 @@ export default function OrderManagement() {
                                 {order.temperature && order.temperature === 'ice' && '아이스 '}
                                 {order.temperature && order.temperature === 'hot' && '따뜻한 '}
                                 {order.menuItemName}
+                                {order.isMild && ' 연하게'}
                               </div>
                             </div>
                             <span
@@ -534,6 +536,7 @@ export default function OrderManagement() {
                       {order.temperature && order.temperature === 'ice' && '아이스 '}
                       {order.temperature && order.temperature === 'hot' && '따뜻한 '}
                       {getMenuItemName(order.menuItemId)}
+                      {order.isMild && ' 연하게'}
                     </span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass(order.status)}`}
@@ -551,39 +554,24 @@ export default function OrderManagement() {
                 </div>
               </div>
               <div className='flex flex-wrap gap-2'>
-                {order.status !== 'completed' && (
-                  <Button
-                    onClick={() => updateOrderStatus(order.id, 'completed')}
-                    size='sm'
-                    variant='outline'
-                    className='bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
-                    disabled={isLoading}
-                  >
-                    완료 처리
-                  </Button>
-                )}
-                {order.status === 'pending' && (
-                  <Button
-                    onClick={() => updateOrderStatus(order.id, 'processing')}
-                    size='sm'
-                    variant='outline'
-                    className='bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
-                    disabled={isLoading}
-                  >
-                    처리 중으로 변경
-                  </Button>
-                )}
-                {order.status !== 'cancelled' && order.status !== 'completed' && (
-                  <Button
-                    onClick={() => updateOrderStatus(order.id, 'cancelled')}
-                    size='sm'
-                    variant='outline'
-                    className='bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
-                    disabled={isLoading}
-                  >
-                    취소 처리
-                  </Button>
-                )}
+                <Button
+                  onClick={() => updateOrderStatus(order.id, 'completed')}
+                  size='sm'
+                  variant='outline'
+                  className='bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+                  disabled={isLoading}
+                >
+                  완료
+                </Button>
+                <Button
+                  onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                  size='sm'
+                  variant='outline'
+                  className='bg-red-50 hover:bg-red-100 text-red-700 border-red-200'
+                  disabled={isLoading}
+                >
+                  취소
+                </Button>
                 <Button
                   onClick={() => deleteOrder(order.id)}
                   size='sm'

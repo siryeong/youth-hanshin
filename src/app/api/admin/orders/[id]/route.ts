@@ -7,6 +7,7 @@ interface DbOrder {
   member_name: string;
   is_custom_name: boolean;
   menu_item_id: number;
+  is_mild: boolean;
   temperature: string | null;
   status: string;
   created_at: string;
@@ -57,6 +58,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       isCustomName: typedOrder.is_custom_name,
       menuItemId: typedOrder.menu_item_id,
       menuItemName: typedOrder.menuItem.name,
+      isMild: typedOrder.is_mild,
       temperature: typedOrder.temperature,
       status: typedOrder.status,
       createdAt: new Date(typedOrder.created_at),

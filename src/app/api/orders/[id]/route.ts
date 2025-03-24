@@ -9,6 +9,7 @@ type OrderRecord = {
   is_custom_name: boolean;
   menu_item_id: number;
   temperature: string | null;
+  is_mild: boolean;
   status: string;
   created_at: string;
   updated_at: string;
@@ -94,7 +95,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     // 요청 본문 파싱
     const body = await request.json();
-    const { menuItemId, temperature } = body;
+    const { menuItemId, temperature, isMild } = body;
 
     // 필수 파라미터 확인
     if (!menuItemId) {
@@ -109,6 +110,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       menu_item_id: number;
       updated_at: string;
       temperature?: string;
+      is_mild?: boolean;
     } = {
       menu_item_id: menuItemId,
       updated_at: new Date().toISOString(),
@@ -117,6 +119,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // 온도 정보가 있으면 추가
     if (temperature !== undefined) {
       updateData.temperature = temperature;
+    }
+    // 연하게 옵션 정보가 있으면 추가
+    if (isMild !== undefined) {
+      updateData.is_mild = isMild;
     }
 
     // 주문 업데이트
@@ -171,6 +177,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       menuItemId: order.menu_item_id,
       menuItemName: menuItemName,
       temperature: order.temperature,
+      isMild: order.is_mild,
       status: order.status,
       createdAt: order.created_at,
       updatedAt: order.updated_at,

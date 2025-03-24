@@ -33,6 +33,7 @@ type MenuItem = {
 // 카트 아이템 타입 정의
 type CartItem = MenuItem & {
   temperature?: 'hot' | 'ice';
+  isMild?: boolean;
 };
 
 // 마을 타입 정의
@@ -66,6 +67,7 @@ export default function CafeOrder() {
   const [orderStep, setOrderStep] = useState<'info' | 'menu' | 'cart'>('info');
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [selectedTemperature, setSelectedTemperature] = useState<'hot' | 'ice' | null>(null);
+  const [isMild, setIsMild] = useState<boolean>(false);
   const [isCafeOpen, setIsCafeOpen] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [cafeSettings, setCafeSettings] = useState({
@@ -79,12 +81,14 @@ export default function CafeOrder() {
     id: number;
     menuName: string;
     temperature?: string;
+    isMild?: boolean;
   } | null>(null);
   const [completedOrderInfo, setCompletedOrderInfo] = useState<{
     villageName: string;
     memberName: string;
     menuName: string;
     temperature?: string;
+    isMild?: boolean;
   } | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState<boolean>(false);
 
@@ -269,11 +273,13 @@ export default function CafeOrder() {
     const cartItem = {
       ...selectedItem,
       temperature: temp,
+      isMild: isMild,
     };
     setCart(cartItem);
 
+    const mildText = isMild ? '연하게 ' : '';
     toast.success(
-      `${temp === 'hot' ? '따뜻한' : '아이스'} ${selectedItem.name} 메뉴가 선택되었습니다.`,
+      `${mildText}${temp === 'hot' ? '따뜻한' : '아이스'} ${selectedItem.name} 메뉴가 선택되었습니다.`,
       {
         position: 'top-center',
       },
@@ -285,6 +291,7 @@ export default function CafeOrder() {
     setCart(null);
     setSelectedItem(null);
     setSelectedTemperature(null);
+    setIsMild(false);
   };
 
   // 마을 선택 처리
@@ -360,6 +367,7 @@ export default function CafeOrder() {
           id: data.order.id,
           menuName: data.order.menuItemName || '알 수 없는 메뉴',
           temperature: data.order.temperature,
+          isMild: data.order.isMild,
         });
         setShowDuplicateWarning(true);
         return true;
@@ -389,6 +397,7 @@ export default function CafeOrder() {
       const orderData = {
         menuItemId: cart.id,
         temperature: cart.temperature,
+        isMild: cart.isMild || false,
       };
 
       // API 호출하여 주문 업데이트
@@ -411,6 +420,7 @@ export default function CafeOrder() {
         memberName: memberName,
         menuName: cart.name,
         temperature: cart.temperature,
+        isMild: cart.isMild,
       });
 
       // 주문 완료 모달 표시
@@ -472,6 +482,7 @@ export default function CafeOrder() {
         isCustomName,
         menuItemId: cart?.id,
         temperature: cart?.temperature,
+        isMild: cart?.isMild || false,
       };
 
       // API 호출하여 주문 저장
@@ -494,6 +505,7 @@ export default function CafeOrder() {
         memberName: memberName,
         menuName: cart?.name || '',
         temperature: cart?.temperature,
+        isMild: cart?.isMild,
       });
 
       // 주문 완료 모달 표시
@@ -622,6 +634,24 @@ export default function CafeOrder() {
       </div>
     );
   }
+
+  // 동적 스페이서 높이 계산 함수
+  const calculateSpacerHeight = () => {
+    // 기본 높이 (하단 바만 있을 때)
+    let height = 0; // 기본 하단 바 높이
+
+    // 온도 선택 영역이 표시되는 경우 추가 높이
+    if (orderStep === 'menu' && selectedItem && selectedItem.requiresTemperature) {
+      height += 62; // 온도 선택 영역 높이
+    }
+
+    // 연하게 옵션이 표시되는 경우 추가 높이
+    if (orderStep === 'menu' && selectedItem && selectedItem.category === 'coffee') {
+      height += 62; // 연하게 옵션 영역 높이
+    }
+
+    return `${height}px`;
+  };
 
   // 카페 영업 시간 표시 함수
   const renderOpeningHours = () => {
@@ -842,6 +872,7 @@ export default function CafeOrder() {
                 <div className='mt-3 sm:mt-4'>
                   <p className='text-xs sm:text-sm text-muted-foreground'>
                     선택된 메뉴: {selectedTemperature === 'hot' ? '따뜻한' : '아이스'}{' '}
+                    {isMild ? '연하게 ' : ''}
                     {selectedItem.name}
                   </p>
                 </div>
@@ -883,6 +914,7 @@ export default function CafeOrder() {
                       {cart.temperature === 'hot' && '따뜻한 '}
                       {cart.temperature === 'ice' && '아이스 '}
                       {cart.name}
+                      {cart.isMild && ' 연하게 '}
                     </span>
                   </div>
                 )}
@@ -891,6 +923,14 @@ export default function CafeOrder() {
           </Card>
         )}
       </div>
+
+      {/* 동적 스페이서 - 하단 고정 바의 높이에 맞게 조정 */}
+      <div
+        className='w-full'
+        style={{
+          height: calculateSpacerHeight(),
+        }}
+      />
 
       {/* 하단 고정 네비게이션 */}
       <div className='fixed bottom-0 left-0 right-0 z-50 bg-background border-t shadow-lg flex justify-center'>
@@ -922,6 +962,43 @@ export default function CafeOrder() {
             </div>
           )}
 
+          {/* 연하게 옵션 선택 영역 (메뉴 선택 단계에서 메뉴가 선택된 경우) */}
+          {orderStep === 'menu' && selectedItem && selectedItem.category === 'coffee' && (
+            <div className='px-3 sm:px-4 py-2 sm:py-3 border-b'>
+              <div className='flex flex-col gap-2'>
+                <p className='text-xs sm:text-sm text-muted-foreground'>샷 농도를 선택해주세요</p>
+                <div className='grid grid-cols-2 gap-2 sm:gap-3'>
+                  <Button
+                    variant={!isMild ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      setIsMild(false);
+                      if (cart) {
+                        setCart({ ...cart, isMild: false });
+                      }
+                    }}
+                    className='h-9 sm:h-10 text-sm sm:text-base w-full'
+                  >
+                    기본
+                  </Button>
+                  <Button
+                    variant={isMild ? 'default' : 'outline'}
+                    size='sm'
+                    onClick={() => {
+                      setIsMild(true);
+                      if (cart) {
+                        setCart({ ...cart, isMild: true });
+                      }
+                    }}
+                    className='h-9 sm:h-10 text-sm sm:text-base w-full'
+                  >
+                    연하게
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className='p-3 sm:p-4'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
@@ -942,6 +1019,7 @@ export default function CafeOrder() {
                     {selectedTemperature === 'hot' && '따뜻한 '}
                     {selectedTemperature === 'ice' && '아이스 '}
                     {selectedItem.name}
+                    {isMild && ' 연하게'}
                   </p>
                 ) : (
                   /* 그 외의 경우 단계 이름 표시 */
@@ -1030,6 +1108,7 @@ export default function CafeOrder() {
                 {duplicateOrderInfo.temperature === 'ice' && '아이스 '}
                 {duplicateOrderInfo.temperature === 'hot' && '따뜻한 '}
                 {duplicateOrderInfo.menuName}
+                {duplicateOrderInfo.isMild && ' 연하게 '}
               </p>
             </div>
             <div className='flex flex-col gap-3'>
@@ -1065,6 +1144,7 @@ export default function CafeOrder() {
                 {completedOrderInfo.temperature === 'ice' && '아이스 '}
                 {completedOrderInfo.temperature === 'hot' && '따뜻한 '}
                 {completedOrderInfo.menuName}
+                {completedOrderInfo.isMild && ' 연하게 '}
               </p>
             </div>
             <div className='flex flex-col gap-3'>

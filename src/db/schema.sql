@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS "orders" (
     "is_custom_name" BOOLEAN NOT NULL DEFAULT false,
     "menu_item_id" INTEGER NOT NULL REFERENCES "menu_items" ("id") ON DELETE CASCADE,
     "temperature" TEXT,
+    "is_mild" BOOLEAN NOT NULL DEFAULT false,
     "status" TEXT NOT NULL DEFAULT 'pending',
     "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()

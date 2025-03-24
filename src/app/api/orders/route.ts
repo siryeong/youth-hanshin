@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
       memberName,
       isCustomName: isCustomName || false,
       temperature: temperature || null,
+      isMild: body.isMild || false,
     };
 
     const newOrder = await supabase.createOrder(orderData);
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       menuItemId: newOrder.menuItemId,
       menuItemName: newOrder.menuItem.name,
       temperature: newOrder.temperature,
+      isMild: newOrder.isMild,
       status: newOrder.status,
       createdAt: newOrder.createdAt,
       updatedAt: newOrder.updatedAt,
