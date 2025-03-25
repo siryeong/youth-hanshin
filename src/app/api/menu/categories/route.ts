@@ -1,18 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { MenuCategoryService } from '@/services/menu-category.service';
 
-// 메뉴 카테고리 목록 조회
+/**
+ * 메뉴 카테고리 목록 조회
+ */
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data: categories, error } = await client
-      .from('menu_categories')
-      .select('*')
-      .order('name');
-
-    if (error) {
-      throw error;
-    }
+    const menuCategoryService = new MenuCategoryService();
+    const categories = await menuCategoryService.getAllCategories();
 
     return NextResponse.json(categories);
   } catch (error) {

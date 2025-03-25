@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { CafeSettingsService } from '@/services/cafe-settings.service';
 
-// 카페 설정 가져오기
+/**
+ * 카페 설정 가져오기 API
+ */
 export async function GET() {
   try {
+    const cafeSettingsService = new CafeSettingsService();
+    
     // 카페 설정 조회
-    const cafeSettings = await supabase.getCafeSettings();
+    const cafeSettings = await cafeSettingsService.getCafeSettings();
 
     // 설정이 없으면 기본값 반환
     if (!cafeSettings) {
@@ -16,18 +20,16 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json({
-      openingTime: cafeSettings.openingTime,
-      closingTime: cafeSettings.closingTime,
-      openDays: cafeSettings.openDays,
-    });
+    return NextResponse.json(cafeSettings);
   } catch (error) {
     console.error('카페 설정 조회 오류:', error);
     return NextResponse.json({ error: '카페 설정을 불러오는데 실패했습니다.' }, { status: 500 });
   }
 }
 
-// 카페 설정 업데이트
+/**
+ * 카페 설정 업데이트 API
+ */
 export async function PUT(request: Request) {
   try {
     const { openingTime, closingTime, openDays } = await request.json();
@@ -55,8 +57,10 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: '영업일은 0-6 사이의 정수여야 합니다.' }, { status: 400 });
     }
 
+    const cafeSettingsService = new CafeSettingsService();
+    
     // 설정 업데이트
-    const updatedSettings = await supabase.updateCafeSettings({
+    const updatedSettings = await cafeSettingsService.updateCafeSettings({
       openingTime,
       closingTime,
       openDays,

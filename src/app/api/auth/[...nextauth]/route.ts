@@ -1,9 +1,10 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getSupabaseClient } from '@/lib/supabase';
-import { compare } from 'bcrypt';
+import { UserService } from '@/services/user.service';
 
-// 관리자 인증을 위한 NextAuth 설정
+/**
+ * 관리자 인증을 위한 NextAuth 설정
+ */
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -18,48 +19,22 @@ const handler = NextAuth({
         }
 
         try {
-          const client = getSupabaseClient();
+          const userService = new UserService();
 
-          // 사용자 조회
-          const { data, error } = await client
-            .from('users')
-            .select('*')
-            .eq('email', credentials.email)
-            .single();
+          // 관리자 인증 시도
+          const user = await userService.authenticateAdmin(credentials.email, credentials.password);
 
-          if (error || !data) {
-            console.error('사용자 조회 오류:', error);
+          // 인증 실패
+          if (!user) {
             return null;
           }
 
-          // 타입 안전하게 접근
-          const email = data.email as string;
-          const name = data.name as string;
-          const password = data.password as string;
-          const isAdmin = data.is_admin as boolean;
-          const id = data.id as string;
-
-          if (!email || !name || !password) {
-            return null;
-          }
-
-          // 비밀번호 확인
-          const isPasswordValid = await compare(credentials.password, password);
-
-          if (!isPasswordValid) {
-            return null;
-          }
-
-          // 관리자 권한 확인
-          if (!isAdmin) {
-            throw new Error('관리자 권한이 없습니다.');
-          }
-
+          // 인증 성공 - 사용자 정보 반환
           return {
-            id,
-            email,
-            name,
-            isAdmin,
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            isAdmin: user.isAdmin,
           };
         } catch (error) {
           console.error('인증 오류:', error);

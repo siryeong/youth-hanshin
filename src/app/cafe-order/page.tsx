@@ -7,15 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Home,
-  Coffee,
-  CupSoda,
-  CheckCircle,
-  AlertTriangle,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, Coffee, CupSoda, CheckCircle, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useRouter } from 'next/navigation';
@@ -48,16 +40,6 @@ type VillageMember = {
   name: string;
 };
 
-// 카페 영업 시간 정의 (24시간 형식)
-// 이 값들은 초기값으로만 사용되고, 실제 값은 API에서 가져옵니다.
-const DEFAULT_CAFE_OPENING_HOURS = {
-  openingTime: '10:00:00', // 오전 10시
-  closingTime: '14:00:00', // 오후 2시
-};
-
-// 요일별 영업 여부 (0: 일요일, 1: 월요일, ..., 6: 토요일)
-const DEFAULT_CAFE_OPEN_DAYS = [0];
-
 export default function CafeOrder() {
   const [cart, setCart] = useState<CartItem | null>(null);
   const [village, setVillage] = useState<Village | null>(null);
@@ -71,9 +53,10 @@ export default function CafeOrder() {
   const [isCafeOpen, setIsCafeOpen] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [cafeSettings, setCafeSettings] = useState({
-    openingTime: DEFAULT_CAFE_OPENING_HOURS.openingTime,
-    closingTime: DEFAULT_CAFE_OPENING_HOURS.closingTime,
-    openDays: DEFAULT_CAFE_OPEN_DAYS,
+    openingTime: '10:00:00', // 오전 10시
+    closingTime: '14:00:00', // 오후 2시
+    // 요일별 영업 여부 (0: 일요일, 1: 월요일, ..., 6: 토요일)
+    openDays: [0],
   });
   const [showOrderComplete, setShowOrderComplete] = useState(false);
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
@@ -278,12 +261,9 @@ export default function CafeOrder() {
     setCart(cartItem);
 
     const mildText = isMild ? '연하게 ' : '';
-    toast.success(
-      `${mildText}${temp === 'hot' ? '따뜻한' : '아이스'} ${selectedItem.name} 메뉴가 선택되었습니다.`,
-      {
-        position: 'top-center',
-      },
-    );
+    toast.success(`${mildText}${temp === 'hot' ? '따뜻한' : '아이스'} ${selectedItem.name} 메뉴가 선택되었습니다.`, {
+      position: 'top-center',
+    });
   };
 
   // 카트 비우기
@@ -442,12 +422,9 @@ export default function CafeOrder() {
       });
     } catch (error) {
       console.error('주문 업데이트 오류:', error);
-      toast.error(
-        error instanceof Error ? error.message : '주문 업데이트 중 오류가 발생했습니다.',
-        {
-          position: 'top-center',
-        },
-      );
+      toast.error(error instanceof Error ? error.message : '주문 업데이트 중 오류가 발생했습니다.', {
+        position: 'top-center',
+      });
     } finally {
       setLoadingWithMessage(false);
       setIsProcessingOrder(false);
@@ -470,10 +447,7 @@ export default function CafeOrder() {
   const processOrder = async () => {
     try {
       setIsProcessingOrder(true);
-      setLoadingWithMessage(
-        true,
-        `${village?.name}마을 ${memberName}님의 주문을 처리하고 있습니다...`,
-      );
+      setLoadingWithMessage(true, `${village?.name}마을 ${memberName}님의 주문을 처리하고 있습니다...`);
 
       // 주문 정보 생성
       const orderData = {
@@ -671,30 +645,24 @@ export default function CafeOrder() {
 
     // 영업일 표시
     const formatOpenDays = () => {
-      if (cafeSettings.openDays.length === 7) return '매일';
-      if (cafeSettings.openDays.length === 0) return '영업일 없음';
+      if (cafeSettings?.openDays?.length === 7) return '매일';
+      if (cafeSettings?.openDays?.length === 0) return '영업일 없음';
 
       const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-      return cafeSettings.openDays.map((day) => dayNames[day]).join(', ');
+      return cafeSettings?.openDays?.map((day) => dayNames[day]).join(', ');
     };
 
     return (
-      <div
-        className={`mb-4 p-3 rounded-lg text-sm ${isCafeOpen ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}
-      >
+      <div className={`mb-4 p-3 rounded-lg text-sm ${isCafeOpen ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
         <div className='flex items-center justify-between'>
           <div>
             <p className='font-medium'>{isCafeOpen ? '영업 중' : '영업 종료'}</p>
             <p className='text-xs mt-1'>
-              주문 가능 시간: {formatOpenDays()} {formatTime(cafeSettings.openingTime)} -{' '}
-              {formatTime(cafeSettings.closingTime)}
+              주문 가능 시간: {formatOpenDays()} {formatTime(cafeSettings?.openingTime || '')} - {formatTime(cafeSettings?.closingTime || '')}
             </p>
           </div>
           <div className='text-right'>
-            <p className='text-xs'>
-              현재 시간:{' '}
-              {currentTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-            </p>
+            <p className='text-xs'>현재 시간: {currentTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
         </div>
       </div>
@@ -711,8 +679,7 @@ export default function CafeOrder() {
           </Button>
         </Link>
         <h1 className='text-2xl sm:text-3xl font-bold text-center'>카페 음료 주문</h1>
-        <div className='hidden sm:block w-[85px]'></div>{' '}
-        {/* 데스크탑에서만 균형을 맞추기 위한 빈 공간 */}
+        <div className='hidden sm:block w-[85px]'></div> {/* 데스크탑에서만 균형을 맞추기 위한 빈 공간 */}
       </div>
 
       {/* 카페 영업 시간 정보 표시 */}
@@ -765,11 +732,7 @@ export default function CafeOrder() {
                     </Card>
                   ))}
                 </div>
-                {village && (
-                  <p className='text-xs sm:text-sm text-muted-foreground'>
-                    선택된 마을: {village.name}
-                  </p>
-                )}
+                {village && <p className='text-xs sm:text-sm text-muted-foreground'>선택된 마을: {village.name}</p>}
               </div>
 
               {village && (
@@ -799,26 +762,13 @@ export default function CafeOrder() {
 
                   {isCustomName && (
                     <div className='flex gap-2 mt-2'>
-                      <Input
-                        placeholder='이름을 입력해주세요'
-                        value={customName}
-                        onChange={handleCustomNameChange}
-                        className='flex-1'
-                      />
+                      <Input placeholder='이름을 입력해주세요' value={customName} onChange={handleCustomNameChange} className='flex-1' />
                       <Button onClick={applyCustomName}>적용</Button>
                     </div>
                   )}
 
-                  {memberName && !isCustomName && (
-                    <p className='text-xs sm:text-sm text-muted-foreground'>
-                      선택된 이름: {memberName}
-                    </p>
-                  )}
-                  {memberName && isCustomName && (
-                    <p className='text-xs sm:text-sm text-muted-foreground'>
-                      입력된 이름: {memberName}
-                    </p>
-                  )}
+                  {memberName && !isCustomName && <p className='text-xs sm:text-sm text-muted-foreground'>선택된 이름: {memberName}</p>}
+                  {memberName && isCustomName && <p className='text-xs sm:text-sm text-muted-foreground'>입력된 이름: {memberName}</p>}
                 </div>
               )}
             </CardContent>
@@ -845,12 +795,8 @@ export default function CafeOrder() {
                       <div className='flex items-center p-1.5 sm:p-2'>
                         <div className='w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center overflow-hidden'>
                           <div className='text-gray-500'>
-                            {item.category === 'coffee' && (
-                              <Coffee className='w-5 h-5 sm:w-6 sm:h-6' />
-                            )}
-                            {item.category === 'non coffee' && (
-                              <CupSoda className='w-5 h-5 sm:w-6 sm:h-6' />
-                            )}
+                            {item.category === 'coffee' && <Coffee className='w-5 h-5 sm:w-6 sm:h-6' />}
+                            {item.category === 'non coffee' && <CupSoda className='w-5 h-5 sm:w-6 sm:h-6' />}
                           </div>
                         </div>
                         <CardTitle className='text-xs sm:text-sm'>{item.name}</CardTitle>
@@ -862,17 +808,14 @@ export default function CafeOrder() {
 
               {selectedItem && !selectedItem.requiresTemperature && (
                 <div className='mt-3 sm:mt-4'>
-                  <p className='text-xs sm:text-sm text-muted-foreground'>
-                    선택된 메뉴: {selectedItem.name}
-                  </p>
+                  <p className='text-xs sm:text-sm text-muted-foreground'>선택된 메뉴: {selectedItem.name}</p>
                 </div>
               )}
 
               {selectedItem && selectedItem.requiresTemperature && selectedTemperature && (
                 <div className='mt-3 sm:mt-4'>
                   <p className='text-xs sm:text-sm text-muted-foreground'>
-                    선택된 메뉴: {selectedTemperature === 'hot' ? '따뜻한' : '아이스'}{' '}
-                    {isMild ? '연하게 ' : ''}
+                    선택된 메뉴: {selectedTemperature === 'hot' ? '따뜻한' : '아이스'} {isMild ? '연하게 ' : ''}
                     {selectedItem.name}
                   </p>
                 </div>
@@ -899,11 +842,7 @@ export default function CafeOrder() {
                   <span className='text-xs sm:text-sm text-muted-foreground'>이름</span>
                   <div className='flex items-center gap-2'>
                     <span className='text-sm sm:text-base font-medium'>{memberName}</span>
-                    {isCustomName && (
-                      <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>
-                        직접 입력
-                      </span>
-                    )}
+                    {isCustomName && <span className='text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded'>직접 입력</span>}
                   </div>
                 </div>
 
@@ -1002,9 +941,7 @@ export default function CafeOrder() {
           <div className='p-3 sm:p-4'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
-                <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xs sm:text-sm`}
-                >
+                <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center bg-primary text-primary-foreground text-xs sm:text-sm`}>
                   {orderStep === 'info' ? '1' : orderStep === 'menu' ? '2' : '3'}
                 </div>
 
@@ -1024,11 +961,7 @@ export default function CafeOrder() {
                 ) : (
                   /* 그 외의 경우 단계 이름 표시 */
                   <span className='font-medium text-xs sm:text-sm'>
-                    {orderStep === 'info'
-                      ? '주문 정보'
-                      : orderStep === 'menu'
-                        ? '메뉴 선택'
-                        : '주문 확인'}
+                    {orderStep === 'info' ? '주문 정보' : orderStep === 'menu' ? '메뉴 선택' : '주문 확인'}
                   </span>
                 )}
               </div>
@@ -1037,24 +970,14 @@ export default function CafeOrder() {
               <div className='flex items-center gap-2'>
                 {/* 메뉴 선택 단계에서 메뉴가 선택된 경우 취소 버튼 표시 */}
                 {orderStep === 'menu' && selectedItem && (
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    onClick={clearCart}
-                    className='h-10 sm:h-11 px-4 sm:px-5 text-sm sm:text-base'
-                  >
+                  <Button variant='outline' size='sm' onClick={clearCart} className='h-10 sm:h-11 px-4 sm:px-5 text-sm sm:text-base'>
                     취소
                   </Button>
                 )}
 
                 {/* 이전 단계 버튼 (첫 단계가 아닐 경우) */}
                 {orderStep !== 'info' && (
-                  <Button
-                    variant='outline'
-                    size='default'
-                    onClick={goToPrevStep}
-                    className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
-                  >
+                  <Button variant='outline' size='default' onClick={goToPrevStep} className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'>
                     <ChevronLeft className='h-4 w-4 sm:h-5 sm:w-5' />
                     <span>이전</span>
                   </Button>
@@ -1062,23 +985,14 @@ export default function CafeOrder() {
 
                 {/* 다음 단계 또는 주문 완료 버튼 */}
                 {orderStep === 'cart' ? (
-                  <Button
-                    size='default'
-                    onClick={handleOrder}
-                    disabled={!isCafeOpen}
-                    className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
-                  >
+                  <Button size='default' onClick={handleOrder} disabled={!isCafeOpen} className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'>
                     <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '주문 완료'}</span>
                   </Button>
                 ) : (
                   <Button
                     size='default'
                     onClick={goToNextStep}
-                    disabled={
-                      !isCafeOpen ||
-                      (orderStep === 'info' && !isOrderInfoValid()) ||
-                      (orderStep === 'menu' && !cart)
-                    }
+                    disabled={!isCafeOpen || (orderStep === 'info' && !isOrderInfoValid()) || (orderStep === 'menu' && !cart)}
                     className='h-11 sm:h-12 px-4 sm:px-5 text-sm sm:text-base'
                   >
                     <span>{!isCafeOpen ? '영업 시간이 아닙니다' : '다음'}</span>
@@ -1135,8 +1049,7 @@ export default function CafeOrder() {
             </div>
             <h2 className='text-2xl font-bold mb-2'>주문 완료!</h2>
             <p className='mb-4'>
-              {completedOrderInfo.villageName}마을 {completedOrderInfo.memberName}님의 주문이
-              완료되었습니다.
+              {completedOrderInfo.villageName}마을 {completedOrderInfo.memberName}님의 주문이 완료되었습니다.
             </p>
             <div className='bg-slate-50 p-3 rounded-md mb-6'>
               <p className='font-medium'>주문 내역</p>

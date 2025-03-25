@@ -1,57 +1,30 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { OrderService } from '@/services/order.service';
 
-interface DbOrder {
-  id: number;
-  village_id: number;
-  member_name: string;
-  is_custom_name: boolean;
-  menu_item_id: number;
-  is_mild: boolean;
-  temperature: string | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  village: {
-    name: string;
-  };
-  menuItem: {
-    name: string;
-  };
-}
-
-// 관리자 전용 주문 목록 조회
+/**
+ * 관리자 전용 주문 목록 조회 API
+ */
 export async function GET() {
   try {
-    const client = getSupabaseClient();
+    const orderService = new OrderService();
 
     // 주문 목록 조회 (관계 포함)
-    const { data: orders, error } = await client
-      .from('orders')
-      .select('*, village:villages(name), menuItem:menu_items(name)')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    // 타입 안전하게 처리
-    const typedOrders = orders as unknown as DbOrder[];
+    const orders = await orderService.getAllOrders();
 
     // 응답 형식 변환
-    const formattedOrders = typedOrders.map((order) => ({
+    const formattedOrders = orders.map((order) => ({
       id: order.id,
-      villageId: order.village_id,
+      villageId: order.villageId,
       villageName: order.village.name,
-      memberName: order.member_name,
-      isCustomName: order.is_custom_name,
-      menuItemId: order.menu_item_id,
+      memberName: order.memberName,
+      isCustomName: order.isCustomName,
+      menuItemId: order.menuItemId,
       menuItemName: order.menuItem.name,
-      isMild: order.is_mild,
+      isMild: order.isMild,
       temperature: order.temperature,
       status: order.status,
-      createdAt: new Date(order.created_at),
-      updatedAt: new Date(order.updated_at),
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
     }));
 
     return NextResponse.json(formattedOrders);

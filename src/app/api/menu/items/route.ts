@@ -1,45 +1,23 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { MenuItemService } from '@/services/menu-item.service';
 
-// 데이터베이스 모델 인터페이스 정의
-interface DbMenuItem {
-  id: number;
-  name: string;
-  description: string;
-  category_id: number;
-  image_path: string;
-  is_temperature_required: boolean;
-  category: {
-    name: string;
-  };
-}
-
-// 메뉴 아이템 목록 조회
+/**
+ * 메뉴 아이템 목록 조회
+ */
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data: menuItems, error } = await client
-      .from('menu_items')
-      .select('*, category:menu_categories(name)')
-      .order('category_id')
-      .order('name');
-
-    if (error) {
-      throw error;
-    }
-
-    // 타입 안전하게 처리
-    const typedMenuItems = menuItems as unknown as DbMenuItem[];
+    const menuItemService = new MenuItemService();
+    const menuItems = await menuItemService.getAllMenuItems();
 
     // 응답 형식 변환
-    const formattedMenuItems = typedMenuItems.map((item) => ({
+    const formattedMenuItems = menuItems.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,
-      categoryId: item.category_id,
+      categoryId: item.categoryId,
       categoryName: item.category.name,
-      imagePath: item.image_path,
-      isTemperatureRequired: item.is_temperature_required,
+      imagePath: item.imagePath,
+      isTemperatureRequired: item.isTemperatureRequired,
     }));
 
     return NextResponse.json(formattedMenuItems);
