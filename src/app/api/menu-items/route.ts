@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { MenuItemService } from '@/services/menu-item.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 메뉴 아이템 목록 조회 API
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const categoryId = category ? parseInt(category) : undefined;
 
-    const menuItemService = new MenuItemService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
     const menuItems = await menuItemService.getAllMenuItems(categoryId);
 
     // 결과를 프론트엔드에서 사용하기 쉬운 형태로 변환

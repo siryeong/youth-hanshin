@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VillageMemberService } from '@/services/village-member.service';
-import { VillageService } from '@/services/village.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 멤버 상세 조회 API
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 멤버 ID입니다.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
 
     // 멤버 정보 조회
     const member = await villageMemberService.getVillageMemberById(id);
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '해당 ID의 멤버를 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    const villageService = new VillageService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 정보 조회
     const village = await villageService.getVillageById(member.villageId);
@@ -65,8 +64,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '이름과 마을 ID는 필수 입력 사항입니다.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
-    const villageService = new VillageService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 존재 여부 확인
     const village = await villageService.getVillageById(villageId);
@@ -114,7 +113,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: '유효하지 않은 멤버 ID입니다.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
 
     // 멤버 존재 여부 확인
     const existingMember = await villageMemberService.getVillageMemberById(id);

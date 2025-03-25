@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 일반 사용자용 주문 상태 조회
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
     const order = await orderService.getOrderById(id);
 
     if (!order) {

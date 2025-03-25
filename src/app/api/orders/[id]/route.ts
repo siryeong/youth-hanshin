@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 일반 사용자용 주문 상세 조회
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 정보 조회
     const order = await orderService.getOrderById(id);
@@ -40,10 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json(formattedOrder);
   } catch (error) {
     console.error('주문 상세 조회 오류:', error);
-    return NextResponse.json(
-      { error: '주문 상세 정보를 불러오는데 실패했습니다.' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: '주문 상세 정보를 불러오는데 실패했습니다.' }, { status: 500 });
   }
 }
 
@@ -64,7 +61,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       return NextResponse.json({ error: '메뉴 아이템 ID는 필수 파라미터입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 업데이트 데이터 준비
     const updateData = {
@@ -95,10 +92,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     } catch (serviceError) {
       if (serviceError instanceof Error) {
         if (serviceError.message.includes('not found')) {
-          return NextResponse.json(
-            { error: '해당 ID의 주문을 찾을 수 없습니다.' },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
         }
       }
       throw serviceError;
@@ -117,7 +111,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const { id: idString } = await params;
     const id = parseInt(idString);
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     try {
       // 주문 삭제
@@ -126,10 +120,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     } catch (serviceError) {
       if (serviceError instanceof Error) {
         if (serviceError.message.includes('not found')) {
-          return NextResponse.json(
-            { error: '해당 ID의 주문을 찾을 수 없습니다.' },
-            { status: 404 },
-          );
+          return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
         }
       }
       throw serviceError;

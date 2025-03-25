@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VillageMemberService } from '@/services/village-member.service';
-import { VillageService } from '@/services/village.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 멤버 목록 조회 API
  */
 export async function GET() {
   try {
-    const villageMemberService = new VillageMemberService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
 
     // 마을 멤버 조회 (마을 정보 포함)
     const members = await villageMemberService.getAllMembersWithVillages();
@@ -35,8 +34,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효한 마을 ID를 입력해주세요.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
-    const villageService = new VillageService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 존재 여부 확인
     const village = await villageService.getVillageById(villageId);

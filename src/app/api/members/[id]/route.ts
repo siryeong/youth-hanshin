@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VillageMemberService } from '@/services/village-member.service';
-import { prisma } from '@/lib/prisma';
-
-interface Params {
-  params: Promise<{
-    id: string;
-  }>;
-}
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 마을 멤버 상세 조회 API
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idString } = await params;
     const id = parseInt(idString);
@@ -19,7 +12,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: '유효하지 않은 멤버 ID입니다.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 멤버 조회
     const member = await villageMemberService.getVillageMemberById(id);
@@ -29,18 +23,9 @@ export async function GET(request: NextRequest, { params }: Params) {
     }
 
     // 멤버의 마을 정보 가져오기
-    const memberWithVillage = await prisma.villageMember.findUnique({
-      where: { id },
-      include: {
-        village: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+    const village = await villageService.getVillageById(member.villageId);
 
-    if (!memberWithVillage) {
+    if (!village) {
       return NextResponse.json({ error: '멤버의 마을 정보를 찾을 수 없습니다.' }, { status: 404 });
     }
 
@@ -49,7 +34,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       id: member.id,
       name: member.name,
       villageId: member.villageId,
-      villageName: memberWithVillage.village.name,
+      villageName: village.name,
     };
 
     return NextResponse.json(formattedMember);

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MenuItemService } from '@/services/menu-item.service';
-import { MenuCategoryService } from '@/services/menu-category.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 메뉴 아이템 상세 조회 API
@@ -13,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 메뉴 아이템 ID입니다.' }, { status: 400 });
     }
 
-    const menuItemService = new MenuItemService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
     const menuItem = await menuItemService.getMenuItemById(id);
 
     if (!menuItem) {
@@ -57,8 +56,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '이름, 설명, 카테고리 ID는 필수 입력 사항입니다.' }, { status: 400 });
     }
 
-    const menuItemService = new MenuItemService();
-    const menuCategoryService = new MenuCategoryService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
 
     // 메뉴 아이템 존재 여부 확인
     const existingMenuItem = await menuItemService.getMenuItemById(id);
@@ -112,7 +111,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: '유효하지 않은 메뉴 아이템 ID입니다.' }, { status: 400 });
     }
 
-    const menuItemService = new MenuItemService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
 
     // 메뉴 아이템 존재 여부 확인
     const existingMenuItem = await menuItemService.getMenuItemById(id);

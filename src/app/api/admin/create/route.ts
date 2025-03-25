@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { UserService } from '@/services/user.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 계정 생성 API
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '관리자 시크릿 키가 올바르지 않습니다.' }, { status: 401 });
     }
 
-    const userService = new UserService();
+    const userService = ServiceRegistry.getUserService();
 
     // 이메일 중복 확인
     const isEmailInUse = await userService.isEmailInUse(email);

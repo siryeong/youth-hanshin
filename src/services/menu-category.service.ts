@@ -6,6 +6,22 @@ import { prisma } from '@/lib/prisma';
  * Handles all operations related to menu categories
  */
 export class MenuCategoryService {
+  // 싱글톤 인스턴스
+  private static instance: MenuCategoryService;
+
+  /**
+   * 싱글톤 인스턴스 반환
+   * @returns MenuCategoryService 인스턴스
+   */
+  public static getInstance(): MenuCategoryService {
+    if (!MenuCategoryService.instance) {
+      MenuCategoryService.instance = new MenuCategoryService();
+    }
+    return MenuCategoryService.instance;
+  }
+
+  // 외부에서 생성자 접근 방지
+  private constructor() {}
   /**
    * Get all menu categories
    * @returns Promise resolving to an array of menu categories

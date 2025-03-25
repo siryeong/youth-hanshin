@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 일반 사용자용 주문 생성
@@ -11,13 +11,10 @@ export async function POST(request: NextRequest) {
 
     // 필수 필드 검증
     if (!villageId || !memberName || menuItemId === undefined) {
-      return NextResponse.json(
-        { error: '마을, 이름, 메뉴 항목은 필수 입력 사항입니다.' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: '마을, 이름, 메뉴 항목은 필수 입력 사항입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 생성
     const orderData = {
@@ -72,7 +69,7 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 데이터 가져오기
     const orders = await orderService.getAllOrders();

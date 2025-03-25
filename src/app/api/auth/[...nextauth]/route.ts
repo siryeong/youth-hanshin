@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { UserService } from '@/services/user.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 인증을 위한 NextAuth 설정
@@ -19,7 +19,7 @@ const handler = NextAuth({
         }
 
         try {
-          const userService = new UserService();
+          const userService = ServiceRegistry.getUserService();
 
           // 관리자 인증 시도
           const user = await userService.authenticateAdmin(credentials.email, credentials.password);

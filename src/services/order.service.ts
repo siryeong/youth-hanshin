@@ -27,6 +27,22 @@ type CreateOrderData = {
  * Handles all operations related to orders
  */
 export class OrderService {
+  // 싱글톤 인스턴스
+  private static instance: OrderService;
+
+  /**
+   * 싱글톤 인스턴스 반환
+   * @returns OrderService 인스턴스
+   */
+  public static getInstance(): OrderService {
+    if (!OrderService.instance) {
+      OrderService.instance = new OrderService();
+    }
+    return OrderService.instance;
+  }
+
+  // 외부에서 생성자 접근 방지
+  private constructor() {}
   /**
    * Get all orders with their relations
    * @returns Promise resolving to an array of orders with their relations

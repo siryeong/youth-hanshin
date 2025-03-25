@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 주문 상태 변경 API
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       );
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 존재 여부 확인
     const existingOrder = await orderService.getOrderById(id);

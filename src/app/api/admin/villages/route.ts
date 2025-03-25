@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VillageService } from '@/services/village.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 마을 목록 조회 API
  */
 export async function GET() {
   try {
-    const villageService = new VillageService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 목록 조회 (멤버 수 포함)
     const villages = await villageService.getAllVillagesWithMemberCounts();
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '마을 이름은 필수입니다.' }, { status: 400 });
     }
 
-    const villageService = new VillageService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 생성
     const village = await villageService.createVillage(name);

@@ -6,6 +6,23 @@ import { compare, hash } from 'bcrypt';
  * Handles all operations related to users including authentication
  */
 export class UserService {
+  private static instance: UserService;
+
+  /**
+   * Private constructor to prevent direct instantiation
+   */
+  private constructor() {}
+
+  /**
+   * Get the singleton instance of UserService
+   * @returns The singleton instance
+   */
+  public static getInstance(): UserService {
+    if (!UserService.instance) {
+      UserService.instance = new UserService();
+    }
+    return UserService.instance;
+  }
   /**
    * Get a user by email
    * @param email - The user's email

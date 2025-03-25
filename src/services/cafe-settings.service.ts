@@ -11,6 +11,22 @@ type CafeSettings = {
  * Handles all operations related to cafe settings
  */
 export class CafeSettingsService {
+  // 싱글톤 인스턴스
+  private static instance: CafeSettingsService;
+
+  /**
+   * 싱글톤 인스턴스 반환
+   * @returns CafeSettingsService 인스턴스
+   */
+  public static getInstance(): CafeSettingsService {
+    if (!CafeSettingsService.instance) {
+      CafeSettingsService.instance = new CafeSettingsService();
+    }
+    return CafeSettingsService.instance;
+  }
+
+  // 외부에서 생성자 접근 방지
+  private constructor() {}
   /**
    * Get cafe settings
    * @returns Promise resolving to the cafe settings or null if not found

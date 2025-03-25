@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { VillageService } from '@/services/village.service';
-import { VillageMemberService } from '@/services/village-member.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 마을 상세 조회 API (관리자 전용)
@@ -14,8 +13,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
     }
 
-    const villageService = new VillageService();
-    const villageMemberService = new VillageMemberService();
+    const villageService = ServiceRegistry.getVillageService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
 
     // 마을 정보 조회
     const village = await villageService.getVillageById(id);
@@ -58,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: '유효한 마을 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const villageService = new VillageService();
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 수정
     const village = await villageService.updateVillage(id, name.trim());
@@ -81,8 +80,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ error: '유효하지 않은 마을 ID입니다.' }, { status: 400 });
     }
 
-    const villageService = new VillageService();
-    const villageMemberService = new VillageMemberService();
+    const villageService = ServiceRegistry.getVillageService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
 
     // 마을에 속한 멤버가 있는지 확인
     const memberCount = await villageMemberService.getVillageMemberCount(id);

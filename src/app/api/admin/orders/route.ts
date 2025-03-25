@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 주문 목록 조회 API
  */
 export async function GET() {
   try {
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 목록 조회 (관계 포함)
     const orders = await orderService.getAllOrders();

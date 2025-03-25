@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { VillageMemberService } from '@/services/village-member.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 마을 멤버 목록 조회 API
  */
 export async function GET() {
   try {
-    const villageMemberService = new VillageMemberService();
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
     const members = await villageMemberService.getAllMembersWithVillages();
 
     // 응답 형식 변환 - API 호환성을 위한 속성명 매핑

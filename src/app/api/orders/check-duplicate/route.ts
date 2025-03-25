@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 중복 주문 확인 API
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       date = new Date(dateStr);
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
     const villageIdNum = parseInt(villageId);
 
     // 중복 주문 정보 가져오기

@@ -8,7 +8,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Home, RefreshCw, PersonStanding, GlassWater } from 'lucide-react';
 
-import { Order } from '@/lib/supabase';
+type Order = {
+  id: number;
+  memberName: string;
+  temperature: 'ice' | 'hot' | 'normal';
+  villageId: number;
+  isMild: boolean;
+  createdAt: Date;
+  status: string;
+  menuItem: {
+    id: number;
+    name: string;
+  };
+};
 
 type VillageSummary = {
   id: number;
@@ -25,9 +37,7 @@ function OrderStatusContent() {
   const [villageSummaries, setVillageSummaries] = useState<VillageSummary[]>([]);
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [view, setView] = useState<'status' | 'menu'>(
-    searchParams.get('view') === 'menu' ? 'menu' : 'status',
-  );
+  const [view, setView] = useState<'status' | 'menu'>(searchParams.get('view') === 'menu' ? 'menu' : 'status');
 
   const handleViewChange = (value: 'status' | 'menu') => {
     setView(value);
@@ -73,11 +83,7 @@ function OrderStatusContent() {
   const isToday = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
+    return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
   };
 
   // 시간 포맷팅
@@ -111,36 +117,26 @@ function OrderStatusContent() {
       const villagesData = await villagesResponse.json();
 
       // 마을별 주문 요약 생성
-      const summaries: VillageSummary[] = villagesData.map(
-        (village: { id: number; name: string }) => {
-          const villageOrders = todayOrders.filter(
-            (order: Order) => order.villageId === village.id,
-          );
+      const summaries: VillageSummary[] = villagesData.map((village: { id: number; name: string }) => {
+        const villageOrders = todayOrders.filter((order: Order) => order.villageId === village.id);
 
-          // 상태별 주문 수 계산
-          const pending = villageOrders.filter((order: Order) => order.status === 'pending').length;
-          const processing = villageOrders.filter(
-            (order: Order) => order.status === 'processing',
-          ).length;
-          const completed = villageOrders.filter(
-            (order: Order) => order.status === 'completed',
-          ).length;
-          const cancelled = villageOrders.filter(
-            (order: Order) => order.status === 'cancelled',
-          ).length;
+        // 상태별 주문 수 계산
+        const pending = villageOrders.filter((order: Order) => order.status === 'pending').length;
+        const processing = villageOrders.filter((order: Order) => order.status === 'processing').length;
+        const completed = villageOrders.filter((order: Order) => order.status === 'completed').length;
+        const cancelled = villageOrders.filter((order: Order) => order.status === 'cancelled').length;
 
-          return {
-            id: village.id,
-            name: village.name,
-            orders: villageOrders,
-            pending,
-            processing,
-            completed,
-            cancelled,
-            total: villageOrders.length,
-          };
-        },
-      );
+        return {
+          id: village.id,
+          name: village.name,
+          orders: villageOrders,
+          pending,
+          processing,
+          completed,
+          cancelled,
+          total: villageOrders.length,
+        };
+      });
 
       // 주문이 있는 마을을 먼저 보여주고, 주문 수가 많은 순으로 정렬
       summaries.sort((a, b) => {
@@ -187,39 +183,18 @@ function OrderStatusContent() {
         </div>
         <h1 className='text-2xl sm:text-3xl font-bold'>오늘의 주문 현황</h1>
         <div className='flex items-center gap-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={fetchData}
-            disabled={isLoading}
-            className='flex items-center gap-2'
-          >
+          <Button variant='outline' size='sm' onClick={fetchData} disabled={isLoading} className='flex items-center gap-2'>
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             새로고침
           </Button>
-          <ToggleGroup
-            type='single'
-            value={view}
-            onValueChange={handleViewChange}
-            className='rounded-md border'
-          >
+          <ToggleGroup type='single' value={view} onValueChange={handleViewChange} className='rounded-md border'>
             {view === 'status' && (
-              <ToggleGroupItem
-                size='sm'
-                value='menu'
-                className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs'
-                aria-label='마을별 현황'
-              >
+              <ToggleGroupItem size='sm' value='menu' className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs' aria-label='마을별 현황'>
                 <PersonStanding className='mx-1.5' />
               </ToggleGroupItem>
             )}
             {view === 'menu' && (
-              <ToggleGroupItem
-                size='sm'
-                value='status'
-                className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs'
-                aria-label='메뉴별 통계'
-              >
+              <ToggleGroupItem size='sm' value='status' className='p-1.5 hover:bg-primary/10 transition-colors shadow-xs' aria-label='메뉴별 통계'>
                 <GlassWater className='mx-1.5' />
               </ToggleGroupItem>
             )}
@@ -251,21 +226,9 @@ function OrderStatusContent() {
                   </div>
                   {village.total > 0 && (
                     <div className='flex gap-1'>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('pending')}`}
-                      >
-                        {village.pending}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('processing')}`}
-                      >
-                        {village.processing}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('completed')}`}
-                      >
-                        {village.completed}
-                      </span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('pending')}`}>{village.pending}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('processing')}`}>{village.processing}</span>
+                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('completed')}`}>{village.completed}</span>
                     </div>
                   )}
                 </div>
@@ -287,11 +250,7 @@ function OrderStatusContent() {
                       >
                         <div className='flex justify-between'>
                           <span className='font-medium'>{order.memberName}</span>
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full ${getStatusColorClass(order.status)}`}
-                          >
-                            {getStatusText(order.status)}
-                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColorClass(order.status)}`}>{getStatusText(order.status)}</span>
                         </div>
                         <div className='mt-1 text-sm'>
                           {order.temperature === 'ice' && '아이스 '}
@@ -299,16 +258,12 @@ function OrderStatusContent() {
                           {order.menuItem.name}
                           {order.isMild && ' 연하게 '}
                         </div>
-                        <div className='mt-1 text-xs text-muted-foreground'>
-                          {formatTime(order.createdAt.toString())} 주문
-                        </div>
+                        <div className='mt-1 text-xs text-muted-foreground'>{formatTime(order.createdAt.toString())} 주문</div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className='py-8 text-center text-muted-foreground'>
-                    오늘 주문 내역이 없습니다.
-                  </div>
+                  <div className='py-8 text-center text-muted-foreground'>오늘 주문 내역이 없습니다.</div>
                 )}
               </CardContent>
             </Card>
@@ -354,9 +309,7 @@ function OrderStatusContent() {
                       ))}
                   </div>
                 ) : (
-                  <div className='py-8 text-center text-muted-foreground'>
-                    오늘 주문 내역이 없습니다.
-                  </div>
+                  <div className='py-8 text-center text-muted-foreground'>오늘 주문 내역이 없습니다.</div>
                 )}
               </CardContent>
             </Card>

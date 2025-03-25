@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MenuCategoryService } from '@/services/menu-category.service';
-
-interface Params {
-  params: Promise<{
-    id: string;
-  }>;
-}
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 메뉴 카테고리 상세 조회 (모든 사용자 접근 가능)
  */
-export async function GET(request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idString } = await params;
     const id = parseInt(idString);
@@ -18,7 +12,7 @@ export async function GET(request: NextRequest, { params }: Params) {
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
     const result = await menuCategoryService.getCategoryWithMenuItems(id);
 
     if (!result) {

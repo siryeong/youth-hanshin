@@ -4,3 +4,4 @@ export * from './menu-category.service';
 export * from './menu-item.service';
 export * from './order.service';
 export * from './cafe-setting.service';
+export * from './user.service';

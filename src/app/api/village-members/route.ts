@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { VillageMemberService } from '@/services/village-member.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 마을 주민 목록 조회 API
@@ -13,7 +13,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '마을 ID가 필요합니다.' }, { status: 400 });
     }
 
-    const villageMemberService = new VillageMemberService();
+    // 서비스 레지스트리에서 VillageMemberService 인스턴스 가져오기
+    const villageMemberService = ServiceRegistry.getVillageMemberService();
     const members = await villageMemberService.getVillageMembers(parseInt(villageId));
     return NextResponse.json(members);
   } catch (error) {

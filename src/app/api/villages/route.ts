@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { VillageService } from '@/services/village.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 // 모든 마을 목록 가져오기 (일반 사용자용)
 export async function GET() {
   try {
-    const villageService = new VillageService();
+    // 서비스 레지스트리에서 VillageService 인스턴스 가져오기
+    const villageService = ServiceRegistry.getVillageService();
 
     // 마을 데이터 가져오기
     const villages = await villageService.getAllVillages();

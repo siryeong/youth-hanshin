@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { CafeSettingsService } from '@/services/cafe-settings.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 카페 설정 가져오기 API
  */
 export async function GET() {
   try {
-    const cafeSettingsService = new CafeSettingsService();
-    
+    const cafeSettingsService = ServiceRegistry.getCafeSettingsService();
+
     // 카페 설정 조회
     const cafeSettings = await cafeSettingsService.getCafeSettings();
 
@@ -35,21 +35,14 @@ export async function PUT(request: Request) {
     const { openingTime, closingTime, openDays } = await request.json();
 
     // 유효성 검사
-    if (
-      typeof openingTime !== 'string' ||
-      typeof closingTime !== 'string' ||
-      !Array.isArray(openDays)
-    ) {
+    if (typeof openingTime !== 'string' || typeof closingTime !== 'string' || !Array.isArray(openDays)) {
       return NextResponse.json({ error: '잘못된 입력 형식입니다.' }, { status: 400 });
     }
 
     // 시간 형식 검사 (HH:MM:SS 또는 HH:MM)
     const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/;
     if (!timeRegex.test(openingTime) || !timeRegex.test(closingTime)) {
-      return NextResponse.json(
-        { error: '시간 형식이 올바르지 않습니다. HH:MM:SS 또는 HH:MM 형식이어야 합니다.' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: '시간 형식이 올바르지 않습니다. HH:MM:SS 또는 HH:MM 형식이어야 합니다.' }, { status: 400 });
     }
 
     // 요일 검사
@@ -57,8 +50,8 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: '영업일은 0-6 사이의 정수여야 합니다.' }, { status: 400 });
     }
 
-    const cafeSettingsService = new CafeSettingsService();
-    
+    const cafeSettingsService = ServiceRegistry.getCafeSettingsService();
+
     // 설정 업데이트
     const updatedSettings = await cafeSettingsService.updateCafeSettings({
       openingTime,
@@ -69,9 +62,6 @@ export async function PUT(request: Request) {
     return NextResponse.json(updatedSettings);
   } catch (error) {
     console.error('카페 설정 업데이트 오류:', error);
-    return NextResponse.json(
-      { error: '카페 설정을 업데이트하는데 실패했습니다.' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: '카페 설정을 업데이트하는데 실패했습니다.' }, { status: 500 });
   }
 }

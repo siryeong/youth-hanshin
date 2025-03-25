@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MenuCategoryService } from '@/services/menu-category.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 메뉴 카테고리 목록 조회 API
  */
 export async function GET() {
   try {
-    const menuCategoryService = new MenuCategoryService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
 
     // 카테고리 목록 조회 (메뉴 아이템 개수 포함)
     const categoriesWithCount = await menuCategoryService.getCategoriesWithItemCounts();
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효한 카테고리 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
     const category = await menuCategoryService.createCategory(name.trim());
 
     return NextResponse.json(category);

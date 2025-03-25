@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { CafeSettingService } from '@/services/cafe-setting.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 카페 설정 가져오기
  */
 export async function GET() {
   try {
-    const cafeSettingService = new CafeSettingService();
+    // 서비스 레지스트리에서 CafeSettingService 인스턴스 가져오기
+    const cafeSettingService = ServiceRegistry.getCafeSettingService();
 
     // 카페 설정 조회
     const cafeSettings = await cafeSettingService.getCafeSettings();
@@ -48,7 +49,8 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const cafeSettingService = new CafeSettingService();
+    // 서비스 레지스트리에서 CafeSettingService 인스턴스 가져오기
+    const cafeSettingService = ServiceRegistry.getCafeSettingService();
 
     // 시간 형식 변환
     const updatedSettings = await cafeSettingService.updateCafeSettings({

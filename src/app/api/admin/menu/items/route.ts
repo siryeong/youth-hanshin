@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MenuItemService } from '@/services/menu-item.service';
-import { MenuCategoryService } from '@/services/menu-category.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 메뉴 아이템 목록 조회 API
  */
 export async function GET() {
   try {
-    const menuItemService = new MenuItemService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
     const menuItems = await menuItemService.getAllMenuItems();
 
     // 응답 형식 변환
@@ -48,8 +47,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '유효한 카테고리 ID를 입력해주세요.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
-    const menuItemService = new MenuItemService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
+    const menuItemService = ServiceRegistry.getMenuItemService();
 
     // 카테고리 존재 여부 확인
     const category = await menuCategoryService.getCategoryById(categoryId);

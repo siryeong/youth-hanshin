@@ -12,6 +12,22 @@ type MenuItemWithCategory = MenuItem & {
  * Handles all operations related to menu items
  */
 export class MenuItemService {
+  // 싱글톤 인스턴스
+  private static instance: MenuItemService;
+
+  /**
+   * 싱글톤 인스턴스 반환
+   * @returns MenuItemService 인스턴스
+   */
+  public static getInstance(): MenuItemService {
+    if (!MenuItemService.instance) {
+      MenuItemService.instance = new MenuItemService();
+    }
+    return MenuItemService.instance;
+  }
+
+  // 외부에서 생성자 접근 방지
+  private constructor() {}
   /**
    * Get all menu items with their categories
    * @param categoryId - Optional category ID to filter by

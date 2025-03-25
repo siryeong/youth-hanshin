@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { OrderService } from '@/services/order.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 주문 상세 조회 API
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 조회 (관계 포함)
     const order = await orderService.getOrderById(id);
@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    const orderService = new OrderService();
+    const orderService = ServiceRegistry.getOrderService();
 
     // 주문 존재 여부 확인
     const existingOrder = await orderService.getOrderById(id);

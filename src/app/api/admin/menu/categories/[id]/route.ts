@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MenuCategoryService } from '@/services/menu-category.service';
+import { ServiceRegistry } from '@/lib/service-registry';
 
 /**
  * 관리자 전용 메뉴 카테고리 상세 조회 API
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
     const categoryWithItems = await menuCategoryService.getCategoryWithMenuItems(id);
 
     if (!categoryWithItems) {
@@ -50,8 +50,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효한 카테고리 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
-    
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
+
     // 카테고리 존재 여부 확인
     const existingCategory = await menuCategoryService.getCategoryById(id);
     if (!existingCategory) {
@@ -79,7 +79,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: '유효하지 않은 카테고리 ID입니다.' }, { status: 400 });
     }
 
-    const menuCategoryService = new MenuCategoryService();
+    const menuCategoryService = ServiceRegistry.getMenuCategoryService();
 
     // 카테고리 존재 여부 확인
     const existingCategory = await menuCategoryService.getCategoryById(id);
