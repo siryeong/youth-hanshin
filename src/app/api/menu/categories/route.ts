@@ -1,20 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
+import { 메뉴저장소가져오기 } from '@/repositories';
 
-// 메뉴 카테고리 목록 조회
+/**
+ * 메뉴 카테고리 목록 조회 API
+ */
 export async function GET() {
   try {
-    const client = getSupabaseClient();
-    const { data: categories, error } = await client
-      .from('menu_categories')
-      .select('*')
-      .order('name');
+    // 메뉴저장소를 통해 카테고리 목록 조회
+    const 메뉴저장소 = 메뉴저장소가져오기();
+    const 카테고리목록 = await 메뉴저장소.메뉴카테고리가져오기();
 
-    if (error) {
-      throw error;
-    }
-
-    return NextResponse.json(categories);
+    return NextResponse.json(카테고리목록);
   } catch (error) {
     console.error('카테고리 목록 조회 오류:', error);
     return NextResponse.json(

@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
-
-interface DbOrder {
-  id: number;
-  status: string;
-  updated_at: string;
-}
+import { 주문저장소가져오기 } from '@/repositories';
 
 // 일반 사용자용 주문 상태 조회
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -16,29 +10,18 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 주문 ID입니다.' }, { status: 400 });
     }
 
-    const client = getSupabaseClient();
-    const { data: order, error } = await client
-      .from('orders')
-      .select('id, status, updated_at')
-      .eq('id', id)
-      .single();
+    const 주문저장소 = 주문저장소가져오기();
+    const 주문 = await 주문저장소.주문상세가져오기(id);
 
-    if (error) {
-      throw error;
-    }
-
-    if (!order) {
+    if (!주문) {
       return NextResponse.json({ error: '해당 ID의 주문을 찾을 수 없습니다.' }, { status: 404 });
     }
 
-    // 타입 안전하게 처리
-    const typedOrder = order as unknown as DbOrder;
-
     // 응답 형식 변환
     const formattedOrder = {
-      id: typedOrder.id,
-      status: typedOrder.status,
-      updatedAt: new Date(typedOrder.updated_at),
+      id: 주문.id,
+      status: 주문.status,
+      updatedAt: new Date(주문.updatedAt),
     };
 
     return NextResponse.json(formattedOrder);

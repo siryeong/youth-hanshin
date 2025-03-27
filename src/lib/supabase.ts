@@ -62,6 +62,19 @@ export type Order = {
   };
 };
 
+export type OrderItem = {
+  id: number;
+  orderId: number;
+  menuItemId: number;
+  quantity: number;
+  temperature: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  menuItem?: {
+    name: string;
+  };
+};
+
 // 카페 설정 타입
 export type CafeSetting = {
   id: number;

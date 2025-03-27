@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { 메뉴저장소가져오기 } from '@/repositories';
 
 export async function GET(request: Request) {
   try {
@@ -7,10 +7,12 @@ export async function GET(request: Request) {
     const category = searchParams.get('category');
     const categoryId = category ? parseInt(category) : undefined;
 
-    const menuItems = await supabase.getMenuItems(categoryId);
+    // 메뉴저장소를 통해 메뉴 아이템 목록 조회
+    const 메뉴저장소 = 메뉴저장소가져오기();
+    const 메뉴항목목록 = await 메뉴저장소.메뉴항목가져오기(categoryId);
 
     // 결과를 프론트엔드에서 사용하기 쉬운 형태로 변환
-    const formattedResults = menuItems.map((item) => ({
+    const formattedResults = 메뉴항목목록.map((item) => ({
       id: item.id,
       name: item.name,
       description: item.description,

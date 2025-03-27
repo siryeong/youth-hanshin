@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getSupabaseClient } from '@/lib/supabase';
 import { compare } from 'bcrypt';
+import { 사용자저장소가져오기 } from '@/repositories';
 
 // 관리자 인증을 위한 NextAuth 설정
 const handler = NextAuth({
@@ -18,33 +18,33 @@ const handler = NextAuth({
         }
 
         try {
-          const client = getSupabaseClient();
+          const 사용자저장소 = 사용자저장소가져오기();
 
           // 사용자 조회
-          const { data, error } = await client
-            .from('users')
-            .select('*')
-            .eq('email', credentials.email)
-            .single();
+          const 사용자 = await 사용자저장소.이메일로사용자찾기(credentials.email);
 
-          if (error || !data) {
-            console.error('사용자 조회 오류:', error);
+          if (!사용자) {
+            console.error('사용자를 찾을 수 없습니다');
+            return null;
+          }
+
+          // 비밀번호 가져오기
+          const 저장된비밀번호 = await 사용자저장소.사용자비밀번호가져오기(credentials.email);
+
+          if (!저장된비밀번호) {
+            console.error('비밀번호를 찾을 수 없습니다');
             return null;
           }
 
           // 타입 안전하게 접근
-          const email = data.email as string;
-          const name = data.name as string;
-          const password = data.password as string;
-          const isAdmin = data.is_admin as boolean;
-          const id = data.id as string;
+          const { id, email, name, isAdmin } = 사용자;
 
-          if (!email || !name || !password) {
+          if (!email || !name || !저장된비밀번호) {
             return null;
           }
 
           // 비밀번호 확인
-          const isPasswordValid = await compare(credentials.password, password);
+          const isPasswordValid = await compare(credentials.password, 저장된비밀번호);
 
           if (!isPasswordValid) {
             return null;

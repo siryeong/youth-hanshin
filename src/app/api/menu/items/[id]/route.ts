@@ -1,14 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseClient } from '@/lib/supabase';
-
-interface DbMenuItem {
-  id: number;
-  name: string;
-  description: string;
-  category_id: number;
-  image_path: string;
-  is_temperature_required: boolean;
-}
+import { 메뉴저장소가져오기 } from '@/repositories';
 
 // 메뉴 아이템 상세 조회
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,52 +10,37 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: '유효하지 않은 메뉴 아이템 ID입니다.' }, { status: 400 });
     }
 
-    const client = getSupabaseClient();
+    const 메뉴저장소 = 메뉴저장소가져오기();
 
     // 메뉴 아이템 조회
-    const { data: menuItem, error } = await client
-      .from('menu_items')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const 메뉴아이템 = await 메뉴저장소.메뉴항목상세가져오기(id);
 
-    if (error) {
-      throw error;
-    }
-
-    if (!menuItem) {
+    if (!메뉴아이템) {
       return NextResponse.json(
         { error: '해당 ID의 메뉴 아이템을 찾을 수 없습니다.' },
         { status: 404 },
       );
     }
 
-    // 타입 안전하게 처리
-    const typedMenuItem = menuItem as unknown as DbMenuItem;
-
     // 카테고리 정보 조회
-    const { data: category, error: categoryError } = await client
-      .from('menu_categories')
-      .select('name')
-      .eq('id', typedMenuItem.category_id)
-      .single();
+    const 카테고리 = await 메뉴저장소.메뉴카테고리상세가져오기(메뉴아이템.categoryId);
 
-    if (categoryError) {
-      throw categoryError;
+    if (!카테고리) {
+      return NextResponse.json(
+        { error: '해당 ID의 메뉴 카테고리를 찾을 수 없습니다.' },
+        { status: 404 },
+      );
     }
-
-    // 타입 안전하게 처리
-    const typedCategory = category as unknown as { name: string };
 
     // 응답 형식 변환
     const formattedMenuItem = {
-      id: typedMenuItem.id,
-      name: typedMenuItem.name,
-      description: typedMenuItem.description,
-      categoryId: typedMenuItem.category_id,
-      categoryName: typedCategory.name,
-      imagePath: typedMenuItem.image_path,
-      isTemperatureRequired: typedMenuItem.is_temperature_required,
+      id: 메뉴아이템.id,
+      name: 메뉴아이템.name,
+      description: 메뉴아이템.description,
+      categoryId: 메뉴아이템.categoryId,
+      categoryName: 카테고리.name,
+      imagePath: 메뉴아이템.imagePath,
+      isTemperatureRequired: 메뉴아이템.isTemperatureRequired,
     };
 
     return NextResponse.json(formattedMenuItem);
