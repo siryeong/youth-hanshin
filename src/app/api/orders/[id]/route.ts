@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { 주문저장소가져오기, 메뉴저장소가져오기 } from '@/repositories';
 import { Order } from '@/lib/supabase';
 
 /**
  * 일반 사용자용 주문 상세 조회 API
  */
-export async function GET({ params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idString } = await params;
     const id = parseInt(idString);
@@ -57,7 +57,7 @@ export async function GET({ params }: { params: Promise<{ id: string }> }) {
 /**
  * 주문 업데이트 API
  */
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idString } = await params;
     const id = parseInt(idString);
@@ -135,7 +135,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 /**
  * 주문 삭제 API
  */
-export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id: idString } = await params;
     const id = parseInt(idString);
