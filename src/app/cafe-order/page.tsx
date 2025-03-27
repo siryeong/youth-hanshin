@@ -346,6 +346,10 @@ export default function CafeOrder() {
 
     try {
       setIsProcessingOrder(true);
+      setLoadingWithMessage(
+        true,
+        `${village?.name}마을 ${memberName}님의 주문을 처리하고 있습니다...`,
+      );
       // 오늘 날짜의 시작 시간 (00:00:00)
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -370,6 +374,7 @@ export default function CafeOrder() {
           isMild: data.order.isMild,
         });
         setShowDuplicateWarning(true);
+        setIsProcessingOrder(false);
         return true;
       }
 
@@ -381,6 +386,7 @@ export default function CafeOrder() {
       // 중복 주문 확인 후 처리 중 상태 해제 (중복 주문 경고 모달이 표시되는 경우는 제외)
       if (!showDuplicateWarning) {
         setIsProcessingOrder(false);
+        setLoadingWithMessage(false);
       }
     }
   };
