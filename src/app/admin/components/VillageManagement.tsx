@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Member, Village } from '@/model/model';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -243,7 +242,7 @@ export default function VillageManagement() {
     <div className='space-y-6'>
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
         {/* 마을 관리 영역 */}
-        <Card>
+        <Card className='h-[650px]'>
           <CardHeader>
             <CardTitle>마을 관리</CardTitle>
           </CardHeader>
@@ -260,11 +259,9 @@ export default function VillageManagement() {
               </Button>
             </div>
 
-            <Separator />
-
             {isLoading && <div className='text-center py-4'>로딩 중...</div>}
 
-            <div className='space-y-2 max-h-[500px] overflow-y-auto'>
+            <div className='space-y-2 h-[515px] overflow-y-auto border rounded-md p-4'>
               {villages.length === 0 && !isLoading ? (
                 <div className='text-center py-4 text-muted-foreground'>
                   등록된 마을이 없습니다.
@@ -352,7 +349,7 @@ export default function VillageManagement() {
         </Card>
 
         {/* 마을 멤버 목록 영역 */}
-        <Card>
+        <Card className='h-[650px]'>
           <CardHeader className='flex flex-row items-center justify-between'>
             <CardTitle>
               {selectedVillage ? `${selectedVillage.name} 마을 멤버` : '마을 멤버'}
@@ -387,7 +384,7 @@ export default function VillageManagement() {
                   />
                 </div>
 
-                <div className='border rounded-md p-4 max-h-[400px] overflow-y-auto'>
+                <div className='overflow-y-auto h-[500px] border rounded-md p-4'>
                   <div className='space-y-2'>
                     {selectedVillage.members?.length === 0 ? (
                       <div className='text-center py-4 text-muted-foreground'>
@@ -406,7 +403,7 @@ export default function VillageManagement() {
                         .map((member) => (
                           <div
                             key={member.id}
-                            className='flex items-center justify-between rounded-md'
+                            className='flex items-center justify-between rounded-md border hover:bg-muted/50 px-4 py-3'
                           >
                             <span>{member.name}</span>
                             <span className='text-muted-foreground text-sm'>
