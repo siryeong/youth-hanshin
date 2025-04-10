@@ -21,7 +21,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 }
 
 // 관리자 전용 멤버 삭제
-export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     await remove({ id: parseInt(id) });
