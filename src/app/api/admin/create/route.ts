@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 비밀번호 해싱
-    const hashedPassword = await hash(password, adminSecretKey);
+    const hashedPassword = await hash(password, 10);
 
     // 관리자 계정 생성
     const adminAccount = await create({ name, email, password: hashedPassword, isAdmin: true });
