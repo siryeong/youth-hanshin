@@ -1,28 +1,37 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Home, RefreshCw, PersonStanding, GlassWater } from 'lucide-react';
+import { CafeOrder, Village } from '@/model/model';
+import { useRequest } from '@/fetch/Request';
+import { fetchVillages } from '@/fetch/Village';
+import { fetchCafeOrders } from '@/fetch/CafeOrder';
 
-import { Order } from '@/lib/supabase';
-
-type VillageSummary = {
+interface MenuSummary {
+  cafeMenuItemId: number;
+  cafeMenuItemName: string;
+  total: number;
+}
+interface VillageSummary {
   id: number;
   name: string;
-  orders: Order[];
+  orders: CafeOrder[];
   pending: number;
-  processing: number;
   completed: number;
-  cancelled: number;
   total: number;
-};
+  menuSummaries: MenuSummary[];
+}
 
 function OrderStatusContent() {
-  const [villageSummaries, setVillageSummaries] = useState<VillageSummary[]>([]);
+  const { request, requestAll } = useRequest();
+
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [orders, setOrders] = useState<CafeOrder[]>([]);
   const searchParams = useSearchParams();
   const router = useRouter();
   const [view, setView] = useState<'status' | 'menu'>(
@@ -42,12 +51,8 @@ function OrderStatusContent() {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -58,12 +63,8 @@ function OrderStatusContent() {
     switch (status) {
       case 'pending':
         return '대기 중';
-      case 'processing':
-        return '처리 중';
       case 'completed':
         return '완료';
-      case 'cancelled':
-        return '취소됨';
       default:
         return status;
     }
@@ -86,93 +87,56 @@ function OrderStatusContent() {
     return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // 데이터 가져오기
-  const fetchData = useCallback(async () => {
+  const villageSummaries: VillageSummary[] = useMemo(
+    () =>
+      villages.map((village) => ({
+        id: village.id,
+        name: village.name,
+        orders: orders.filter((order) => order.village.id === village.id),
+        pending: orders.filter((order) => order.status === 'pending').length,
+        completed: orders.filter((order) => order.status === 'completed').length,
+        total: orders.filter((order) => order.village.id === village.id).length,
+        menuSummaries: orders
+          .filter((order) => order.village.id === village.id)
+          .map((order) => ({
+            cafeMenuItemId: order.cafeMenuItem.id,
+            cafeMenuItemName: `${order.options.temperature === 'ice' ? '아이스 ' : ''}${order.options.temperature === 'hot' ? '따뜻한 ' : ''}${order.cafeMenuItem.name}${order.options.strength === 'mild' ? ' 연하게 ' : ''}`,
+            total: 1,
+          })),
+      })),
+    [villages, orders],
+  );
+
+  const fetchOrders = useCallback(() => {
     setIsLoading(true);
-    setError(null);
-    try {
-      // 오늘의 주문 데이터 가져오기
-      const ordersResponse = await fetch('/api/orders');
-      if (!ordersResponse.ok) {
-        throw new Error('주문 데이터를 불러오는데 실패했습니다.');
+    request(() => fetchCafeOrders()).then(({ data }) => {
+      if (data) {
+        setOrders(data.filter((order) => isToday(order.createdAt)));
+        setLastUpdated(new Date());
       }
-
-      const ordersData = await ordersResponse.json();
-
-      // 오늘 주문만 필터링
-      const todayOrders = ordersData.filter((order: Order) => isToday(order.createdAt.toString()));
-
-      // 마을 데이터 가져오기
-      const villagesResponse = await fetch('/api/villages');
-      if (!villagesResponse.ok) {
-        throw new Error('마을 데이터를 불러오는데 실패했습니다.');
-      }
-
-      const villagesData = await villagesResponse.json();
-
-      // 마을별 주문 요약 생성
-      const summaries: VillageSummary[] = villagesData.map(
-        (village: { id: number; name: string }) => {
-          const villageOrders = todayOrders.filter(
-            (order: Order) => order.villageId === village.id,
-          );
-
-          // 상태별 주문 수 계산
-          const pending = villageOrders.filter((order: Order) => order.status === 'pending').length;
-          const processing = villageOrders.filter(
-            (order: Order) => order.status === 'processing',
-          ).length;
-          const completed = villageOrders.filter(
-            (order: Order) => order.status === 'completed',
-          ).length;
-          const cancelled = villageOrders.filter(
-            (order: Order) => order.status === 'cancelled',
-          ).length;
-
-          return {
-            id: village.id,
-            name: village.name,
-            orders: villageOrders,
-            pending,
-            processing,
-            completed,
-            cancelled,
-            total: villageOrders.length,
-          };
-        },
-      );
-
-      // 주문이 있는 마을을 먼저 보여주고, 주문 수가 많은 순으로 정렬
-      summaries.sort((a, b) => {
-        if (a.total === 0 && b.total > 0) return 1;
-        if (a.total > 0 && b.total === 0) return -1;
-        return b.total - a.total;
-      });
-
-      // 메뉴별 주문 집계
-      const menuCounts: { [key: string]: number } = {};
-      todayOrders.forEach((order: Order) => {
-        const menuName = order.menuItem.name;
-        menuCounts[menuName] = (menuCounts[menuName] || 0) + 1;
-      });
-      setVillageSummaries(summaries);
-      setLastUpdated(new Date());
-    } catch (err) {
-      console.error('데이터 로딩 오류:', err);
-      setError(err instanceof Error ? err.message : '데이터를 불러오는데 문제가 발생했습니다.');
-    } finally {
       setIsLoading(false);
-    }
-  }, []);
+    });
+  }, [request]);
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
-    fetchData();
+    setIsLoading(true);
+    requestAll([() => fetchCafeOrders(), () => fetchVillages()]).then(({ data, error }) => {
+      if (data) {
+        const [orders, villages] = data;
+        setVillages(villages);
+        setOrders(orders.filter((order) => isToday(order.createdAt)));
+        setLastUpdated(new Date());
+      } else {
+        setError(error?.message || '데이터를 불러오는데 문제가 발생했습니다.');
+      }
+      setIsLoading(false);
+    });
 
     // 30초마다 자동 새로고침
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
-  }, [fetchData]);
+  }, [requestAll, fetchOrders]);
 
   return (
     <div className='container mx-auto py-6'>
@@ -190,7 +154,7 @@ function OrderStatusContent() {
           <Button
             variant='outline'
             size='sm'
-            onClick={fetchData}
+            onClick={fetchOrders}
             disabled={isLoading}
             className='flex items-center gap-2'
           >
@@ -257,11 +221,6 @@ function OrderStatusContent() {
                         {village.pending}
                       </span>
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('processing')}`}
-                      >
-                        {village.processing}
-                      </span>
-                      <span
                         className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass('completed')}`}
                       >
                         {village.completed}
@@ -276,17 +235,13 @@ function OrderStatusContent() {
                       <div
                         key={order.id}
                         className={`p-3 rounded-md border ${
-                          order.status === 'completed'
-                            ? 'bg-green-50/50'
-                            : order.status === 'cancelled'
-                              ? 'bg-red-50/50'
-                              : order.status === 'processing'
-                                ? 'bg-blue-50/50'
-                                : 'bg-yellow-50/50'
+                          order.status === 'completed' ? 'bg-green-50/50' : 'bg-yellow-50/50'
                         }`}
                       >
                         <div className='flex justify-between'>
-                          <span className='font-medium'>{order.memberName}</span>
+                          <span className='font-medium'>
+                            {order.member?.name || order.customName}
+                          </span>
                           <span
                             className={`text-xs px-2 py-0.5 rounded-full ${getStatusColorClass(order.status)}`}
                           >
@@ -294,10 +249,10 @@ function OrderStatusContent() {
                           </span>
                         </div>
                         <div className='mt-1 text-sm'>
-                          {order.temperature === 'ice' && '아이스 '}
-                          {order.temperature === 'hot' && '따뜻한 '}
-                          {order.menuItem.name}
-                          {order.isMild && ' 연하게 '}
+                          {order.options.temperature === 'ice' && '아이스 '}
+                          {order.options.temperature === 'hot' && '따뜻한 '}
+                          {order.cafeMenuItem.name}
+                          {order.options.strength === 'mild' && ' 연하게 '}
                         </div>
                         <div className='mt-1 text-xs text-muted-foreground'>
                           {formatTime(order.createdAt.toString())} 주문
@@ -330,10 +285,10 @@ function OrderStatusContent() {
 
                 {village.total > 0 ? (
                   <div className='space-y-3 sm:max-h-80 overflow-y-auto pr-1'>
-                    {village.orders
+                    {village.menuSummaries
                       .reduce(
-                        (acc, order) => {
-                          const menuKey = `${order.temperature === 'ice' ? '아이스 ' : ''}${order.temperature === 'hot' ? '따뜻한 ' : ''}${order.menuItem.name}${order.isMild ? ' 연하게 ' : ''}`;
+                        (acc, menu) => {
+                          const menuKey = menu.cafeMenuItemName;
                           const existing = acc.find((item) => item.name === menuKey);
                           if (existing) {
                             existing.count++;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -12,140 +12,87 @@ import {
 } from '@/components/ui/select';
 import { ClipboardCopy } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
-
-interface Order {
-  id: number;
-  villageId: number;
-  villageName?: string;
-  memberName: string;
-  isCustomName: boolean;
-  menuItemId: number;
-  menuItemName?: string;
-  isMild: boolean;
-  temperature?: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Village {
-  id: number;
-  name: string;
-}
-
-interface MenuItem {
-  id: number;
-  name: string;
-  categoryId: number;
-  categoryName?: string;
-}
+import { CafeOrder, Village, TemperatureType, StrengthType } from '@/model/model';
 
 export default function OrderManagement() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<CafeOrder[]>([]);
   const [villages, setVillages] = useState<Village[]>([]);
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [filterVillageId, setFilterVillageId] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [showVillageSummary, setShowVillageSummary] = useState(false);
 
   // 주문 목록 불러오기
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(() => {
     setIsLoading(true);
-    try {
-      const response = await fetch('/api/admin/orders');
-      if (!response.ok) throw new Error('주문 목록을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setOrders(data);
-    } catch (error) {
-      console.error('주문 목록 불러오기 오류:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetch('/api/admin/cafe-orders')
+      .then((response) => {
+        if (!response.ok) throw new Error('주문 목록을 불러오는데 실패했습니다.');
+        return response.json();
+      })
+      .then((data) => setOrders(data))
+      .catch((error) => console.error('주문 목록 불러오기 오류:', error))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   // 마을 목록 불러오기
-  const fetchVillages = async () => {
-    try {
-      const response = await fetch('/api/admin/villages');
-      if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setVillages(data);
-    } catch (error) {
-      console.error('마을 목록 불러오기 오류:', error);
-    }
-  };
+  const fetchVillages = useCallback(() => {
+    setIsLoading(true);
+    fetch('/api/admin/villages')
+      .then((response) => {
+        if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
+        return response.json();
+      })
+      .then((data) => setVillages(data))
+      .catch((error) => console.error('마을 목록 불러오기 오류:', error))
+      .finally(() => setIsLoading(false));
+  }, []);
 
-  // 메뉴 아이템 목록 불러오기
-  const fetchMenuItems = async () => {
-    try {
-      const response = await fetch('/api/admin/menu/items');
-      if (!response.ok) throw new Error('메뉴 아이템 목록을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setMenuItems(data);
-    } catch (error) {
-      console.error('메뉴 아이템 목록 불러오기 오류:', error);
-    }
-  };
-
-  // 컴포넌트 마운트 시 데이터 불러오기
+  // 컴포넌트 마운트 시 데이터 불러오기 - 한 번만 실행되도록 빈 의존성 배열 사용
   useEffect(() => {
     fetchOrders();
     fetchVillages();
-    fetchMenuItems();
-  }, []);
+  }, [fetchOrders, fetchVillages]);
 
   // 주문 상태 변경
-  const updateOrderStatus = async (id: number, status: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/admin/orders/${id}/status`, {
+  const updateOrderStatus = useCallback(
+    (id: number, status: string) => {
+      setIsLoading(true);
+      fetch(`/api/admin/cafe-orders/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
-      });
-
-      if (!response.ok) throw new Error('주문 상태 변경에 실패했습니다.');
-
-      await fetchOrders();
-    } catch (error) {
-      console.error('주문 상태 변경 오류:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error('주문 상태 변경에 실패했습니다.');
+          return response.json();
+        })
+        .then(() => fetchOrders())
+        .catch((error) => console.error('주문 상태 변경 오류:', error))
+        .finally(() => setIsLoading(false));
+    },
+    [fetchOrders],
+  );
 
   // 주문 삭제
-  const deleteOrder = async (id: number) => {
-    if (!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
+  const deleteOrder = useCallback(
+    (id: number) => {
+      if (!confirm('정말로 이 주문을 삭제하시겠습니까?')) return;
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/admin/orders/${id}`, {
+      setIsLoading(true);
+      fetch(`/api/admin/cafe-orders/${id}`, {
         method: 'DELETE',
-      });
-
-      if (!response.ok) throw new Error('주문 삭제에 실패했습니다.');
-
-      await fetchOrders();
-    } catch (error) {
-      console.error('주문 삭제 오류:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 마을 이름 가져오기
-  const getVillageName = (villageId: number) => {
-    const village = villages.find((v) => v.id === villageId);
-    return village ? village.name : '알 수 없음';
-  };
-
-  // 메뉴 아이템 이름 가져오기
-  const getMenuItemName = (menuItemId: number) => {
-    const menuItem = menuItems.find((m) => m.id === menuItemId);
-    return menuItem ? menuItem.name : '알 수 없음';
-  };
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error('주문 삭제에 실패했습니다.');
+          return response.json();
+        })
+        .then(() => fetchOrders())
+        .catch((error) => console.error('주문 삭제 오류:', error))
+        .finally(() => setIsLoading(false));
+    },
+    [fetchOrders],
+  );
 
   // 주문 상태에 따른 배경색 클래스
   const getStatusColorClass = (status: string) => {
@@ -181,7 +128,7 @@ export default function OrderManagement() {
 
   // 필터링된 주문 목록
   const filteredOrders = orders.filter((order) => {
-    if (filterVillageId !== 'all' && order.villageId !== parseInt(filterVillageId)) {
+    if (filterVillageId !== 'all' && order.village.id !== parseInt(filterVillageId)) {
       return false;
     }
     if (filterStatus !== 'all' && order.status !== filterStatus) {
@@ -207,15 +154,13 @@ export default function OrderManagement() {
   // 마을별 주문 집계
   const villageSummary = todayOrders.reduce(
     (acc, order) => {
-      const villageId = order.villageId;
+      const villageId = order.village.id;
       if (!acc[villageId]) {
         acc[villageId] = {
           count: 0,
-          villageName: getVillageName(villageId),
+          villageName: order.village.name,
           pending: 0,
-          processing: 0,
           completed: 0,
-          cancelled: 0,
           orders: [],
         };
       }
@@ -224,21 +169,17 @@ export default function OrderManagement() {
       // 상태에 따라 해당 카운터 증가
       if (order.status === 'pending') {
         acc[villageId].pending += 1;
-      } else if (order.status === 'processing') {
-        acc[villageId].processing += 1;
       } else if (order.status === 'completed') {
         acc[villageId].completed += 1;
-      } else if (order.status === 'cancelled') {
-        acc[villageId].cancelled += 1;
       }
 
       // 주문 정보 추가
       acc[villageId].orders.push({
         id: order.id,
-        memberName: order.memberName,
-        menuItemName: getMenuItemName(order.menuItemId),
-        temperature: order.temperature,
-        isMild: order.isMild,
+        memberName: order.member?.name || order.customName || '',
+        cafeMenuItemName: order.cafeMenuItem.name,
+        temperature: order.options.temperature,
+        strength: order.options.strength,
         status: order.status,
         createdAt: order.createdAt,
       });
@@ -251,15 +192,13 @@ export default function OrderManagement() {
         count: number;
         villageName: string;
         pending: number;
-        processing: number;
         completed: number;
-        cancelled: number;
         orders: Array<{
           id: number;
           memberName: string;
-          menuItemName: string;
-          isMild: boolean;
-          temperature?: string;
+          cafeMenuItemName: string;
+          temperature: TemperatureType;
+          strength: StrengthType;
           status: string;
           createdAt: string;
         }>;
@@ -279,15 +218,15 @@ export default function OrderManagement() {
 
     // 마을별 메뉴 집계 계산
     todayOrders.forEach((order) => {
-      const villageId = order.villageId;
-      const menuName = getMenuItemName(order.menuItemId);
+      const villageId = order.village.id;
+      const menuName = order.cafeMenuItem.name;
 
       // 온도 정보 추가
       let menuWithTemp = '';
-      menuWithTemp += order.temperature === 'ice' ? '아이스 ' : '';
-      menuWithTemp += order.temperature === 'hot' ? '따뜻한 ' : '';
+      menuWithTemp += order.options.temperature === 'ice' ? '아이스 ' : '';
+      menuWithTemp += order.options.temperature === 'hot' ? '따뜻한 ' : '';
       menuWithTemp += menuName;
-      menuWithTemp += order.isMild ? ' 연하게' : '';
+      menuWithTemp += order.options.strength === 'mild' ? ' 연하게' : '';
 
       if (!menuSummary[villageId]) {
         menuSummary[villageId] = {};
@@ -337,8 +276,8 @@ export default function OrderManagement() {
         let menuWithTemp = '';
         menuWithTemp += order.temperature === 'ice' ? '아이스 ' : '';
         menuWithTemp += order.temperature === 'hot' ? '따뜻한 ' : '';
-        menuWithTemp += order.menuItemName;
-        menuWithTemp += order.isMild ? ' 연하게' : '';
+        menuWithTemp += order.cafeMenuItemName;
+        menuWithTemp += order.strength === 'mild' ? ' 연하게' : '';
 
         orderListText += `${order.memberName} - ${menuWithTemp}\n`;
       });
@@ -401,9 +340,7 @@ export default function OrderManagement() {
             <SelectContent>
               <SelectItem value='all'>모든 상태</SelectItem>
               <SelectItem value='pending'>대기 중</SelectItem>
-              <SelectItem value='processing'>처리 중</SelectItem>
               <SelectItem value='completed'>완료</SelectItem>
-              <SelectItem value='cancelled'>취소됨</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -461,21 +398,9 @@ export default function OrderManagement() {
                     </div>
                     <div className='flex items-center gap-1'>
                       <span
-                        className={`w-2 h-2 rounded-full ${getStatusColorClass('processing')}`}
-                      ></span>
-                      <span>처리 중: {data.processing}건</span>
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      <span
                         className={`w-2 h-2 rounded-full ${getStatusColorClass('completed')}`}
                       ></span>
                       <span>완료: {data.completed}건</span>
-                    </div>
-                    <div className='flex items-center gap-1'>
-                      <span
-                        className={`w-2 h-2 rounded-full ${getStatusColorClass('cancelled')}`}
-                      ></span>
-                      <span>취소: {data.cancelled}건</span>
                     </div>
                   </div>
 
@@ -489,10 +414,10 @@ export default function OrderManagement() {
                             <div>
                               <span className='font-medium'>{order.memberName}</span>
                               <div className='mt-1'>
-                                {order.temperature && order.temperature === 'ice' && '아이스 '}
-                                {order.temperature && order.temperature === 'hot' && '따뜻한 '}
-                                {order.menuItemName}
-                                {order.isMild && ' 연하게'}
+                                {order.temperature === 'ice' && '아이스 '}
+                                {order.temperature === 'hot' && '따뜻한 '}
+                                {order.cafeMenuItemName}
+                                {order.strength === 'mild' && ' 연하게'}
                               </div>
                             </div>
                             <span
@@ -533,10 +458,10 @@ export default function OrderManagement() {
                 <div>
                   <div className='flex items-center gap-2'>
                     <span className='text-lg font-medium'>
-                      {order.temperature && order.temperature === 'ice' && '아이스 '}
-                      {order.temperature && order.temperature === 'hot' && '따뜻한 '}
-                      {getMenuItemName(order.menuItemId)}
-                      {order.isMild && ' 연하게'}
+                      {order.options.temperature === 'ice' && '아이스 '}
+                      {order.options.temperature === 'hot' && '따뜻한 '}
+                      {order.cafeMenuItem.name}
+                      {order.options.strength === 'mild' && ' 연하게'}
                     </span>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${getStatusColorClass(order.status)}`}
@@ -545,8 +470,8 @@ export default function OrderManagement() {
                     </span>
                   </div>
                   <p className='text-sm text-muted-foreground'>
-                    {getVillageName(order.villageId)}마을 - {order.memberName}
-                    {order.isCustomName && ' (직접 입력)'}
+                    {order.village.name}마을 - {order.member?.name || order.customName || ''}
+                    {order.customName && ' (직접 입력)'}
                   </p>
                 </div>
                 <div className='text-sm text-muted-foreground mt-2 md:mt-0'>

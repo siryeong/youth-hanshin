@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { getSupabaseClient } from '@/lib/supabase';
 import { compare } from 'bcrypt';
+import { findByEmail } from '@/db/repository/accountRepository';
 
 // 관리자 인증을 위한 NextAuth 설정
 const handler = NextAuth({
@@ -18,39 +18,24 @@ const handler = NextAuth({
         }
 
         try {
-          const client = getSupabaseClient();
+          const account = await findByEmail({ email: credentials.email });
 
-          // 사용자 조회
-          const { data, error } = await client
-            .from('users')
-            .select('*')
-            .eq('email', credentials.email)
-            .single();
-
-          if (error || !data) {
-            console.error('사용자 조회 오류:', error);
+          if (!account) {
+            console.error('사용자를 찾을 수 없습니다');
             return null;
           }
 
-          // 타입 안전하게 접근
-          const email = data.email as string;
-          const name = data.name as string;
-          const password = data.password as string;
-          const isAdmin = data.is_admin as boolean;
-          const id = data.id as string;
-
+          const { id, email, name, isAdmin, password } = account;
           if (!email || !name || !password) {
             return null;
           }
 
-          // 비밀번호 확인
           const isPasswordValid = await compare(credentials.password, password);
 
           if (!isPasswordValid) {
             return null;
           }
 
-          // 관리자 권한 확인
           if (!isAdmin) {
             throw new Error('관리자 권한이 없습니다.');
           }

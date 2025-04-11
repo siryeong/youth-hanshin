@@ -8,12 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
-
-type CafeSettingsType = {
-  openingTime: string;
-  closingTime: string;
-  openDays: number[];
-};
+import { CafeSetting } from '@/model/model';
 
 const DAYS_OF_WEEK = [
   { value: 0, label: '일요일' },
@@ -26,10 +21,13 @@ const DAYS_OF_WEEK = [
 ];
 
 export default function CafeSettings() {
-  const [settings, setSettings] = useState<CafeSettingsType>({
+  const [settings, setSettings] = useState<CafeSetting>({
+    id: 0,
     openingTime: '10:00:00',
     closingTime: '14:00:00',
     openDays: [0],
+    createdAt: '',
+    updatedAt: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +56,14 @@ export default function CafeSettings() {
           openDays: Array.isArray(data.openDays) ? data.openDays : [0],
         };
 
-        setSettings(validatedData);
+        setSettings({
+          id: 0,
+          openingTime: validatedData.openingTime,
+          closingTime: validatedData.closingTime,
+          openDays: validatedData.openDays,
+          createdAt: '',
+          updatedAt: '',
+        });
 
         // 로컬 상태 초기화
         const openingTimeParts = parseTime(validatedData.openingTime);
