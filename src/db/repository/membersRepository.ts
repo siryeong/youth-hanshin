@@ -16,12 +16,14 @@ export async function create({
   name,
   phone,
   birthDate,
+  extra,
 }: {
   name: string;
   phone: string | null;
   birthDate: string | null;
+  extra: string | null;
 }) {
-  const result = await db.insert(members).values({ name, phone, birthDate }).returning();
+  const result = await db.insert(members).values({ name, phone, birthDate, extra }).returning();
   return result[0];
 }
 
@@ -34,15 +36,17 @@ export async function update({
   name,
   phone,
   birthDate,
+  extra,
 }: {
   id: number;
   name: string;
   phone: string | null;
   birthDate: string | null;
+  extra: string | null;
 }) {
   const result = await db
     .update(members)
-    .set({ name, phone, birthDate })
+    .set({ name, phone, birthDate, extra })
     .where(eq(members.id, id))
     .returning();
   return result[0];

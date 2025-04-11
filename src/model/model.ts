@@ -13,6 +13,7 @@ export interface Member {
   name: string;
   phone: string | null;
   birthDate: string | null;
+  extra: string | null;
   createdAt: string;
   updatedAt: string;
 }

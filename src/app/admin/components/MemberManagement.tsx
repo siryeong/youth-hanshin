@@ -38,7 +38,7 @@ type SortConfig = {
 export default function MemberManagement() {
   const [members, setMembers] = useState<Member[]>([]);
   const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
-  const [newMember, setNewMember] = useState({ name: '', phone: '', birthDate: '' });
+  const [newMember, setNewMember] = useState({ name: '', phone: '', birthDate: '', extra: '' });
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,7 +122,7 @@ export default function MemberManagement() {
       if (!response.ok) throw new Error('멤버 추가에 실패했습니다.');
 
       await fetchMembers();
-      setNewMember({ name: '', phone: '', birthDate: '' });
+      setNewMember({ name: '', phone: '', birthDate: '', extra: '' });
     } catch (error) {
       console.error('멤버 추가 오류:', error);
     } finally {
@@ -143,6 +143,7 @@ export default function MemberManagement() {
           name: editingMember.name,
           phone: editingMember.phone,
           birthDate: editingMember.birthDate,
+          extra: editingMember.extra,
         }),
       });
 
@@ -200,6 +201,12 @@ export default function MemberManagement() {
             onChange={(e) => setNewMember({ ...newMember, birthDate: e.target.value })}
             disabled={isLoading}
           />
+          <Input
+            placeholder='추가 정보'
+            value={newMember.extra}
+            onChange={(e) => setNewMember({ ...newMember, extra: e.target.value })}
+            disabled={isLoading}
+          />
           <Button onClick={addMember} disabled={isLoading || !newMember.name.trim()}>
             추가
           </Button>
@@ -239,6 +246,12 @@ export default function MemberManagement() {
                   <ArrowUpDown className='ml-2 h-4 w-4' />
                 </div>
               </TableHead>
+              <TableHead className='cursor-pointer' onClick={() => handleSort('extra')}>
+                <div className='flex items-center'>
+                  추가 정보
+                  <ArrowUpDown className='ml-2 h-4 w-4' />
+                </div>
+              </TableHead>
               <TableHead className='text-right'>관리</TableHead>
             </TableRow>
           </TableHeader>
@@ -261,6 +274,7 @@ export default function MemberManagement() {
                   <TableCell>{member.name}</TableCell>
                   <TableCell>{member.phone || '-'}</TableCell>
                   <TableCell>{member.birthDate || '-'}</TableCell>
+                  <TableCell>{member.extra || '-'}</TableCell>
                   <TableCell className='text-right'>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -341,6 +355,19 @@ export default function MemberManagement() {
                   }
                   className='col-span-3'
                   placeholder='YYYY-MM-DD'
+                />
+              </div>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <label htmlFor='extra' className='text-right'>
+                  추가 정보
+                </label>
+                <Input
+                  id='extra'
+                  value={editingMember.extra || ''}
+                  onChange={(e) =>
+                    setEditingMember({ ...editingMember, extra: e.target.value || null })
+                  }
+                  className='col-span-3'
                 />
               </div>
             </div>

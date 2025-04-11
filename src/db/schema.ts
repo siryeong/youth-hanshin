@@ -29,6 +29,7 @@ export const members = pgTable('members', {
   name: text('name').notNull(),
   phone: text('phone'),
   birthDate: text('birth_date'),
+  extra: text('extra'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

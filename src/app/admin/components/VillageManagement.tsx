@@ -480,7 +480,7 @@ export default function VillageManagement() {
                         className='flex flex-1 justify-between cursor-pointer'
                       >
                         <span>{member.name}</span>
-                        <span className='text-muted-foreground text-sm'>{member.phone || '-'}</span>
+                        <span className='text-muted-foreground text-sm'>{member.extra || '-'}</span>
                       </Label>
                     </div>
                   ))

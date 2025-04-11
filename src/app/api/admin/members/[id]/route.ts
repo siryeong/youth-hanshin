@@ -6,13 +6,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params;
     const body = await request.json();
-    const { name, phone, birthDate } = body;
+    const { name, phone, birthDate, extra } = body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: '유효한 멤버 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const member = await update({ id: parseInt(id), name, phone, birthDate });
+    const member = await update({ id: parseInt(id), name, phone, birthDate, extra });
     return NextResponse.json(member);
   } catch (error) {
     console.error('멤버 수정 오류:', error);

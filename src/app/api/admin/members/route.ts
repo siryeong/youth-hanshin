@@ -16,13 +16,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name } = body;
+    const { name, phone, birthDate, extra } = body;
 
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: '유효한 멤버 이름을 입력해주세요.' }, { status: 400 });
     }
 
-    const member = await create({ name, phone: '', birthDate: '' });
+    const member = await create({ name, phone, birthDate, extra });
     return NextResponse.json(member);
   } catch (error) {
     console.error('멤버 추가 오류:', error);
