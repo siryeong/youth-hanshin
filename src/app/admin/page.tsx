@@ -16,7 +16,7 @@ export default function AdminPage() {
       <Tabs defaultValue='villages' className='w-full'>
         <TabsList className='grid w-full grid-cols-5'>
           <TabsTrigger value='villages'>마을 관리</TabsTrigger>
-          <TabsTrigger value='members'>마을 멤버 관리</TabsTrigger>
+          <TabsTrigger value='members'>멤버 관리</TabsTrigger>
           <TabsTrigger value='menu'>메뉴 관리</TabsTrigger>
           <TabsTrigger value='orders'>주문 관리</TabsTrigger>
           <TabsTrigger value='cafe-settings'>카페 설정</TabsTrigger>
@@ -37,8 +37,8 @@ export default function AdminPage() {
         <TabsContent value='members'>
           <Card>
             <CardHeader>
-              <CardTitle>마을 멤버 관리</CardTitle>
-              <CardDescription>마을 멤버를 추가, 수정, 삭제할 수 있습니다.</CardDescription>
+              <CardTitle>멤버 관리</CardTitle>
+              <CardDescription>멤버를 추가, 수정, 삭제할 수 있습니다.</CardDescription>
             </CardHeader>
             <CardContent>
               <MemberManagement />

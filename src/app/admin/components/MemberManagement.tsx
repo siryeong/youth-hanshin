@@ -4,46 +4,46 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Member } from '@/model/model';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { MoreHorizontal, ArrowUpDown, Search } from 'lucide-react';
 
-interface Village {
-  id: number;
-  name: string;
-}
-
-interface Member {
-  id: number;
-  name: string;
-  villageId: number;
-  villageName?: string;
-}
+type SortConfig = {
+  key: keyof Member;
+  direction: 'asc' | 'desc';
+};
 
 export default function MemberManagement() {
   const [members, setMembers] = useState<Member[]>([]);
-  const [villages, setVillages] = useState<Village[]>([]);
-  const [newMemberName, setNewMemberName] = useState('');
-  const [selectedVillageId, setSelectedVillageId] = useState<string>('');
+  const [filteredMembers, setFilteredMembers] = useState<Member[]>([]);
+  const [newMember, setNewMember] = useState({ name: '', phone: '', birthDate: '', extra: '' });
   const [editingMember, setEditingMember] = useState<Member | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [filterVillageId, setFilterVillageId] = useState<string>('all');
-
-  // 마을 목록 불러오기
-  const fetchVillages = async () => {
-    try {
-      const response = await fetch('/api/admin/villages');
-      if (!response.ok) throw new Error('마을 목록을 불러오는데 실패했습니다.');
-      const data = await response.json();
-      setVillages(data);
-    } catch (error) {
-      console.error('마을 목록 불러오기 오류:', error);
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'name', direction: 'asc' });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // 멤버 목록 불러오기
   const fetchMembers = async () => {
@@ -53,6 +53,7 @@ export default function MemberManagement() {
       if (!response.ok) throw new Error('멤버 목록을 불러오는데 실패했습니다.');
       const data = await response.json();
       setMembers(data);
+      setFilteredMembers(data);
     } catch (error) {
       console.error('멤버 목록 불러오기 오류:', error);
     } finally {
@@ -62,13 +63,49 @@ export default function MemberManagement() {
 
   // 컴포넌트 마운트 시 데이터 불러오기
   useEffect(() => {
-    fetchVillages();
     fetchMembers();
   }, []);
 
+  // 검색 및 정렬 적용
+  useEffect(() => {
+    let result = [...members];
+
+    // 검색 적용
+    if (searchQuery) {
+      result = result.filter(
+        (member) =>
+          member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (member.phone && member.phone.includes(searchQuery)),
+      );
+    }
+
+    // 정렬 적용
+    result.sort((a, b) => {
+      const aValue = a[sortConfig.key];
+      const bValue = b[sortConfig.key];
+
+      if (aValue === null) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (bValue === null) return sortConfig.direction === 'asc' ? 1 : -1;
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    setFilteredMembers(result);
+  }, [members, searchQuery, sortConfig]);
+
+  // 정렬 함수
+  const handleSort = (key: keyof Member) => {
+    setSortConfig((current) => ({
+      key,
+      direction: current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
+
   // 멤버 추가
   const addMember = async () => {
-    if (!newMemberName.trim() || !selectedVillageId) return;
+    if (!newMember.name.trim()) return;
 
     setIsLoading(true);
     try {
@@ -76,16 +113,16 @@ export default function MemberManagement() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: newMemberName,
-          villageId: parseInt(selectedVillageId),
+          name: newMember.name,
+          phone: newMember.phone,
+          birthDate: newMember.birthDate,
         }),
       });
 
       if (!response.ok) throw new Error('멤버 추가에 실패했습니다.');
 
       await fetchMembers();
-      setNewMemberName('');
-      setSelectedVillageId('');
+      setNewMember({ name: '', phone: '', birthDate: '', extra: '' });
     } catch (error) {
       console.error('멤버 추가 오류:', error);
     } finally {
@@ -104,7 +141,9 @@ export default function MemberManagement() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editingMember.name,
-          villageId: editingMember.villageId,
+          phone: editingMember.phone,
+          birthDate: editingMember.birthDate,
+          extra: editingMember.extra,
         }),
       });
 
@@ -112,6 +151,7 @@ export default function MemberManagement() {
 
       await fetchMembers();
       setEditingMember(null);
+      setIsEditDialogOpen(false);
     } catch (error) {
       console.error('멤버 수정 오류:', error);
     } finally {
@@ -139,157 +179,209 @@ export default function MemberManagement() {
     }
   };
 
-  // 필터링된 멤버 목록
-  const filteredMembers =
-    filterVillageId === 'all'
-      ? members
-      : members.filter((member) => member.villageId === parseInt(filterVillageId));
-
-  // 마을 이름 가져오기
-  const getVillageName = (villageId: number) => {
-    const village = villages.find((v) => v.id === villageId);
-    return village ? village.name : '알 수 없음';
-  };
-
   return (
     <div className='space-y-6'>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-        <Input
-          placeholder='새 멤버 이름'
-          value={newMemberName}
-          onChange={(e) => setNewMemberName(e.target.value)}
-          disabled={isLoading}
-        />
-        <Select value={selectedVillageId} onValueChange={setSelectedVillageId} disabled={isLoading}>
-          <SelectTrigger>
-            <SelectValue placeholder='마을 선택' />
-          </SelectTrigger>
-          <SelectContent>
-            {villages.map((village) => (
-              <SelectItem key={village.id} value={village.id.toString()}>
-                {village.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          onClick={addMember}
-          disabled={isLoading || !newMemberName.trim() || !selectedVillageId}
-        >
-          추가
-        </Button>
+      <div className='flex flex-col md:flex-row gap-4 items-end'>
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 flex-grow'>
+          <Input
+            placeholder='이름'
+            value={newMember.name}
+            onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+            disabled={isLoading}
+          />
+          <Input
+            placeholder='전화번호'
+            value={newMember.phone}
+            onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+            disabled={isLoading}
+          />
+          <Input
+            placeholder='생년월일'
+            value={newMember.birthDate}
+            onChange={(e) => setNewMember({ ...newMember, birthDate: e.target.value })}
+            disabled={isLoading}
+          />
+          <Input
+            placeholder='추가 정보'
+            value={newMember.extra}
+            onChange={(e) => setNewMember({ ...newMember, extra: e.target.value })}
+            disabled={isLoading}
+          />
+          <Button onClick={addMember} disabled={isLoading || !newMember.name.trim()}>
+            추가
+          </Button>
+        </div>
       </div>
 
       <Separator />
-
-      <div className='flex justify-between items-center'>
-        <h3 className='text-lg font-medium'>멤버 목록</h3>
-        <Select value={filterVillageId} onValueChange={setFilterVillageId}>
-          <SelectTrigger className='w-[180px]'>
-            <SelectValue placeholder='마을 필터' />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='all'>모든 마을</SelectItem>
-            {villages.map((village) => (
-              <SelectItem key={village.id} value={village.id.toString()}>
-                {village.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className='relative flex-grow md:max-w-xs'>
+        <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
+        <Input
+          placeholder='이름 또는 전화번호 검색'
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className='pl-8'
+        />
       </div>
 
-      {isLoading && <div className='text-center py-4'>로딩 중...</div>}
-
-      <div className='space-y-4'>
-        {filteredMembers.length === 0 && !isLoading ? (
-          <div className='text-center py-4 text-muted-foreground'>등록된 멤버가 없습니다.</div>
-        ) : (
-          filteredMembers.map((member) => (
-            <div
-              key={member.id}
-              className='flex items-center justify-between p-3 border rounded-md'
-            >
-              {editingMember?.id === member.id ? (
-                <div className='grid grid-cols-1 md:grid-cols-3 gap-2 w-full'>
-                  <Input
-                    value={editingMember.name}
-                    onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
-                    disabled={isLoading}
-                  />
-                  <Select
-                    value={editingMember.villageId.toString()}
-                    onValueChange={(value) =>
-                      setEditingMember({
-                        ...editingMember,
-                        villageId: parseInt(value),
-                      })
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder='마을 선택' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {villages.map((village) => (
-                        <SelectItem key={village.id} value={village.id.toString()}>
-                          {village.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className='flex items-center space-x-2'>
-                    <Button
-                      onClick={updateMember}
-                      disabled={isLoading || !editingMember.name.trim()}
-                      size='sm'
-                      className='flex-1'
-                    >
-                      저장
-                    </Button>
-                    <Button
-                      onClick={() => setEditingMember(null)}
-                      variant='outline'
-                      size='sm'
-                      disabled={isLoading}
-                      className='flex-1'
-                    >
-                      취소
-                    </Button>
-                  </div>
+      <div className='rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className='cursor-pointer' onClick={() => handleSort('name')}>
+                <div className='flex items-center'>
+                  이름
+                  <ArrowUpDown className='ml-2 h-4 w-4' />
                 </div>
-              ) : (
-                <>
-                  <div>
-                    <span className='text-lg'>{member.name}</span>
-                    <p className='text-sm text-muted-foreground'>
-                      {getVillageName(member.villageId)}
-                    </p>
-                  </div>
-                  <div className='flex items-center space-x-2'>
-                    <Button
-                      onClick={() => setEditingMember(member)}
-                      variant='outline'
-                      size='sm'
-                      disabled={isLoading}
-                    >
-                      수정
-                    </Button>
-                    <Button
-                      onClick={() => deleteMember(member.id)}
-                      variant='destructive'
-                      size='sm'
-                      disabled={isLoading}
-                    >
-                      삭제
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))
-        )}
+              </TableHead>
+              <TableHead className='cursor-pointer' onClick={() => handleSort('phone')}>
+                <div className='flex items-center'>
+                  전화번호
+                  <ArrowUpDown className='ml-2 h-4 w-4' />
+                </div>
+              </TableHead>
+              <TableHead className='cursor-pointer' onClick={() => handleSort('birthDate')}>
+                <div className='flex items-center'>
+                  생년월일
+                  <ArrowUpDown className='ml-2 h-4 w-4' />
+                </div>
+              </TableHead>
+              <TableHead className='cursor-pointer' onClick={() => handleSort('extra')}>
+                <div className='flex items-center'>
+                  추가 정보
+                  <ArrowUpDown className='ml-2 h-4 w-4' />
+                </div>
+              </TableHead>
+              <TableHead className='text-right'>관리</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6} className='h-24 text-center'>
+                  로딩 중...
+                </TableCell>
+              </TableRow>
+            ) : filteredMembers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className='h-24 text-center'>
+                  등록된 멤버가 없습니다.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredMembers.map((member) => (
+                <TableRow key={member.id}>
+                  <TableCell>{member.name}</TableCell>
+                  <TableCell>{member.phone || '-'}</TableCell>
+                  <TableCell>{member.birthDate || '-'}</TableCell>
+                  <TableCell>{member.extra || '-'}</TableCell>
+                  <TableCell className='text-right'>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant='ghost' className='h-8 w-8 p-0'>
+                          <span className='sr-only'>메뉴 열기</span>
+                          <MoreHorizontal className='h-4 w-4' />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align='end'>
+                        <DropdownMenuLabel>작업</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditingMember(member);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          수정
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className='text-red-600'
+                          onClick={() => deleteMember(member.id)}
+                        >
+                          삭제
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
+
+      {/* 멤버 수정 다이얼로그 */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>멤버 정보 수정</DialogTitle>
+          </DialogHeader>
+          {editingMember && (
+            <div className='grid gap-4 py-4'>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <label htmlFor='name' className='text-right'>
+                  이름
+                </label>
+                <Input
+                  id='name'
+                  value={editingMember.name}
+                  onChange={(e) => setEditingMember({ ...editingMember, name: e.target.value })}
+                  className='col-span-3'
+                />
+              </div>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <label htmlFor='phone' className='text-right'>
+                  전화번호
+                </label>
+                <Input
+                  id='phone'
+                  value={editingMember.phone || ''}
+                  onChange={(e) =>
+                    setEditingMember({ ...editingMember, phone: e.target.value || null })
+                  }
+                  className='col-span-3'
+                  placeholder='010-0000-0000'
+                />
+              </div>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <label htmlFor='birthDate' className='text-right'>
+                  생년월일
+                </label>
+                <Input
+                  id='birthDate'
+                  value={editingMember.birthDate || ''}
+                  onChange={(e) =>
+                    setEditingMember({ ...editingMember, birthDate: e.target.value || null })
+                  }
+                  className='col-span-3'
+                  placeholder='YYYY-MM-DD'
+                />
+              </div>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <label htmlFor='extra' className='text-right'>
+                  추가 정보
+                </label>
+                <Input
+                  id='extra'
+                  value={editingMember.extra || ''}
+                  onChange={(e) =>
+                    setEditingMember({ ...editingMember, extra: e.target.value || null })
+                  }
+                  className='col-span-3'
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant='outline' onClick={() => setIsEditDialogOpen(false)}>
+              취소
+            </Button>
+            <Button onClick={updateMember} disabled={!editingMember?.name.trim()}>
+              저장
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
