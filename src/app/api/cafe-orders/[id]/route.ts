@@ -13,8 +13,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     }
 
     // 주문 조회
-    const 주문 = await findOne({ id });
-    return NextResponse.json(주문);
+    const order = await findOne({ id });
+    return NextResponse.json(order);
   } catch (error) {
     console.error('주문 조회 오류:', error);
     return NextResponse.json({ error: '주문 조회 중 오류가 발생했습니다.' }, { status: 500 });
