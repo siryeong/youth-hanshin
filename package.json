@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:up": "docker compose -f .youth-hanshin-dev/docker-compose.yml up -d && npx drizzle-kit push",
+    "db:down": "docker compose -f .youth-hanshin-dev/docker-compose.yml down"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.1.4",

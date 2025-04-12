@@ -181,8 +181,8 @@ export default function MemberManagement() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex flex-col md:flex-row gap-4 items-end'>
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 flex-grow'>
+      <div className='flex flex-col gap-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 flex-grow'>
           <Input
             placeholder='이름'
             value={newMember.name}
@@ -207,10 +207,10 @@ export default function MemberManagement() {
             onChange={(e) => setNewMember({ ...newMember, extra: e.target.value })}
             disabled={isLoading}
           />
-          <Button onClick={addMember} disabled={isLoading || !newMember.name.trim()}>
-            추가
-          </Button>
         </div>
+        <Button onClick={addMember} disabled={isLoading || !newMember.name.trim()}>
+          추가
+        </Button>
       </div>
 
       <Separator />
