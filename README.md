@@ -7,22 +7,34 @@
 ### 필수 요구사항
 
 - Node.js 18 이상
-- Supabase 계정
+- Postgres
 
 ### 환경 변수 설정
 
-1. 로컬 개발 환경을 위한 `.env.local` 파일 생성:
+1. 로컬 개발 환경을 위한 `.env` 파일 생성:
 
 ```bash
+# postgres
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/postgres"
+
 # 환경 설정
 NODE_ENV=development
 
-# Supabase 연결 정보
-NEXT_PUBLIC_SUPABASE_URL="your-supabase-url"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
+# NextAuth 설정
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=next_auth_secret
+
+# 관리자 설정
+ADMIN_SECRET_KEY=admin_secret_key
 ```
 
 ### 로컬 개발 환경 실행
+
+0. postgres 도커 실행:
+
+```bash
+npm run db:up
+```
 
 1. 개발 서버 실행:
 
@@ -46,21 +58,18 @@ npm run build
 npm run start
 ```
 
-## 데이터베이스 구조
-
-데이터베이스 스키마는 `src/db/schema.sql` 파일에서 관리됩니다. 스키마 변경 방법에 대한 자세한 내용은 [src/db/README.md](src/db/README.md)를 참조하세요.
-
 ## 개발/배포 환경
 
-이 프로젝트는 Supabase를 데이터베이스로 사용합니다. 모든 API 엔드포인트는 Supabase 클라이언트를 통해 데이터에 접근합니다.
+이 프로젝트는 Postgres를 데이터베이스로 사용합니다. 모든 API 엔드포인트는 Postgres 클라이언트를 통해 데이터에 접근합니다.
 
 ## 기술 스택
 
 - Next.js 15
 - React 19
 - TypeScript
-- Supabase
+- Postgres
 - Tailwind CSS
+- Drizzle ORM
 
 ## 시작하기
 
@@ -95,8 +104,7 @@ Vercel에 애플리케이션을 배포할 때 다음 설정이 필요합니다:
 1. **환경 변수 설정**:
    Vercel 프로젝트 설정에서 다음 환경 변수를 추가하세요:
 
-   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase URL
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anon Key
+   - `DATABASE_URL`: Postgres URL
 
 2. **배포 후 확인**:
    배포 후 Vercel 로그를 확인하여 애플리케이션이 올바르게 실행되는지 확인하세요.
