@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -131,18 +131,37 @@ export default function CafeOrderPage() {
   // 메뉴 아이템 선택
   const selectMenuItem = (item: CafeMenuItem) => {
     if (orderInfo.cafeMenuItem?.id === item.id) {
-      // 이미 선택된 아이템을 다시 클릭하면 선택 취소
       setOrderInfo({ ...orderInfo, cafeMenuItem: null });
     } else {
       setOrderInfo({ ...orderInfo, cafeMenuItem: item });
-      // 온도 선택이 필요 없는 메뉴는 바로 카트에 추가
-      if (!item.requiredOptions.temperature) {
-        toast.success(`${item.name} 메뉴가 선택되었습니다.`, {
-          position: 'top-center',
-        });
-      }
     }
   };
+
+  // 동적 스페이서 높이 계산 함수
+  const spacerHeight = useMemo(() => {
+    // 기본 높이 (하단 바만 있을 때)
+    let height = 0; // 기본 하단 바 높이
+
+    // 온도 선택 영역이 표시되는 경우 추가 높이
+    if (
+      orderStep === 'menu' &&
+      orderInfo.cafeMenuItem &&
+      orderInfo.cafeMenuItem.requiredOptions.temperature
+    ) {
+      height += 64; // 온도 선택 영역 높이
+    }
+
+    // 연하게 옵션이 표시되는 경우 추가 높이
+    if (
+      orderStep === 'menu' &&
+      orderInfo.cafeMenuItem &&
+      orderInfo.cafeMenuItem.requiredOptions.strength
+    ) {
+      height += 64; // 연하게 옵션 영역 높이
+    }
+
+    return `${height}px`;
+  }, [orderStep, orderInfo.cafeMenuItem]);
 
   // 온도 선택
   const selectTemperature = (temp: TemperatureType) => {
@@ -154,13 +173,6 @@ export default function CafeOrderPage() {
         temperature: temp,
       },
     });
-    const strengthText = orderInfo.options.strength === 'mild' ? '연하게 ' : '';
-    toast.success(
-      `${strengthText}${temp === 'hot' ? '따뜻한' : '아이스'} ${orderInfo.cafeMenuItem.name} 메뉴가 선택되었습니다.`,
-      {
-        position: 'top-center',
-      },
-    );
   };
 
   // 카트 비우기
@@ -172,9 +184,6 @@ export default function CafeOrderPage() {
   const selectVillage = (selectedVillage: Village) => {
     setOrderInfo({ ...orderInfo, village: selectedVillage });
     setIsCustomName(false);
-    toast.success(`${selectedVillage.name} 마을이 선택되었습니다.`, {
-      position: 'top-center',
-    });
   };
 
   // 멤버 선택 처리
@@ -186,9 +195,6 @@ export default function CafeOrderPage() {
     } else {
       setIsCustomName(false);
       setOrderInfo({ ...orderInfo, customName: null, member: member });
-      toast.success(`${member.name}님으로 선택되었습니다.`, {
-        position: 'top-center',
-      });
     }
   };
 
@@ -241,7 +247,6 @@ export default function CafeOrderPage() {
         setOrderStep('info');
       })
       .catch((error) => {
-        console.error('주문 처리 오류:', error);
         toast.error(error instanceof Error ? error.message : '주문 처리 중 오류가 발생했습니다.', {
           position: 'top-center',
         });
@@ -250,6 +255,7 @@ export default function CafeOrderPage() {
 
   // 새 주문 생성 (중복 무시)
   const createNewOrderAnyway = () => {
+    setShowDuplicateWarning(false);
     processOrder();
   };
 
@@ -267,7 +273,6 @@ export default function CafeOrderPage() {
         }
       })
       .catch((error) => {
-        console.error('주문 업데이트 오류:', error);
         toast.error(
           error instanceof Error ? error.message : '주문 업데이트 중 오류가 발생했습니다.',
           {
@@ -382,24 +387,6 @@ export default function CafeOrderPage() {
       </div>
     );
   }
-
-  // 동적 스페이서 높이 계산 함수
-  const calculateSpacerHeight = () => {
-    // 기본 높이 (하단 바만 있을 때)
-    let height = 0; // 기본 하단 바 높이
-
-    // 온도 선택 영역이 표시되는 경우 추가 높이
-    if (orderStep === 'menu' && orderInfo.cafeMenuItem && orderInfo.options.temperature !== null) {
-      height += 62; // 온도 선택 영역 높이
-    }
-
-    // 연하게 옵션이 표시되는 경우 추가 높이
-    if (orderStep === 'menu' && orderInfo.cafeMenuItem && orderInfo.options.strength !== null) {
-      height += 62; // 연하게 옵션 영역 높이
-    }
-
-    return `${height}px`;
-  };
 
   // 카페 영업 시간 표시 함수
   const renderOpeningHours = () => {
@@ -674,7 +661,7 @@ export default function CafeOrderPage() {
       <div
         className='w-full'
         style={{
-          height: calculateSpacerHeight(),
+          height: spacerHeight,
         }}
       />
 

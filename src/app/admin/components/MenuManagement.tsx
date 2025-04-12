@@ -51,8 +51,7 @@ export default function MenuManagement() {
 
   // 메뉴 아이템 추가
   const addMenuItem = useCallback(() => {
-    if (!newMenuItem.name.trim() || !newMenuItem.description.trim() || !newMenuItem.category)
-      return;
+    if (!newMenuItem.name.trim() || !newMenuItem.category) return;
 
     setIsLoading(true);
     fetch('/api/admin/cafe-menu/items', {

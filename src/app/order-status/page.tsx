@@ -89,21 +89,22 @@ function OrderStatusContent() {
 
   const villageSummaries: VillageSummary[] = useMemo(
     () =>
-      villages.map((village) => ({
-        id: village.id,
-        name: village.name,
-        orders: orders.filter((order) => order.village.id === village.id),
-        pending: orders.filter((order) => order.status === 'pending').length,
-        completed: orders.filter((order) => order.status === 'completed').length,
-        total: orders.filter((order) => order.village.id === village.id).length,
-        menuSummaries: orders
-          .filter((order) => order.village.id === village.id)
-          .map((order) => ({
+      villages.map((village) => {
+        const villageOrders = orders.filter((order) => order.village.id === village.id);
+        return {
+          id: village.id,
+          name: village.name,
+          orders: villageOrders,
+          pending: villageOrders.filter((order) => order.status === 'pending').length,
+          completed: villageOrders.filter((order) => order.status === 'completed').length,
+          total: villageOrders.length,
+          menuSummaries: villageOrders.map((order) => ({
             cafeMenuItemId: order.cafeMenuItem.id,
             cafeMenuItemName: `${order.options.temperature === 'ice' ? '아이스 ' : ''}${order.options.temperature === 'hot' ? '따뜻한 ' : ''}${order.cafeMenuItem.name}${order.options.strength === 'mild' ? ' 연하게 ' : ''}`,
             total: 1,
           })),
-      })),
+        };
+      }),
     [villages, orders],
   );
 

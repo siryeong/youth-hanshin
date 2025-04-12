@@ -12,11 +12,12 @@ export async function POST(request: NextRequest) {
       villageId,
       memberId,
       cafeMenuItemId,
+      customName,
       options: { temperature, strength },
     } = body;
 
     // 필수 필드 검증
-    if (!villageId || !memberId || cafeMenuItemId === undefined) {
+    if (!villageId || cafeMenuItemId === undefined || (memberId === undefined && !customName)) {
       return NextResponse.json(
         { error: '마을, 멤버, 메뉴 항목은 필수 입력 사항입니다.' },
         { status: 400 },
@@ -34,6 +35,7 @@ export async function POST(request: NextRequest) {
       villageId,
       memberId,
       cafeMenuItemId,
+      customName,
       options: { temperature, strength },
       status: 'pending',
     };
