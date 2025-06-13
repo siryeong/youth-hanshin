@@ -19,7 +19,7 @@ import { fetchCafeMenuItems } from '@/fetch/CafeMenuItem';
 import { useRequest } from '@/fetch/Request';
 import { createOrder, fetchDuplicateOrder, updateOrder } from '@/fetch/CafeOrder';
 
-interface OrderInfo {
+export interface OrderInfo {
   cafeMenuItem: CafeMenuItem | null;
   village: Village | null;
   member: Member | null;

@@ -1,30 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CafeMenuItem, TemperatureType, StrengthType, Village, Member } from '@/model/model';
-
-interface OrderInfo {
-  village: Village;
-  member: Member;
-  customName: string | null;
-  cafeMenuItem: CafeMenuItem | null;
-  options: {
-    temperature: TemperatureType;
-    strength: StrengthType;
-  };
-}
+import { TemperatureType } from '@/model/model';
+import { OrderInfo } from './useCafeOrder';
 
 interface OrderBottomBarProps {
   orderStep: 'info' | 'menu' | 'cart';
-  orderInfo: {
-    village: Village;
-    member: Member;
-    customName: string | null;
-    cafeMenuItem: CafeMenuItem | null;
-    options: {
-      temperature: TemperatureType;
-      strength: StrengthType;
-    };
-  };
+  orderInfo: OrderInfo;
   isCafeOpen: boolean;
   isProcessingOrder: boolean;
   isOrderInfoValid: () => boolean;
