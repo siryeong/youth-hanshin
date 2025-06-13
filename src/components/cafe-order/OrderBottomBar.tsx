@@ -1,12 +1,23 @@
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { CafeMenuItem, TemperatureType, StrengthType } from '@/model/model';
+import { CafeMenuItem, TemperatureType, StrengthType, Village, Member } from '@/model/model';
+
+interface OrderInfo {
+  village: Village;
+  member: Member;
+  customName: string | null;
+  cafeMenuItem: CafeMenuItem | null;
+  options: {
+    temperature: TemperatureType;
+    strength: StrengthType;
+  };
+}
 
 interface OrderBottomBarProps {
   orderStep: 'info' | 'menu' | 'cart';
   orderInfo: {
-    village: any;
-    member: any;
+    village: Village;
+    member: Member;
     customName: string | null;
     cafeMenuItem: CafeMenuItem | null;
     options: {
@@ -22,7 +33,7 @@ interface OrderBottomBarProps {
   handleOrder: () => void;
   clearCart: () => void;
   selectTemperature: (temp: TemperatureType) => void;
-  setOrderInfo: (orderInfo: any) => void;
+  setOrderInfo: (orderInfo: OrderInfo) => void;
   spacerHeight: string;
 }
 
