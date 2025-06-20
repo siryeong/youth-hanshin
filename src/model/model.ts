@@ -90,3 +90,27 @@ export interface CafeSetting {
   createdAt: string;
   updatedAt: string;
 }
+
+// 이벤트 참가자
+export interface EventParticipant {
+  id: number;
+  name: string;
+  village: Village;
+  createdAt: string;
+}
+
+// 선물 교환 매칭
+export interface GiftExchangeMatch {
+  id: number;
+  eventId: string;
+  giver: EventParticipant;
+  receiver: EventParticipant;
+  isRevealed: boolean;
+  createdAt: string;
+}
+
+// 선물 교환 결과 (클라이언트용)
+export interface GiftExchangeResult {
+  participant: EventParticipant;
+  receiver: EventParticipant;
+}
