@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   uuid,
+  unique,
 } from 'drizzle-orm/pg-core';
 
 // 계정
@@ -129,3 +130,61 @@ export const cafeSettings = pgTable('cafe_settings', {
   closingTime: text('closing_time').notNull(),
   openDays: integer('open_days').array().notNull(),
 });
+
+// 이벤트 참가자
+export const eventParticipants = pgTable(
+  'event_participants',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    villageId: integer('village_id')
+      .notNull()
+      .references(() => villages.id),
+    createdAt: timestamp('created_at').defaultNow(),
+  },
+  (t) => ({
+    // 마을 + 이름 조합이 유니크해야 함
+    uniqueVillageNameConstraint: unique().on(t.villageId, t.name),
+  }),
+);
+
+// 선물 교환 매칭 결과
+export const giftExchangeMatches = pgTable('gift_exchange_matches', {
+  id: serial('id').primaryKey(),
+  eventId: text('event_id').notNull(), // 이벤트 구분용 (날짜나 이벤트명)
+  giverId: integer('giver_id')
+    .notNull()
+    .references(() => eventParticipants.id),
+  receiverId: integer('receiver_id')
+    .notNull()
+    .references(() => eventParticipants.id),
+  isRevealed: boolean('is_revealed').default(false), // 선물 교환 완료 여부
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Relations
+export const eventParticipantsRelations = relations(eventParticipants, ({ one, many }) => ({
+  village: one(villages, {
+    fields: [eventParticipants.villageId],
+    references: [villages.id],
+  }),
+  asGiver: many(giftExchangeMatches, {
+    relationName: 'giver',
+  }),
+  asReceiver: many(giftExchangeMatches, {
+    relationName: 'receiver',
+  }),
+}));
+
+export const giftExchangeMatchesRelations = relations(giftExchangeMatches, ({ one }) => ({
+  giver: one(eventParticipants, {
+    fields: [giftExchangeMatches.giverId],
+    references: [eventParticipants.id],
+    relationName: 'giver',
+  }),
+  receiver: one(eventParticipants, {
+    fields: [giftExchangeMatches.receiverId],
+    references: [eventParticipants.id],
+    relationName: 'receiver',
+  }),
+}));
