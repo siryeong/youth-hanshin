@@ -68,7 +68,7 @@ export function DuplicateOrderModal({
         </div>
         <h2 className='text-xl font-bold mb-2'>중복 주문 감지됨</h2>
         <p className='mb-4'>
-          {duplicateOrderInfo.village.name}마을{' '}
+          {duplicateOrderInfo.village.name}{' '}
           {duplicateOrderInfo.member?.name || duplicateOrderInfo.customName}님은 오늘 이미{' '}
           주문하셨습니다.
         </p>

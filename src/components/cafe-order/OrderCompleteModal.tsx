@@ -50,7 +50,7 @@ export function OrderCompleteModal({
         </div>
         <h2 className='text-2xl font-bold mb-2'>주문 완료!</h2>
         <p className='mb-4'>
-          {completedOrderInfo.village.name}마을{' '}
+          {completedOrderInfo.village.name}{' '}
           {completedOrderInfo.member?.name || completedOrderInfo.customName}님의 주문이
           완료되었습니다.
         </p>

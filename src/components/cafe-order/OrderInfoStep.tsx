@@ -44,7 +44,7 @@ export function OrderInfoStep({
                 onClick={() => selectVillage(v)}
               >
                 <CardHeader className='p-2 sm:p-3 text-center'>
-                  <CardTitle className='text-xs sm:text-sm'>{v.name}마을</CardTitle>
+                  <CardTitle className='text-xs sm:text-sm'>{v.name}</CardTitle>
                 </CardHeader>
               </Card>
             ))}
