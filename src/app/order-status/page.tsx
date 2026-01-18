@@ -211,7 +211,7 @@ function OrderStatusContent() {
               <CardContent className='p-6'>
                 <div className='flex justify-between items-start mb-4'>
                   <div>
-                    <h2 className='text-xl font-bold'>{village.name}마을</h2>
+                    <h2 className='text-xl font-bold'>{village.name}</h2>
                     <p className='text-sm text-muted-foreground'>총 {village.total}건의 주문</p>
                   </div>
                   {village.total > 0 && (
@@ -279,7 +279,7 @@ function OrderStatusContent() {
               <CardContent className='p-6'>
                 <div className='flex justify-between items-start mb-4'>
                   <div>
-                    <h2 className='text-xl font-bold'>{village.name}마을</h2>
+                    <h2 className='text-xl font-bold'>{village.name}</h2>
                     <p className='text-sm text-muted-foreground'>총 {village.total}건의 주문</p>
                   </div>
                 </div>

@@ -243,7 +243,7 @@ export default function OrderManagement() {
     let summaryText = '';
 
     Object.entries(villageSummary).forEach(([villageId, data]) => {
-      summaryText += `[${data.villageName}마을]\n`;
+      summaryText += `[${data.villageName}]\n`;
 
       const villageMenus = menuSummary[Number(villageId)];
       if (villageMenus) {
@@ -265,7 +265,7 @@ export default function OrderManagement() {
     let orderListText = '';
 
     Object.entries(villageSummary).forEach(([, data]) => {
-      orderListText += `[${data.villageName}마을]\n`;
+      orderListText += `[${data.villageName}]\n`;
 
       // 주문자 이름 기준으로 정렬
       const sortedOrders = [...data.orders].sort((a, b) =>
@@ -387,7 +387,7 @@ export default function OrderManagement() {
             {Object.entries(villageSummary).length > 0 ? (
               Object.entries(villageSummary).map(([villageId, data]) => (
                 <div key={villageId} className='p-4 border rounded-md bg-slate-50'>
-                  <div className='font-medium'>{data.villageName}마을</div>
+                  <div className='font-medium'>{data.villageName}</div>
                   <div className='text-lg font-bold mt-1'>{data.count}건</div>
                   <div className='text-sm text-muted-foreground mt-2'>
                     <div className='flex items-center gap-1'>
@@ -470,7 +470,7 @@ export default function OrderManagement() {
                     </span>
                   </div>
                   <p className='text-sm text-muted-foreground'>
-                    {order.village.name}마을 - {order.member?.name || order.customName || ''}
+                    {order.village.name} - {order.member?.name || order.customName || ''}
                     {order.customName && ' (직접 입력)'}
                   </p>
                 </div>

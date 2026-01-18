@@ -125,7 +125,7 @@ export function OrderBottomBar({
                 {/* 주문 정보 단계에서 마을이 선택된 경우 마을 이름 표시 */}
                 {orderStep === 'info' && orderInfo.village ? (
                   <p className='font-medium text-xs sm:text-sm'>
-                    {orderInfo.village?.name}마을 - {orderInfo.member?.name || orderInfo.customName}
+                    {orderInfo.village?.name} - {orderInfo.member?.name || orderInfo.customName}
                   </p>
                 ) : /* 메뉴 선택 단계에서 메뉴가 선택된 경우 메뉴 이름 표시 */
                 orderStep === 'menu' && orderInfo.cafeMenuItem ? (

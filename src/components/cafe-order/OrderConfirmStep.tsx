@@ -26,7 +26,7 @@ export function OrderConfirmStep({ orderInfo, isCustomName }: OrderConfirmStepPr
         <div className='space-y-3 p-3 sm:p-4 bg-muted/30 rounded-lg'>
           <div className='flex flex-col gap-1'>
             <span className='text-xs sm:text-sm text-muted-foreground'>마을</span>
-            <span className='text-sm sm:text-base font-medium'>{orderInfo.village?.name}마을</span>
+            <span className='text-sm sm:text-base font-medium'>{orderInfo.village?.name}</span>
           </div>
 
           <div className='flex flex-col gap-1'>
