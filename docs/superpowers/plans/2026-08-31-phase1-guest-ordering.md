@@ -780,7 +780,7 @@ insert into public.menus_v2 (category, name, price, ice_price_delta, options, so
 - [ ] **Step 6: 테스트 통과 확인**
 
 Run: `npm run test:db`
-Expected: PASS 2개
+Expected: PASS 4개
 
 - [ ] **Step 7: 커밋**
 
