@@ -1086,6 +1086,38 @@ test('빈 장바구니는 거절한다', async () => {
   const { error } = await anonClient().rpc('place_order', { p_items: [], p_guest_token: TOKEN })
   expect(error?.message).toContain('EMPTY_CART')
 })
+
+test('메뉴를 지워도 주문 내역은 주문 당시 이름과 옵션으로 남는다', async () => {
+  const db = serviceClient()
+  const { data: temp } = await db
+    .from('menus_v2')
+    .insert({
+      category: 'coffee',
+      name: '한정 메뉴',
+      price: 2000,
+      ice_price_delta: 1000,
+      options: { temperature: ['hot'], shot: 0, light: false, syrup: false },
+      sort_order: 99,
+    })
+    .select('id')
+    .single()
+
+  const { data: orderId } = await anonClient().rpc('place_order', {
+    p_items: [{ menu_id: temp!.id, option_label: 'HOT · 1잔', options: { temperature: 'hot' }, quantity: 1 }],
+    p_guest_token: TOKEN,
+  })
+
+  await db.from('menus_v2').delete().eq('id', temp!.id)
+
+  const { data: items } = await db
+    .from('order_items_v2')
+    .select('menu_id, menu_name, option_label')
+    .eq('order_id', orderId)
+
+  expect(items![0].menu_id).toBeNull()
+  expect(items![0].menu_name).toBe('한정 메뉴')
+  expect(items![0].option_label).toBe('HOT · 1잔')
+})
 ```
 
 - [ ] **Step 2: 테스트 실패 확인**
@@ -1151,7 +1183,9 @@ grant execute on function public.place_order(jsonb, uuid) to anon, authenticated
 - [ ] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test:db -- place-order`
-Expected: PASS 4개
+Expected: PASS 5개
+
+마지막 테스트는 시드된 19행을 건드리지 않도록 임시 메뉴를 새로 만들어 지운다. `db reset` 은 스위트 전체에 한 번만 돌기 때문이다.
 
 - [ ] **Step 5: 커밋**
 
@@ -2458,7 +2492,7 @@ Expected: PASS 1개
 
 Vercel 프로젝트에 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`를 넣는다.
 
-> **운영 DB 반영은 여기서 멈춘다.** 마이그레이션 대상인 `youth-hanshin` 프로젝트는 v1 이 지금 쓰고 있는 운영 데이터베이스다. `supabase link` 와 `supabase db push` 는 개발자의 명시적 승인을 받은 뒤에만 실행한다. 구현자는 여기까지 준비만 하고 승인을 요청한다. 승인 후 절차: `supabase link --project-ref <youth-hanshin ref>` → `supabase db push` → `cohorts_v2`·`cafe_settings_v2`·`menus_v2` 초기 데이터 1회 입력. 모든 마이그레이션은 새 `_v2` 객체만 만들고 v1 객체는 건드리지 않는다.
+> **운영 DB 반영은 여기서 멈춘다.** 마이그레이션 대상인 `youth-hanshin` 프로젝트는 v1 이 지금 쓰고 있는 운영 데이터베이스다. `supabase link` 와 `supabase db push` 는 개발자의 명시적 승인을 받은 뒤에만 실행한다. 구현자는 여기까지 준비만 하고 승인을 요청한다. 승인 후 절차: `supabase link --project-ref <youth-hanshin ref>` → **`db push` 전에 v1 객체와 이름이 겹치는지 확인한다** (`select typname from pg_type where typname in ('menu_category','order_item_status','app_role')` 와 `select proname from pg_proc where proname = 'active_cohort_id'`; 결과가 있으면 그 객체에도 `_v2` 를 붙이고 마이그레이션을 고친 뒤 다시 시도한다) → `supabase db push` → `cohorts_v2`·`cafe_settings_v2`·`menus_v2` 초기 데이터 1회 입력. 모든 마이그레이션은 새 `_v2` 객체만 만들고 v1 객체는 건드리지 않는다.
 
 `README.md`에 로컬 실행 순서(`supabase start` → `.env.local` 작성 → `npm run dev`)와 테스트 명령 세 가지(`npm test`, `npm run test:db`, `npm run e2e`)를 적는다.
 
