@@ -1,0 +1,4 @@
+.stepper { display: inline-flex; align-items: center; background: var(--fill); border-radius: var(--radius-field); }
+.step { width: var(--control); height: var(--control); display: grid; place-items: center; }
+.step:disabled { color: var(--text-disabled); cursor: default; }
+.value { min-width: 32px; text-align: center; font-family: var(--font-mono); font-weight: 500; }

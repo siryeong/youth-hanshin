@@ -1,0 +1,2 @@
+.chip { display: inline-flex; align-items: center; justify-content: center; height: var(--control); padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--fill); color: var(--text-2); font-size: var(--text-caption); font-weight: 500; }
+.selected { background: var(--accent-fill); color: #171310; font-weight: 600; }

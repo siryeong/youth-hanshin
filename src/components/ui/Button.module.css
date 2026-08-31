@@ -1,0 +1,17 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  height: var(--control);
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-field);
+  font-size: var(--text-label);
+  font-weight: 500;
+}
+.lg { height: var(--control-lg); font-size: var(--text-body); }
+.primary { background: var(--text); color: var(--surface); }
+.accent { background: var(--accent-fill); color: #171310; }
+.secondary { background: var(--fill); color: var(--text); }
+.danger { background: var(--danger); color: #FFFFFF; }
+.button:disabled { background: var(--fill); color: var(--text-disabled); cursor: default; }
