@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#F4F0E7;color:#171310;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-feature-settings:"tnum"}
+    .card{background:#FFFFFF; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:14px}
+    .h{font-size:13px; font-weight:600}
+    .m{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12px; color:#7C7268}
+    .stage{background:#EAE3D6;border-radius:16px;padding:14px}
+  </style>
+</helmet>
+<div style="padding:44px 48px 56px; display:flex; flex-direction:column; gap:34px">
+
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <div class="mono" style="font-size:12px; letter-spacing:0.1em; color:#7C7268">FOUNDATION / 03</div>
+    <div style="font-size:32px; font-weight:600; letter-spacing:-0.02em">간격 · 형태 · 모션</div>
+    <div style="font-size:14px; line-height:1.65; color:#4A423A; max-width:620px">4px 배수 한 벌로 여백과 크기를 모두 정한다. 층은 테두리나 그림자가 아니라 면의 톤 차이로 만든다. 애플의 그룹 리스트와 같은 방식이다.</div>
+  </div>
+
+  <div class="card">
+    <div class="h">간격 스케일 · 4px 배수</div>
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">4</span><span style="height:14px; width:4px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">아이콘과 글자 사이</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">8</span><span style="height:14px; width:8px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">칩 사이, 라벨과 입력 사이</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">12</span><span style="height:14px; width:12px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">리스트 항목 사이</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">16</span><span style="height:14px; width:16px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">카드 내부 패딩(모바일)</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">20</span><span style="height:14px; width:20px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">화면 좌우 여백(모바일)</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">24</span><span style="height:14px; width:24px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">카드 내부 패딩(PC)</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">32</span><span style="height:14px; width:32px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">섹션 사이</span></div>
+      <div style="display:flex; align-items:center; gap:12px"><span class="m" style="width:52px">48</span><span style="height:14px; width:48px; background:#F2CCD5"></span><span style="font-size:12px; color:#4A423A">큰 블록 사이(PC)</span></div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:14px">
+    <div class="card" style="flex:1">
+      <div class="h">모서리</div>
+      <div style="display:flex; gap:12px; align-items:flex-end">
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center"><div style="width:56px; height:56px; background:#EAE3D6; border-radius:8px"></div><span class="m">8 칩</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center"><div style="width:56px; height:56px; background:#EAE3D6; border-radius:12px"></div><span class="m">12 입력</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center"><div style="width:56px; height:56px; background:#EAE3D6; border-radius:16px"></div><span class="m">16 카드</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center"><div style="width:56px; height:56px; background:#EAE3D6; border-radius:22px"></div><span class="m">22 시트</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center"><div style="width:56px; height:56px; background:#EAE3D6; border-radius:999px"></div><span class="m">999 배지</span></div>
+      </div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="h">면의 층위</div>
+      <div style="display:flex; flex-direction:column; gap:0; border-radius:12px; overflow:hidden">
+        <div style="background:#F4F0E7; padding:13px 16px; display:flex; justify-content:space-between; align-items:center"><span style="font-size:13px">배경</span><span class="m">#F4F0E7</span></div>
+        <div style="background:#FFFFFF; padding:13px 16px; display:flex; justify-content:space-between; align-items:center"><span style="font-size:13px">카드 · 시트</span><span class="m">#FFFFFF</span></div>
+        <div style="background:#EAE3D6; padding:13px 16px; display:flex; justify-content:space-between; align-items:center"><span style="font-size:13px">컨트롤 채움</span><span class="m">#EAE3D6</span></div>
+        <div style="background:#DFD6C6; padding:13px 16px; display:flex; justify-content:space-between; align-items:center"><span style="font-size:13px">눌림 · 트랙</span><span class="m">#DFD6C6</span></div>
+      </div>
+      <div style="font-size:12px; line-height:1.7; color:#4A423A">카드는 배경보다 밝아서 떠 보이고, 컨트롤은 배경보다 어두워서 눌러 보인다. 테두리와 그림자는 쓰지 않는다.<br>바텀시트와 모달은 뒤를 어둡게 덮어 층을 만든다.</div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:14px">
+    <div class="card" style="flex:1">
+      <div class="h">터치 타깃과 컨트롤 높이</div>
+      <div style="display:flex; align-items:flex-end; gap:14px">
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center">
+          <div style="width:92px; height:48px; background:#171310; color:#FFFFFF; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500">48</div>
+          <span class="m">모바일 주요</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center">
+          <div style="width:92px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500; background:#EAE3D6">44</div>
+          <span class="m">모바일 최소</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center">
+          <div style="width:92px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:500; background:#EAE3D6">40</div>
+          <span class="m">PC 기본</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:center">
+          <div style="width:92px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:500; background:#EAE3D6">34</div>
+          <span class="m">PC 표 안</span>
+        </div>
+      </div>
+      <div style="font-size:12px; line-height:1.6; color:#4A423A">아이콘 버튼도 눌리는 영역은 44×44 이상으로 잡는다. 아이콘 자체는 20 또는 24.</div>
+    </div>
+    <div class="card" style="flex:1">
+      <div class="h">아이콘</div>
+      <div style="display:flex; gap:16px; align-items:center; color:#171310">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path><path d="M8 3.5V5M11 3V5M14 3.5V5"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.6 20a5.6 5.6 0 0 1 10.8 0"></path><path d="M16 5.6a3 3 0 0 1 0 5.4"></path><path d="M17.6 20a5.8 5.8 0 0 0-2.2-4.4"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"></circle><path d="M12 7.5V12l3 2"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12S6.2 6 12 6s9.2 6 9.2 6-3.4 6-9.2 6-9.2-6-9.2-6Z"></path><circle cx="12" cy="12" r="2.8"></circle></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10" width="15" height="10" rx="2.5"></rect><path d="M8 10V7.5a4 4 0 0 1 8 0V10"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 1.8 5.6H4.2S6 13.5 6 9Z"></path><path d="M10 18a2 2 0 0 0 4 0"></path></svg>
+      </div>
+      <div style="font-size:12px; line-height:1.65; color:#4A423A">24px 그리드, 선 굵기 1.5, 끝은 둥글게. 면으로 채우지 않는다. 이모지는 쓰지 않는다.</div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:14px">
+    <div class="card" style="flex:1">
+      <div class="h">모션</div>
+      <div style="font-size:13px; line-height:1.75; color:#4A423A">
+        <span class="mono" style="font-size:12px">120ms</span> · 즉각 반응 — 칩 선택, 체크<br>
+        <span class="mono" style="font-size:12px">180ms</span> · 기본 — 화면 전환, 펼치기<br>
+        <span class="mono" style="font-size:12px">260ms</span> · 바텀시트, 모달<br>
+        <span class="mono" style="font-size:12px">cubic-bezier(0.2, 0.8, 0.2, 1)</span><br>
+        <span style="color:#7C7268">prefers-reduced-motion에서는 이동 없이 페이드만.</span>
+      </div>
+    </div>
+    <div class="card" style="flex:1.4">
+      <div class="h">레이아웃 · 브레이크포인트</div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13px">
+        <div style="display:flex; gap:12px; align-items:center"><span class="m" style="width:104px">~ 599</span><span style="color:#4A423A">모바일 · 1열 · 좌우 20 · 하단 탭</span></div>
+        <div style="display:flex; gap:12px; align-items:center"><span class="m" style="width:104px">600 ~ 1023</span><span style="color:#4A423A">태블릿 · 2열 · 좌우 32 · 하단 탭 유지</span></div>
+        <div style="display:flex; gap:12px; align-items:center"><span class="m" style="width:104px">1024 ~</span><span style="color:#4A423A">PC · 12칼럼 · 사이드바 240 · 본문 최대 1280</span></div>
+      </div>
+      <div style="font-size:12px; line-height:1.65; color:#4A423A; padding-top:12px">같은 화면을 폭에 따라 다시 배치한다. 바텀시트는 1024 이상에서 가운데 모달로, 하단 탭은 좌측 사이드바로 바뀐다.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

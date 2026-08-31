@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#F4F0E7;color:#171310;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-feature-settings:"tnum"}
+    .list > * + *{border-top:1px solid rgba(38,30,22,0.07)}
+    .tr{display:grid;grid-template-columns:1.2fr 1fr 1fr 1.6fr;padding:12px 18px;font-size:13px;align-items:center}
+    .sw{width:16px;height:16px;border-radius:5px;flex-shrink:0}
+    .cell{display:flex;align-items:center;gap:8px}
+    .hex{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;color:#7C7268}
+    .pad{background:#EAE3D6;border-radius:18px;padding:20px}
+  </style>
+</helmet>
+<div style="padding:44px 48px 56px; display:flex; flex-direction:column; gap:40px">
+
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <div class="mono" style="font-size:12px; letter-spacing:0.1em; color:#7C7268">FOUNDATION / 01</div>
+    <div style="font-size:32px; font-weight:600; letter-spacing:-0.02em">컬러</div>
+    <div style="font-size:14px; line-height:1.65; color:#4A423A; max-width:680px">브랜드 4색(블랙·화이트·아이보리·연핑크)을 원색으로 두고, 화면에서는 시맨틱 토큰으로만 참조한다. 테두리와 그림자를 쓰지 않으므로 <b style="font-weight:600">면의 밝기 차이가 층위를 만드는 유일한 수단</b>이다. 배경보다 밝으면 떠 있는 것(카드), 어두우면 눌리는 것(컨트롤)이다.</div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <div style="font-size:15px; font-weight:600">브랜드 원색</div>
+    <div class="pad" style="display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:20px">
+      <div style="display:flex; flex-direction:column; gap:10px">
+        <div style="height:112px; border-radius:14px; background:#171310"></div>
+        <div style="font-size:14px; font-weight:600">잉크 블랙</div>
+        <div class="hex">#171310</div>
+        <div style="font-size:13px; line-height:1.55; color:#4A423A">본문, 주요 버튼, 헤드라인</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px">
+        <div style="height:112px; border-radius:14px; background:#FFFFFF"></div>
+        <div style="font-size:14px; font-weight:600">화이트</div>
+        <div class="hex">#FFFFFF</div>
+        <div style="font-size:13px; line-height:1.55; color:#4A423A">카드, 시트, 떠 있는 면</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px">
+        <div style="height:112px; border-radius:14px; background:#F4F0E7"></div>
+        <div style="font-size:14px; font-weight:600">아이보리</div>
+        <div class="hex">#F4F0E7</div>
+        <div style="font-size:13px; line-height:1.55; color:#4A423A">앱 배경. 카드가 이 위에 뜬다</div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px">
+        <div style="height:112px; border-radius:14px; background:#F2CCD5"></div>
+        <div style="font-size:14px; font-weight:600">소프트 핑크</div>
+        <div class="hex">#F2CCD5</div>
+        <div style="font-size:13px; line-height:1.55; color:#4A423A">선택된 것 하나를 가리키는 면</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:18px">
+    <div style="font-size:15px; font-weight:600">확장 스케일</div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font-size:13px; font-weight:500; color:#4A423A">면 · 밝은 쪽이 위로 뜬다</div>
+      <div class="pad" style="display:flex; gap:10px; padding:14px">
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#FFFFFF"></div><div class="hex">surface · FFFFFF</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#F4F0E7"></div><div class="hex">bg · F4F0E7</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#EAE3D6"></div><div class="hex">fill · EAE3D6</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#DFD6C6"></div><div class="hex">fill-strong · DFD6C6</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font-size:13px; font-weight:500; color:#4A423A">Ink · 글자와 아이콘</div>
+      <div style="display:flex; gap:10px">
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#171310"></div><div class="hex">900 · 171310</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#4A423A"></div><div class="hex">700 · 4A423A</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#7C7268"></div><div class="hex">500 · 7C7268</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#A79E93"></div><div class="hex">300 · A79E93</div></div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font-size:13px; font-weight:500; color:#4A423A">Pink · 강조</div>
+      <div style="display:flex; gap:10px">
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#F9E5EA"></div><div class="hex">soft · F9E5EA</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#F2CCD5"></div><div class="hex">fill · F2CCD5</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#E39FAF"></div><div class="hex">400 · E39FAF</div></div>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><div style="height:52px; border-radius:10px; background:#A8475E"></div><div class="hex">text · A8475E</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:14px">
+    <div style="font-size:15px; font-weight:600">시맨틱 토큰</div>
+    <div class="list" style="border-radius:16px; overflow:hidden; background:#FFFFFF">
+      <div style="display:grid; grid-template-columns:1.2fr 1fr 1fr 1.6fr; background:#EAE3D6; padding:12px 18px; font-size:12px; font-weight:600; color:#4A423A">
+        <div>토큰</div><div>라이트</div><div>다크</div><div>용도</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">bg</div>
+        <div class="cell"><span class="sw" style="background:#F4F0E7"></span><span class="hex">F4F0E7</span></div>
+        <div class="cell"><span class="sw" style="background:#14120F"></span><span class="hex">14120F</span></div>
+        <div style="color:#4A423A">화면 바탕</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">surface</div>
+        <div class="cell"><span class="sw" style="background:#FFFFFF"></span><span class="hex">FFFFFF</span></div>
+        <div class="cell"><span class="sw" style="background:#211D18"></span><span class="hex">211D18</span></div>
+        <div style="color:#4A423A">카드, 바텀시트, 리스트 그룹</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">fill</div>
+        <div class="cell"><span class="sw" style="background:#EAE3D6"></span><span class="hex">EAE3D6</span></div>
+        <div class="cell"><span class="sw" style="background:#2C261F"></span><span class="hex">2C261F</span></div>
+        <div style="color:#4A423A">입력, 보조 버튼, 미선택 칩, 표 헤더</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">fill-strong</div>
+        <div class="cell"><span class="sw" style="background:#DFD6C6"></span><span class="hex">DFD6C6</span></div>
+        <div class="cell"><span class="sw" style="background:#3A332B"></span><span class="hex">3A332B</span></div>
+        <div style="color:#4A423A">눌림 상태, 스위치 트랙, 진행 바 트랙</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">separator</div>
+        <div class="cell"><span class="sw" style="background:#E4DCCE"></span><span class="hex">ink 7%</span></div>
+        <div class="cell"><span class="sw" style="background:#2E2822"></span><span class="hex">text 10%</span></div>
+        <div style="color:#4A423A">그룹 리스트 안쪽 헤어라인. 컨테이너를 두르는 데는 쓰지 않는다</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">text</div>
+        <div class="cell"><span class="sw" style="background:#171310"></span><span class="hex">171310</span></div>
+        <div class="cell"><span class="sw" style="background:#F6F1E9"></span><span class="hex">F6F1E9</span></div>
+        <div style="color:#4A423A">본문</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">text-muted</div>
+        <div class="cell"><span class="sw" style="background:#7C7268"></span><span class="hex">7C7268</span></div>
+        <div class="cell"><span class="sw" style="background:#9A9084"></span><span class="hex">9A9084</span></div>
+        <div style="color:#4A423A">보조 설명, 메타 정보</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">accent-fill</div>
+        <div class="cell"><span class="sw" style="background:#F2CCD5"></span><span class="hex">F2CCD5</span></div>
+        <div class="cell"><span class="sw" style="background:#E7ADBA"></span><span class="hex">E7ADBA</span></div>
+        <div style="color:#4A423A">선택된 항목, 강조 버튼</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">accent-soft</div>
+        <div class="cell"><span class="sw" style="background:#F9E5EA"></span><span class="hex">F9E5EA</span></div>
+        <div class="cell"><span class="sw" style="background:#332629"></span><span class="hex">332629</span></div>
+        <div style="color:#4A423A">놓을 수 있는 영역, 옅은 강조 면</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">accent-text</div>
+        <div class="cell"><span class="sw" style="background:#A8475E"></span><span class="hex">A8475E</span></div>
+        <div class="cell"><span class="sw" style="background:#F0BFC9"></span><span class="hex">F0BFC9</span></div>
+        <div style="color:#4A423A">링크, 핑크 계열 텍스트</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">success</div>
+        <div class="cell"><span class="sw" style="background:#3E7A5E"></span><span class="hex">3E7A5E</span></div>
+        <div class="cell"><span class="sw" style="background:#7FBFA1"></span><span class="hex">7FBFA1</span></div>
+        <div style="color:#4A423A">출석, 주문 가능</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">warning</div>
+        <div class="cell"><span class="sw" style="background:#A9701F"></span><span class="hex">A9701F</span></div>
+        <div class="cell"><span class="sw" style="background:#D9A75B"></span><span class="hex">D9A75B</span></div>
+        <div style="color:#4A423A">마감 임박</div>
+      </div>
+      <div class="tr">
+        <div class="mono" style="font-size:12px">danger</div>
+        <div class="cell"><span class="sw" style="background:#A93F3C"></span><span class="hex">A93F3C</span></div>
+        <div class="cell"><span class="sw" style="background:#E08C89"></span><span class="hex">E08C89</span></div>
+        <div style="color:#4A423A">주문 취소, 임시 휴무, 계정 삭제</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; gap:16px">
+    <div style="flex:1; background:#FFFFFF; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:10px">
+      <div style="font-size:13px; font-weight:600">사용 규칙</div>
+      <div style="font-size:13px; line-height:1.75; color:#4A423A">· 컨테이너에 테두리를 두르지 않는다. 면의 밝기로 구분한다.<br>· 그림자를 쓰지 않는다. 시트와 모달은 뒤를 어둡게 덮어 층을 만든다.<br>· 헤어라인은 그룹 리스트 안쪽에서 행을 나눌 때만 쓴다.<br>· 핑크는 면으로만 쓴다. 핑크 위 글자는 항상 잉크 900.<br>· 본문·라벨은 대비 4.5:1 이상. 상태는 색만으로 구분하지 않는다.<br>· 다크 테마는 같은 토큰 이름의 값만 바꾼다. 화면 코드에 hex를 직접 쓰지 않는다.</div>
+    </div>
+    <div style="flex:1; background:#14120F; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:12px">
+      <div style="font-size:13px; font-weight:600; color:#F6F1E9">다크에서는 반대로 쌓인다</div>
+      <div style="background:#211D18; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px">
+        <div style="font-size:14px; font-weight:600; color:#F6F1E9">사랑마을</div>
+        <div style="font-size:12px; color:#9A9084">3기 · 12명 · 이장 김하늘</div>
+        <div style="display:flex; gap:8px; padding-top:4px">
+          <span style="background:#E7ADBA; color:#14120F; font-size:12px; font-weight:500; padding:6px 12px; border-radius:999px">예배 9/12</span>
+          <span style="background:#2C261F; color:#CFC6BA; font-size:12px; padding:6px 12px; border-radius:999px">모임 7/12</span>
+        </div>
+      </div>
+      <div style="font-size:12px; line-height:1.65; color:#9A9084">라이트에서 카드는 배경보다 밝고, 다크에서도 카드가 배경보다 밝다. 방향은 그대로고 값만 바뀐다.</div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

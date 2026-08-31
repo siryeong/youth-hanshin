@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-feature-settings:"tnum"}
+    button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+  </style>
+</helmet>
+<div style="padding:28px 24px 32px; display:flex; flex-direction:column; gap:22px; min-height:820px; background: {{t.bg}}; transition: background 180ms cubic-bezier(0.2,0.8,0.2,1)">
+
+  <div style="display:flex; flex-direction:column; gap:8px">
+    <div class="mono" style="font-size:12px; letter-spacing:0.1em; color: {{t.muted}}">FOUNDATION / 04</div>
+    <div style="font-size:24px; font-weight:600; letter-spacing:-0.02em; color: {{t.text}}">테마 전환</div>
+    <div style="font-size:13px; line-height:1.6; color: {{t.muted}}">같은 토큰 이름에 값만 바꿔 끼운다. 선택값은 로컬에 저장해 재방문 때 되살린다.</div>
+  </div>
+
+  <button onClick="{{ toggle }}" style="display:flex; align-items:center; justify-content:space-between; gap:12px; height:52px; padding:0 8px 0 16px; border-radius:14px; background: {{t.surface}}; width:100%; text-align:left">
+    <span style="display:flex; align-items:center; gap:10px; color: {{t.text}}; font-size:14px; font-weight:500">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"></circle><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"></path></svg>
+      {{ t.label }} 테마
+    </span>
+    <span style="width:52px; height:32px; border-radius:999px; padding:3px; display:flex; align-items:center; background: {{t.trackBg}}; justify-content: {{t.knobAlign}}; transition: background 180ms">
+      <span style="width:26px; height:26px; border-radius:999px; background: {{t.knobBg}}; display:block"></span>
+    </span>
+  </button>
+
+  <div style="display:flex; flex-direction:column; gap:12px; padding:18px; border-radius:18px; background: {{t.surface}}">
+    <div style="display:flex; align-items:center; justify-content:space-between">
+      <div style="display:flex; flex-direction:column; gap:3px">
+        <div style="font-size:17px; font-weight:600; color: {{t.text}}">사랑마을</div>
+        <div class="mono" style="font-size:12px; color: {{t.muted}}">3기 · 12명</div>
+      </div>
+      <span style="font-size:12px; font-weight:500; padding:6px 10px; border-radius:999px; background: {{t.sunken}}; color: {{t.muted}}">이장 김하늘</span>
+    </div>
+    <div style="display:flex; gap:8px">
+      <span style="font-size:13px; font-weight:500; padding:8px 14px; border-radius:999px; background: {{t.accent}}; color: {{t.accentText}}">예배 9/12</span>
+      <span style="font-size:13px; padding:8px 14px; border-radius:999px; background: {{t.sunken}}; color: {{t.muted}}">마을모임 7/12</span>
+    </div>
+    <div style="font-size:14px; line-height:1.6; color: {{t.text}}">이번 주 마을모임은 3층 카페에서 모입니다.</div>
+    <div style="display:flex; gap:8px; padding-top:2px">
+      <span style="flex:1; height:44px; border-radius:12px; background: {{t.primaryBg}}; color: {{t.primaryText}}; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500">주문하기</span>
+      <span style="flex:1; height:44px; border-radius:12px; background:transparent; color: {{t.text}}; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:500">내 마을</span>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px; padding:18px; border-radius:18px; background: {{t.surface}}">
+    <div style="font-size:13px; font-weight:600; color: {{t.text}}">지금 적용된 값</div>
+    <sc-for list="{{ tokens }}" as="row" hint-placeholder-count="5">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:5px 0">
+        <span class="mono" style="font-size:12px; color: {{t.muted}}">{{ row.name }}</span>
+        <span style="display:flex; align-items:center; gap:8px; background: {{t.sunken}}; padding:4px 6px 4px 10px; border-radius:999px">
+          <span class="mono" style="font-size:12px; color: {{t.text}}">{{ row.hex }}</span>
+          <span style="width:18px; height:18px; border-radius:6px; background: {{row.hex}}"></span>
+        </span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="font-size:12px; line-height:1.7; color: {{t.muted}}">테마 토글은 헤더(PC)와 내 정보 화면(모바일)에 둔다. 시스템 설정을 처음 한 번만 따르고, 사용자가 고른 뒤에는 그 값을 유지한다.</div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"mode":{"editor":"enum","options":["light","dark"],"default":"light","section":"테마"},"$preview":{"width":420,"height":820}}'>
+class Component extends DCLogic {
+  constructor(props){
+    super(props)
+    this.state = { mode: null }
+  }
+  renderVals(){
+    const mode = this.state.mode || this.props.mode || 'light'
+    const light = {
+      label: '라이트', bg: '#F4F0E7', surface: '#FFFFFF', sunken: '#EAE3D6', fillStrong: '#DFD6C6',
+      text: '#171310', muted: '#7C7268', accent: '#F2CCD5', accentText: '#171310',
+      primaryBg: '#171310', primaryText: '#FFFFFF', trackBg: '#DFD6C6', knobBg: '#FFFFFF', knobAlign: 'flex-start'
+    }
+    const dark = {
+      label: '다크', bg: '#14120F', surface: '#211D18', sunken: '#2C261F', fillStrong: '#3A332B',
+      text: '#F6F1E9', muted: '#9A9084', accent: '#E7ADBA', accentText: '#14120F',
+      primaryBg: '#F6F1E9', primaryText: '#14120F', trackBg: '#4A423A', knobBg: '#E7ADBA', knobAlign: 'flex-end'
+    }
+    const t = mode === 'dark' ? dark : light
+    return {
+      t,
+      tokens: [
+        { name: 'bg', hex: t.bg },
+        { name: 'surface', hex: t.surface },
+        { name: 'fill', hex: t.sunken },
+        { name: 'text', hex: t.text },
+        { name: 'accent-fill', hex: t.accent }
+      ],
+      toggle: () => this.setState({ mode: mode === 'dark' ? 'light' : 'dark' })
+    }
+  }
+}
+</script>
+</body>
+</html>

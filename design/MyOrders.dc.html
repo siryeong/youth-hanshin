@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#F4F0E7;color:#171310;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-feature-settings:"tnum"}
+    .sec{font-size:12px; font-weight:600; color:#7C7268; letter-spacing:0.02em}
+    .card{background:#FFFFFF; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:12px}
+    .list > * + *{border-top:1px solid rgba(38,30,22,0.07)}
+  </style>
+</helmet>
+<div style="min-height:900px; display:flex; flex-direction:column; background:#F4F0E7">
+
+  <div style="padding:16px 20px 12px; display:flex; align-items:center; justify-content:space-between">
+    <span style="font-size:22px; font-weight:600; letter-spacing:-0.02em">내 주문</span>
+    <span class="mono" style="font-size:12px; color:#7C7268">8월 31일 주일</span>
+  </div>
+
+  <div style="padding:0 20px 12px; display:flex; flex-direction:column; gap:10px">
+    <div style="display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:12px; background:#F7ECD9">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A5A15" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 7.6V12l2.8 1.8"></path></svg>
+      <span style="font-size:13px; font-weight:500; color:#8A5A15; flex:1">마감까지 12분 남았어요</span>
+      <span class="mono" style="font-size:12px; color:#8A5A15">14:30</span>
+    </div>
+    <div style="display:flex; gap:10px; padding:12px 14px; border-radius:12px; background:#EAE3D6">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C7268" stroke-width="1.6" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 11v5.2M12 8v.4"></path></svg>
+      <span style="font-size:13px; line-height:1.6; color:#4A423A">게스트로 주문했어요. 브라우저를 닫으면 이 내역을 볼 수 없어요. <span style="color:#A8475E; font-weight:500">로그인하고 이어보기</span></span>
+    </div>
+  </div>
+
+  <div style="padding:4px 20px 12px; display:flex; flex-direction:column; gap:10px">
+    <span class="sec">오늘 주문</span>
+
+    <div class="card">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+        <div style="display:flex; gap:12px">
+          <span style="width:40px; height:40px; border-radius:11px; background:#F9E5EA; display:flex; align-items:center; justify-content:center; color:#171310; flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+          </span>
+          <span style="display:flex; flex-direction:column; gap:4px">
+            <span style="font-size:17px; font-weight:600">아메리카노</span>
+            <span style="font-size:13px; color:#7C7268">ICE · 샷 1</span>
+          </span>
+        </div>
+        <span class="mono" style="font-size:13px; font-weight:500; background:#EAE3D6; padding:5px 10px; border-radius:999px">2잔</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px">
+        <span class="mono" style="font-size:12px; color:#A79E93">11:24 주문</span>
+        <span style="height:40px; padding:0 16px; border-radius:11px; color:#A93F3C; font-size:14px; font-weight:500; display:flex; align-items:center; background:#F7E3E2">주문 취소</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+        <div style="display:flex; gap:12px">
+          <span style="width:40px; height:40px; border-radius:11px; background:#EAE3D6; display:flex; align-items:center; justify-content:center; color:#171310; flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+          </span>
+          <span style="display:flex; flex-direction:column; gap:4px">
+            <span style="font-size:17px; font-weight:600">캐모마일</span>
+            <span style="font-size:13px; color:#7C7268">HOT</span>
+          </span>
+        </div>
+        <span class="mono" style="font-size:13px; font-weight:500; background:#EAE3D6; padding:5px 10px; border-radius:999px">1잔</span>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px">
+        <span class="mono" style="font-size:12px; color:#A79E93">11:24 주문</span>
+        <span style="height:40px; padding:0 16px; border-radius:11px; color:#A93F3C; font-size:14px; font-weight:500; display:flex; align-items:center; background:#F7E3E2">주문 취소</span>
+      </div>
+    </div>
+
+    <div class="card" style="background:#EAE3D6; border-style:dashed">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px">
+        <div style="display:flex; gap:12px">
+          <span style="width:40px; height:40px; border-radius:11px; background:#EAE3D6; display:flex; align-items:center; justify-content:center; color:#A79E93; flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+          </span>
+          <span style="display:flex; flex-direction:column; gap:4px">
+            <span style="font-size:17px; font-weight:600; color:#A79E93; text-decoration:line-through">카페라떼</span>
+            <span style="font-size:13px; color:#A79E93">ICE · 연하게</span>
+          </span>
+        </div>
+        <span style="font-size:12px; font-weight:500; color:#7C7268; background:#EAE3D6; padding:5px 10px; border-radius:999px">취소됨</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:8px 20px 20px; display:flex; flex-direction:column; gap:10px">
+    <span class="sec">지난 주문 · 3기</span>
+    <div class="list" style="background:#FFFFFF; border-radius:16px; overflow:hidden">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px">
+        <span style="display:flex; flex-direction:column; gap:3px">
+          <span style="font-size:14px; font-weight:500">8월 24일 주일</span>
+          <span style="font-size:12px; color:#7C7268">아메리카노 ICE 1잔 · 유자차 HOT 1잔</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A79E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px">
+        <span style="display:flex; flex-direction:column; gap:3px">
+          <span style="font-size:14px; font-weight:500">8월 17일 주일</span>
+          <span style="font-size:12px; color:#7C7268">콜드브루 ICE 2잔</span>
+        </span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A79E93" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9.5 6 6 6-6 6"></path></svg>
+      </div>
+    </div>
+    <span style="font-size:12px; color:#A79E93; line-height:1.6">지난 주문은 취소할 수 없어요. 메뉴가 없어져도 주문 당시 이름과 옵션 그대로 남습니다.</span>
+  </div>
+
+  <div style="margin-top:auto; display:flex; padding:6px 6px 10px; background:#FFFFFF">
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+      <span style="font-size:11px">주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#171310">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-3-1.6L12 21l-3-1.6L6 21V3.5Z"></path><path d="M9.5 9h5M9.5 13h5"></path></svg>
+      <span style="font-size:11px; font-weight:600">내 주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.6 20a5.6 5.6 0 0 1 10.8 0"></path><path d="M16 5.6a3 3 0 0 1 0 5.4"></path><path d="M17.6 20a5.8 5.8 0 0 0-2.2-4.4"></path></svg>
+      <span style="font-size:11px">내 마을</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+      <span style="font-size:11px">내 정보</span>
+    </span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

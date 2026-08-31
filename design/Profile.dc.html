@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#F4F0E7;color:#171310;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-feature-settings:"tnum"}
+    .sect{font-size:12px; font-weight:600; color:#7C7268; padding:0 2px}
+    .panel{background:#FFFFFF; border-radius:16px; overflow:hidden}
+    .row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; min-height:56px}
+    .lab{font-size:14px; font-weight:500}
+    .val{font-size:14px; color:#4A423A}
+    .sw-on{width:52px; height:32px; border-radius:999px; background:#171310; padding:3px; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0}
+    .sw-off{width:52px; height:32px; border-radius:999px; background:#DFD6C6; padding:3px; display:flex; align-items:center; flex-shrink:0}
+    .knob{width:26px; height:26px; border-radius:999px; background:#FFFFFF}
+    .panel > * + *{border-top:1px solid rgba(38,30,22,0.07)}
+  </style>
+</helmet>
+<div style="min-height:1000px; display:flex; flex-direction:column; background:#F4F0E7">
+
+  <div style="padding:16px 20px 12px">
+    <span style="font-size:22px; font-weight:600; letter-spacing:-0.02em">내 정보</span>
+  </div>
+
+  <div style="padding:0 20px 16px; display:flex; flex-direction:column; gap:18px">
+
+    <div style="display:flex; align-items:center; gap:14px; padding:18px; background:#FFFFFF; border-radius:16px">
+      <span style="width:56px; height:56px; border-radius:999px; background:#F2CCD5; color:#171310; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600">김</span>
+      <span style="flex:1; display:flex; flex-direction:column; gap:6px">
+        <span style="font-size:17px; font-weight:600">김하늘</span>
+        <span style="display:flex; align-items:center; gap:6px">
+          <span style="font-size:12px; font-weight:500; background:#F9E5EA; color:#171310; padding:4px 9px; border-radius:999px">이장</span>
+          <span style="font-size:12px; color:#7C7268">사랑마을 · 3기</span>
+        </span>
+      </span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <span class="sect">프로필</span>
+      <div class="panel">
+        <div class="row"><span class="lab">이름</span><span class="val">김하늘</span></div>
+        <div class="row" style=""><span class="lab">성별</span><span class="val">여</span></div>
+        <div class="row" style="">
+          <span class="lab">생년월일</span>
+          <span style="display:flex; align-items:center; gap:8px">
+            <span class="mono val">1998-**-**</span>
+            <span style="width:36px; height:36px; margin-right:-8px; display:flex; align-items:center; justify-content:center; color:#7C7268"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12S6.2 6 12 6s9.2 6 9.2 6-3.4 6-9.2 6-9.2-6-9.2-6Z"></path><circle cx="12" cy="12" r="2.8"></circle><path d="m4 20 16-16"></path></svg></span>
+          </span>
+        </div>
+        <div class="row" style="">
+          <span class="lab">휴대폰번호</span>
+          <span style="display:flex; align-items:center; gap:8px">
+            <span class="mono val">010-****-1234</span>
+            <span style="width:36px; height:36px; margin-right:-8px; display:flex; align-items:center; justify-content:center; color:#7C7268"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12S6.2 6 12 6s9.2 6 9.2 6-3.4 6-9.2 6-9.2-6-9.2-6Z"></path><circle cx="12" cy="12" r="2.8"></circle><path d="m4 20 16-16"></path></svg></span>
+          </span>
+        </div>
+        <div style="padding:12px 16px; display:flex; justify-content:flex-end">
+          <span style="height:40px; padding:0 16px; border-radius:11px; font-size:14px; font-weight:500; display:flex; align-items:center; background:#EAE3D6">수정하기</span>
+        </div>
+      </div>
+      <span style="font-size:12px; color:#A79E93; line-height:1.6; padding:0 2px">생년월일과 휴대폰번호는 비워 둘 수 있어요. 나이는 생년월일로 계산합니다.</span>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <span class="sect">공개 설정</span>
+      <div class="panel">
+        <div class="row">
+          <span style="display:flex; flex-direction:column; gap:3px">
+            <span class="lab">성별</span>
+            <span style="font-size:12px; color:#7C7268">마을원에게 보여요</span>
+          </span>
+          <span class="sw-on"><span class="knob"></span></span>
+        </div>
+        <div class="row" style="">
+          <span style="display:flex; flex-direction:column; gap:3px">
+            <span class="lab">생년월일</span>
+            <span style="font-size:12px; color:#7C7268">비공개</span>
+          </span>
+          <span class="sw-off"><span class="knob"></span></span>
+        </div>
+        <div class="row" style="">
+          <span style="display:flex; flex-direction:column; gap:3px">
+            <span class="lab">휴대폰번호</span>
+            <span style="font-size:12px; color:#7C7268">비공개</span>
+          </span>
+          <span class="sw-off"><span class="knob"></span></span>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; padding:12px 14px; border-radius:12px; background:#EAE3D6">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C7268" stroke-width="1.6" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 11v5.2M12 8v.4"></path></svg>
+        <span style="font-size:13px; line-height:1.6; color:#4A423A">기본값은 모두 비공개예요. 목회자와 임원은 이 설정과 관계없이 명단을 봅니다.</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <span class="sect">앱 설정</span>
+      <div class="panel">
+        <div class="row">
+          <span class="lab">테마</span>
+          <span style="display:flex; gap:3px; padding:3px; background:#EAE3D6; border-radius:10px">
+            <span style="height:32px; padding:0 12px; border-radius:8px; background:#FFFFFF; font-size:13px; font-weight:500; display:flex; align-items:center">시스템</span>
+            <span style="height:32px; padding:0 12px; border-radius:8px; font-size:13px; color:#7C7268; display:flex; align-items:center">라이트</span>
+            <span style="height:32px; padding:0 12px; border-radius:8px; font-size:13px; color:#7C7268; display:flex; align-items:center">다크</span>
+          </span>
+        </div>
+        <div class="row" style="">
+          <span style="display:flex; flex-direction:column; gap:3px">
+            <span class="lab">소식 알림</span>
+            <span style="font-size:12px; color:#7C7268">마을 소식과 전체 소식</span>
+          </span>
+          <span class="sw-on"><span class="knob"></span></span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <div style="height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:500; background:#EAE3D6">로그아웃</div>
+      <span style="font-size:12px; color:#A79E93; line-height:1.65; text-align:center">마지막 접속 8월 31일 · 1년 이상 접속하지 않으면 계정과 개인정보가 폐기돼요.</span>
+    </div>
+
+  </div>
+
+  <div style="margin-top:auto; display:flex; padding:6px 6px 10px; background:#FFFFFF">
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+      <span style="font-size:11px">주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-3-1.6L12 21l-3-1.6L6 21V3.5Z"></path><path d="M9.5 9h5M9.5 13h5"></path></svg>
+      <span style="font-size:11px">내 주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.6 20a5.6 5.6 0 0 1 10.8 0"></path><path d="M16 5.6a3 3 0 0 1 0 5.4"></path><path d="M17.6 20a5.8 5.8 0 0 0-2.2-4.4"></path></svg>
+      <span style="font-size:11px">내 마을</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#171310">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+      <span style="font-size:11px; font-weight:600">내 정보</span>
+    </span>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

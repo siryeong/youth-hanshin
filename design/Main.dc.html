@@ -1,0 +1,201 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#F4F0E7;color:#171310;font-family:"IBM Plex Sans KR","Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased;word-break:keep-all}
+    a{color:#A8475E;text-decoration:none} a:hover{color:#8C374C}
+    .mono{font-family:"IBM Plex Mono",ui-monospace,monospace; font-feature-settings:"tnum"}
+    button{font:inherit;color:inherit;cursor:pointer;border:0;background:none;text-align:left;padding:0}
+    .scroll{overflow-y:auto; -webkit-overflow-scrolling:touch}
+    .scroll::-webkit-scrollbar{width:0}
+  </style>
+</helmet>
+<div style="height:844px; display:flex; flex-direction:column; background:#F4F0E7; overflow:hidden">
+
+  <div style="padding:14px 20px 10px; display:flex; align-items:center; justify-content:space-between; gap:12px; background:#F4F0E7">
+    <div style="display:flex; flex-direction:column; gap:2px">
+      <span style="font-size:22px; font-weight:600; letter-spacing:-0.02em">청년부 카페</span>
+      <span style="font-size:12px; color:#7C7268">주일 10:00 – 14:30</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px">
+      <span style="width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center; color:#171310">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 4.5 1.8 5.6 1.8 5.6H4.2S6 13.5 6 9Z"></path><path d="M10 18a2 2 0 0 0 4 0"></path></svg>
+      </span>
+      <span style="width:44px; height:44px; border-radius:999px; display:flex; align-items:center; justify-content:center; position:relative; color:#171310">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="19.5" r="1.4"></circle><circle cx="17" cy="19.5" r="1.4"></circle><path d="M2.8 4h2.4l2.3 10.6h10.2L20 7.2H6.2"></path></svg>
+        <sc-if value="{{ hasCart }}" hint-placeholder-val="{{ true }}">
+          <span class="mono" style="position:absolute; top:4px; right:4px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; background:#171310; color:#FFFFFF; font-size:11px; font-weight:500; display:flex; align-items:center; justify-content:center">{{ cartCount }}</span>
+        </sc-if>
+      </span>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 10px">
+    <div style="display:flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; background:#E4F0EA">
+      <span style="width:7px; height:7px; border-radius:999px; background:#3E7A5E"></span>
+      <span style="font-size:13px; font-weight:500; color:#2F6349; flex:1">지금 주문할 수 있어요</span>
+      <span class="mono" style="font-size:12px; color:#2F6349">14:30 마감</span>
+    </div>
+  </div>
+
+  <div style="padding:0 20px 12px">
+    <div style="display:flex; gap:4px; padding:4px; background:#EAE3D6; border-radius:12px">
+      <sc-for list="{{ cats }}" as="cat" hint-placeholder-count="3">
+        <button onClick="{{ cat.pick }}" style="flex:1; height:40px; border-radius:9px; font-size:14px; font-weight:500; display:flex; align-items:center; justify-content:center; background: {{cat.bg}}; color: {{cat.fg}}">{{ cat.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div class="scroll" style="flex:1; padding:4px 20px 20px">
+    <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px">
+      <sc-for list="{{ items }}" as="item" hint-placeholder-count="6">
+        <button onClick="{{ item.add }}" style="display:flex; flex-direction:column; gap:10px; padding:14px; border-radius:16px; background: {{item.bg}}; min-height:132px">
+          <span style="display:flex; align-items:flex-start; justify-content:space-between; width:100%">
+            <span style="width:38px; height:38px; border-radius:11px; background: {{item.iconBg}}; display:flex; align-items:center; justify-content:center; color:#171310">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path><path d="M8 3.5V5M11 3V5M14 3.5V5"></path></svg>
+            </span>
+            <sc-if value="{{ item.hasCount }}" hint-placeholder-val="{{ true }}">
+              <span class="mono" style="min-width:24px; height:24px; padding:0 7px; border-radius:999px; background:#171310; color:#FFFFFF; font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center">{{ item.count }}</span>
+            </sc-if>
+          </span>
+          <span style="display:flex; flex-direction:column; gap:4px; width:100%">
+            <span style="font-size:15px; font-weight:600; line-height:1.35">{{ item.name }}</span>
+            <span style="font-size:12px; color:#7C7268; line-height:1.45">{{ item.opt }}</span>
+          </span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; padding:16px 4px 0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A79E93" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.2"></circle><path d="M12 11v5.2M12 8v.4"></path></svg>
+      <span style="font-size:12px; color:#A79E93; line-height:1.5">메뉴를 누르면 옵션을 고를 수 있어요</span>
+    </div>
+  </div>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:0 20px 8px">
+      <div style="display:flex; align-items:center; gap:10px; background:#171310; color:#FFFFFF; border-radius:12px; padding:12px 14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"></path></svg>
+        <span style="flex:1; font-size:13px">{{ toast }}</span>
+        <button onClick="{{ undo }}" style="font-size:13px; font-weight:600; color:#F2CCD5">되돌리기</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="padding:8px 20px 10px; background:#F4F0E7">
+    <button style="width:100%; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; gap:8px; font-size:15px; font-weight:600; background: {{ctaBg}}; color: {{ctaFg}}">{{ ctaLabel }}</button>
+  </div>
+
+  <div style="display:flex; padding:6px 6px 10px; background:#FFFFFF">
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#171310">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h11v7a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5V8Z"></path><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg>
+      <span style="font-size:11px; font-weight:600">주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12V21l-3-1.6L12 21l-3-1.6L6 21V3.5Z"></path><path d="M9.5 9h5M9.5 13h5"></path></svg>
+      <span style="font-size:11px">내 주문</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"></circle><path d="M3.6 20a5.6 5.6 0 0 1 10.8 0"></path><path d="M16 5.6a3 3 0 0 1 0 5.4"></path><path d="M17.6 20a5.8 5.8 0 0 0-2.2-4.4"></path></svg>
+      <span style="font-size:11px">내 마을</span>
+    </span>
+    <span style="flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0; color:#A79E93">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg>
+      <span style="font-size:11px">내 정보</span>
+    </span>
+  </div>
+
+</div>
+</x-dc>
+<script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const MENUS = {
+  coffee: [
+    { id: 'americano', name: '아메리카노', opt: 'ICE · HOT · 샷 추가' },
+    { id: 'latte', name: '카페라떼', opt: 'ICE · HOT · 연하게' },
+    { id: 'vanilla', name: '바닐라라떼', opt: 'ICE · HOT · 시럽' },
+    { id: 'coldbrew', name: '콜드브루', opt: 'ICE · 샷 추가' },
+    { id: 'cappuccino', name: '카푸치노', opt: 'HOT · 연하게' },
+    { id: 'einspanner', name: '아인슈페너', opt: 'ICE · HOT' }
+  ],
+  tea: [
+    { id: 'chamomile', name: '캐모마일', opt: 'HOT' },
+    { id: 'peppermint', name: '페퍼민트', opt: 'HOT' },
+    { id: 'earlgrey', name: '얼그레이', opt: 'ICE · HOT' },
+    { id: 'yuja', name: '유자차', opt: 'ICE · HOT · 연하게' }
+  ],
+  ade: [
+    { id: 'choco', name: '초코라떼', opt: 'ICE · HOT · 연하게' },
+    { id: 'strawberry', name: '딸기라떼', opt: 'ICE' },
+    { id: 'lemonade', name: '레몬에이드', opt: 'ICE · 시럽' },
+    { id: 'icetea', name: '복숭아 아이스티', opt: 'ICE' }
+  ]
+}
+
+class Component extends DCLogic {
+  constructor(props){
+    super(props)
+    this.state = { cat: 'coffee', cart: { latte: 2 }, toast: '', lastId: '' }
+  }
+  total(cart){
+    return Object.keys(cart).reduce((sum, k) => sum + cart[k], 0)
+  }
+  renderVals(){
+    const cat = this.state.cat
+    const cart = this.state.cart
+    const count = this.total(cart)
+    const cats = [{ id: 'coffee', label: '커피' }, { id: 'tea', label: '차' }, { id: 'ade', label: '음료' }].map((c) => ({
+      id: c.id,
+      label: c.label,
+      bg: c.id === cat ? '#FFFFFF' : 'transparent',
+      fg: c.id === cat ? '#171310' : '#7C7268',
+      pick: () => this.setState({ cat: c.id })
+    }))
+    const items = (MENUS[cat] || []).map((m) => {
+      const n = cart[m.id] || 0
+      return {
+        id: m.id,
+        name: m.name,
+        opt: m.opt,
+        count: n,
+        hasCount: n > 0,
+        bg: n > 0 ? '#F2CCD5' : '#FFFFFF',
+        iconBg: n > 0 ? '#FFFFFF' : '#EAE3D6',
+        add: () => {
+          const next = Object.assign({}, this.state.cart)
+          next[m.id] = (next[m.id] || 0) + 1
+          this.setState({ cart: next, toast: m.name + ' 담았어요', lastId: m.id })
+        }
+      }
+    })
+    return {
+      cats,
+      items,
+      cartCount: count,
+      hasCart: count > 0,
+      toast: this.state.toast,
+      hasToast: this.state.toast.length > 0,
+      ctaLabel: count > 0 ? '장바구니 ' + count + '개 · 주문하기' : '메뉴를 골라 담아 주세요',
+      ctaBg: count > 0 ? '#171310' : '#EAE3D6',
+      ctaFg: count > 0 ? '#FFFFFF' : '#A79E93',
+      undo: () => {
+        const next = Object.assign({}, this.state.cart)
+        const id = this.state.lastId
+        if(next[id]){
+          next[id] = next[id] - 1
+          if(next[id] <= 0) delete next[id]
+        }
+        this.setState({ cart: next, toast: '', lastId: '' })
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
