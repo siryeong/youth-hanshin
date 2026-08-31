@@ -766,7 +766,7 @@ insert into public.menus (category, name, price, ice_price_delta, options, sort_
   ('non_coffee', '녹차', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 9),
   ('cold', '레몬 아이스티', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 1),
   ('cold', '복숭아 아이스티', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 2),
-  ('cold', '아삿츄', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 3),
+  ('cold', '아샷추', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 3),
   ('cold', '카프리썬', 1000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 4);
 ```
 
