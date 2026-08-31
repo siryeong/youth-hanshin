@@ -1,0 +1,80 @@
+:root {
+  --bg: #F4F0E7;
+  --surface: #FFFFFF;
+  --fill: #EAE3D6;
+  --fill-strong: #DFD6C6;
+  --separator: rgba(38, 30, 22, 0.07);
+  --text: #171310;
+  --text-2: #4A423A;
+  --text-muted: #7C7268;
+  --text-disabled: #A79E93;
+  --accent-fill: #F2CCD5;
+  --accent-soft: #F9E5EA;
+  --accent-text: #A8475E;
+  --success: #3E7A5E;
+  --warning: #A9701F;
+  --danger: #A93F3C;
+
+  --text-display: 32px;
+  --text-title-lg: 24px;
+  --text-screen: 22px;
+  --text-title: 20px;
+  --text-subtitle: 17px;
+  --text-body: 15px;
+  --text-label: 14px;
+  --text-caption: 13px;
+  --text-micro: 12px;
+  --text-nano: 11px;
+
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-12: 48px;
+
+  --radius-chip: 8px; --radius-field: 12px; --radius-card: 16px;
+  --radius-sheet: 22px; --radius-pill: 999px;
+
+  --control-lg: 48px; --control: 44px; --control-pc: 40px; --control-sm: 34px;
+
+  --dur-fast: 120ms; --dur-base: 180ms; --dur-sheet: 260ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --font-sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+[data-theme="dark"] {
+  --bg: #14120F;
+  --surface: #211D18;
+  --fill: #2C261F;
+  --fill-strong: #3A332B;
+  --separator: rgba(246, 241, 233, 0.10);
+  --text: #F6F1E9;
+  --text-2: #CFC6BA;
+  --text-muted: #9A9084;
+  --text-disabled: #6E655B;
+  --accent-fill: #E7ADBA;
+  --accent-soft: #332629;
+  --accent-text: #F0BFC9;
+  --success: #7FBFA1;
+  --warning: #D9A75B;
+  --danger: #E08C89;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14120F;
+    --surface: #211D18;
+    --fill: #2C261F;
+    --fill-strong: #3A332B;
+    --separator: rgba(246, 241, 233, 0.10);
+    --text: #F6F1E9;
+    --text-2: #CFC6BA;
+    --text-muted: #9A9084;
+    --text-disabled: #6E655B;
+    --accent-fill: #E7ADBA;
+    --accent-soft: #332629;
+    --accent-text: #F0BFC9;
+    --success: #7FBFA1;
+    --warning: #D9A75B;
+    --danger: #E08C89;
+  }
+}
