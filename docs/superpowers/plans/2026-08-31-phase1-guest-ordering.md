@@ -937,7 +937,7 @@ git commit -m "feat: RLS 적용과 가격 비노출 뷰"
 `supabase/tests/order-window.test.ts`:
 
 ```ts
-import { beforeEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 import { anonClient, serviceClient } from './client'
 
 async function todayIsodow(): Promise<number> {
@@ -948,6 +948,13 @@ async function todayIsodow(): Promise<number> {
 beforeEach(async () => {
   await serviceClient().from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
 })
+afterEach(async () => {
+  // 이 파일은 공유 설정 행을 바꾼다. 원래 값으로 되돌려야 뒤에 도는 schema.test.ts 의 시드 단언이 깨지지 않는다.
+  const db = serviceClient()
+  await db.from('cafe_settings_v2').update({ weekday: 7, opens_at: '10:00', closes_at: '14:30' }).eq('id', true)
+  await db.from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
+})
+
 
 test('설정된 요일과 시간 안이면 열려 있다', async () => {
   const isodow = await todayIsodow()
@@ -1049,7 +1056,7 @@ git commit -m "feat: 주문 가능 시간 판정 함수"
 `supabase/tests/place-order.test.ts`:
 
 ```ts
-import { beforeEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 import { anonClient, serviceClient } from './client'
 
 const TOKEN = '11111111-1111-1111-1111-111111111111'
@@ -1068,6 +1075,13 @@ async function americano(): Promise<string> {
 }
 
 beforeEach(open)
+afterEach(async () => {
+  // 이 파일은 공유 설정 행을 바꾼다. 원래 값으로 되돌려야 뒤에 도는 schema.test.ts 의 시드 단언이 깨지지 않는다.
+  const db = serviceClient()
+  await db.from('cafe_settings_v2').update({ weekday: 7, opens_at: '10:00', closes_at: '14:30' }).eq('id', true)
+  await db.from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
+})
+
 
 test('열려 있으면 주문과 항목이 만들어지고 메뉴명이 스냅샷으로 남는다', async () => {
   const menuId = await americano()
@@ -1234,7 +1248,7 @@ git commit -m "feat: 주문 제출 RPC"
 `supabase/tests/guest-orders.test.ts`:
 
 ```ts
-import { beforeEach, expect, test } from 'vitest'
+import { afterEach, beforeEach, expect, test } from 'vitest'
 import { anonClient, serviceClient } from './client'
 
 const MINE = '22222222-2222-2222-2222-222222222222'
@@ -1256,6 +1270,13 @@ async function order(token: string) {
 }
 
 beforeEach(open)
+afterEach(async () => {
+  // 이 파일은 공유 설정 행을 바꾼다. 원래 값으로 되돌려야 뒤에 도는 schema.test.ts 의 시드 단언이 깨지지 않는다.
+  const db = serviceClient()
+  await db.from('cafe_settings_v2').update({ weekday: 7, opens_at: '10:00', closes_at: '14:30' }).eq('id', true)
+  await db.from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
+})
+
 
 test('자기 토큰의 오늘 주문만 본다', async () => {
   await order(MINE)
