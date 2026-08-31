@@ -570,8 +570,8 @@ git commit -m "feat: Button, Chip, Stepper 기본 컴포넌트"
 - [ ] **Step 1: 로컬 Supabase 시작**
 
 ```bash
-npx supabase init
-npx supabase start
+supabase init
+supabase start
 ```
 
 `supabase status` 출력의 `API URL`, `anon key`, `service_role key`를 `.env.test`에 적는다:
@@ -590,7 +590,13 @@ SUPABASE_SERVICE_KEY=<service_role key>
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  test: { environment: 'node', include: ['supabase/tests/**/*.test.ts'], setupFiles: ['dotenv/config'], testTimeout: 20000 },
+  test: {
+    environment: 'node',
+    include: ['supabase/tests/**/*.test.ts'],
+    setupFiles: ['dotenv/config'],
+    testTimeout: 20000,
+    fileParallelism: false,
+  },
 })
 ```
 
@@ -601,7 +607,7 @@ npm i -D dotenv
 `package.json`의 `scripts`에 추가:
 
 ```json
-{ "test:db": "npx supabase db reset && dotenv -e .env.test -- vitest run --config vitest.db.config.ts" }
+{ "test:db": "supabase db reset && DOTENV_CONFIG_PATH=.env.test vitest run --config vitest.db.config.ts" }
 ```
 
 `supabase/tests/client.ts`:
