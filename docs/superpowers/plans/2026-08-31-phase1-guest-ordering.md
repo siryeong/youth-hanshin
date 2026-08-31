@@ -25,6 +25,8 @@
 - 데스크톱과 모바일 화면을 지원한다. 리사이즈에 곧바로 대응한다.
 - 라이트·다크 테마를 전환한다. 선택값을 로컬에 저장하고 재방문 시 복원한다.
 - 시간 계산은 모두 `Asia/Seoul` 기준이다. 마감 판단에 클라이언트 시계를 쓰지 않는다.
+- 메뉴와 가격은 `한신카페메뉴판.jpeg`(2025 한신교회 DRINKS MENU)를 그대로 따른다. 메뉴를 지어내지 않는다. ICE 는 커피·논커피에서 +1,000원, COLD DRINKS 는 ICE 전용이다.
+- 메뉴판의 계좌번호와 예금주는 개인정보다. 코드·시드·디자인 어디에도 넣지 않는다.
 - 디자인: 컨테이너에 테두리를 두르지 않고 그림자를 쓰지 않는다. 층위는 면의 밝기로 만든다. 헤어라인은 그룹 리스트 안쪽에만 쓴다. 글자 크기는 32·24·22·20·17·15·14·13·12·11 열 단계만 쓴다.
 
 ## File Structure
@@ -621,11 +623,22 @@ export const anonClient = () =>
 import { expect, test } from 'vitest'
 import { serviceClient } from './client'
 
-test('메뉴 시드가 카테고리 3개로 들어간다', async () => {
-  const { data, error } = await serviceClient().from('menus').select('category')
+test('메뉴판 그대로 19개가 세 카테고리로 들어간다', async () => {
+  const { data, error } = await serviceClient().from('menus').select('category, name, price, ice_price_delta')
   expect(error).toBeNull()
-  expect(data!.length).toBeGreaterThanOrEqual(12)
-  expect(new Set(data!.map((m) => m.category))).toEqual(new Set(['coffee', 'tea', 'drink']))
+  expect(data!).toHaveLength(19)
+  expect(new Set(data!.map((m) => m.category))).toEqual(new Set(['coffee', 'non_coffee', 'cold']))
+})
+
+test('아메리카노는 1000원이고 ICE 는 1000원을 더 받는다', async () => {
+  const { data } = await serviceClient().from('menus').select('price, ice_price_delta').eq('name', '아메리카노').single()
+  expect(data!.price).toBe(1000)
+  expect(data!.ice_price_delta).toBe(1000)
+})
+
+test('COLD DRINKS 는 ICE 추가금이 없다', async () => {
+  const { data } = await serviceClient().from('menus').select('ice_price_delta').eq('category', 'cold')
+  expect(data!.every((m) => m.ice_price_delta === 0)).toBe(true)
 })
 
 test('기본 주문 시간대는 주일 10:00-14:30 이다', async () => {
@@ -646,7 +659,7 @@ Expected: FAIL — `relation "public.menus" does not exist`
 `supabase/migrations/0001_core.sql`:
 
 ```sql
-create type public.menu_category as enum ('coffee', 'tea', 'drink');
+create type public.menu_category as enum ('coffee', 'non_coffee', 'cold');
 create type public.order_item_status as enum ('ordered', 'cancelled');
 create type public.app_role as enum ('admin', 'pastor', 'staff', 'youth');
 
@@ -678,6 +691,7 @@ create table public.menus (
   category public.menu_category not null,
   name text not null,
   price int not null default 0,
+  ice_price_delta int not null default 0,
   options jsonb not null default '{}'::jsonb,
   is_active boolean not null default true,
   sort_order int not null default 0
@@ -733,21 +747,27 @@ insert into public.cohorts (name, year, is_active) values ('3기', 2026, true);
 
 insert into public.cafe_settings (weekday, opens_at, closes_at) values (7, '10:00', '14:30');
 
-insert into public.menus (category, name, price, options, sort_order) values
-  ('coffee', '아메리카노', 1500, '{"temperature":["ice","hot"],"shot":2,"light":true,"syrup":false}', 1),
-  ('coffee', '카페라떼',   2000, '{"temperature":["ice","hot"],"shot":2,"light":true,"syrup":false}', 2),
-  ('coffee', '바닐라라떼', 2500, '{"temperature":["ice","hot"],"shot":2,"light":false,"syrup":true}', 3),
-  ('coffee', '콜드브루',   2500, '{"temperature":["ice"],"shot":2,"light":false,"syrup":false}', 4),
-  ('coffee', '카푸치노',   2000, '{"temperature":["hot"],"shot":2,"light":true,"syrup":false}', 5),
-  ('coffee', '아인슈페너', 3000, '{"temperature":["ice","hot"],"shot":1,"light":false,"syrup":false}', 6),
-  ('tea', '캐모마일',      1500, '{"temperature":["hot"],"shot":0,"light":false,"syrup":false}', 1),
-  ('tea', '페퍼민트',      1500, '{"temperature":["hot"],"shot":0,"light":false,"syrup":false}', 2),
-  ('tea', '얼그레이',      1500, '{"temperature":["ice","hot"],"shot":0,"light":false,"syrup":false}', 3),
-  ('tea', '유자차',        2000, '{"temperature":["ice","hot"],"shot":0,"light":true,"syrup":false}', 4),
-  ('drink', '초코라떼',    2500, '{"temperature":["ice","hot"],"shot":0,"light":true,"syrup":false}', 1),
-  ('drink', '딸기라떼',    3000, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 2),
-  ('drink', '레몬에이드',  2500, '{"temperature":["ice"],"shot":0,"light":false,"syrup":true}', 3),
-  ('drink', '복숭아 아이스티', 2000, '{"temperature":["ice"],"shot":0,"light":false,"syrup":true}', 4);
+-- 2025 한신교회 DRINKS MENU 그대로. ICE 는 커피·논커피에서 +1,000, COLD DRINKS 는 ICE 전용이라 추가금이 없다.
+insert into public.menus (category, name, price, ice_price_delta, options, sort_order) values
+  ('coffee', '아메리카노', 1000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 1),
+  ('coffee', '카페라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 2),
+  ('coffee', '카푸치노', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 3),
+  ('coffee', '바닐라라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 4),
+  ('coffee', '카페모카', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 5),
+  ('coffee', '카라멜 마끼아또', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 6),
+  ('non_coffee', '초코라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 1),
+  ('non_coffee', '녹차라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 2),
+  ('non_coffee', '단호박라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 3),
+  ('non_coffee', '유자차', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 4),
+  ('non_coffee', '생강차', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 5),
+  ('non_coffee', '자몽차', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 6),
+  ('non_coffee', '캐모마일', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 7),
+  ('non_coffee', '루이보스', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 8),
+  ('non_coffee', '녹차', 2000, 1000, '{"temperature":["hot","ice"],"shot":0,"light":true,"syrup":false}', 9),
+  ('cold', '레몬 아이스티', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 1),
+  ('cold', '복숭아 아이스티', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 2),
+  ('cold', '아삿츄', 2000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 3),
+  ('cold', '카프리썬', 1000, 0, '{"temperature":["ice"],"shot":0,"light":false,"syrup":false}', 4);
 ```
 
 - [ ] **Step 6: 테스트 통과 확인**
@@ -790,8 +810,9 @@ test('게스트는 menus 테이블을 읽지 못한다', async () => {
 test('게스트는 menus_public 으로 메뉴를 읽고 가격 컬럼은 없다', async () => {
   const { data, error } = await anonClient().from('menus_public').select('*')
   expect(error).toBeNull()
-  expect(data!.length).toBeGreaterThanOrEqual(12)
+  expect(data!).toHaveLength(19)
   expect(Object.keys(data![0])).not.toContain('price')
+  expect(Object.keys(data![0])).not.toContain('ice_price_delta')
 })
 
 test('게스트는 주문 테이블을 직접 읽지 못한다', async () => {
@@ -1371,7 +1392,7 @@ VITE_SUPABASE_ANON_KEY=
 ```ts
 import { supabase } from '../../lib/supabase'
 
-export type MenuCategory = 'coffee' | 'tea' | 'drink'
+export type MenuCategory = 'coffee' | 'non_coffee' | 'cold'
 export type MenuOptions = { temperature: ('ice' | 'hot')[]; shot: number; light: boolean; syrup: boolean }
 export type Menu = { id: string; category: MenuCategory; name: string; options: MenuOptions; sort_order: number }
 
@@ -1583,8 +1604,8 @@ import styles from './CategoryTabs.module.css'
 
 const TABS: { id: MenuCategory; label: string }[] = [
   { id: 'coffee', label: '커피' },
-  { id: 'tea', label: '차' },
-  { id: 'drink', label: '음료' },
+  { id: 'non_coffee', label: '논커피' },
+  { id: 'cold', label: '음료' },
 ]
 
 export function CategoryTabs({ value, onChange }: { value: MenuCategory; onChange: (c: MenuCategory) => void }) {

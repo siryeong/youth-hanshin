@@ -117,24 +117,29 @@
 <script data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
 const MENUS = {
   coffee: [
-    { id: 'americano', name: '아메리카노', opt: 'ICE · HOT · 샷 추가' },
-    { id: 'latte', name: '카페라떼', opt: 'ICE · HOT · 연하게' },
-    { id: 'vanilla', name: '바닐라라떼', opt: 'ICE · HOT · 시럽' },
-    { id: 'coldbrew', name: '콜드브루', opt: 'ICE · 샷 추가' },
-    { id: 'cappuccino', name: '카푸치노', opt: 'HOT · 연하게' },
-    { id: 'einspanner', name: '아인슈페너', opt: 'ICE · HOT' }
+    { id: 'americano', name: '아메리카노', opt: 'HOT · ICE · 샷 추가' },
+    { id: 'latte', name: '카페라떼', opt: 'HOT · ICE · 연하게' },
+    { id: 'cappuccino', name: '카푸치노', opt: 'HOT · ICE · 샷 추가' },
+    { id: 'vanilla', name: '바닐라라떼', opt: 'HOT · ICE · 시럽 추가' },
+    { id: 'mocha', name: '카페모카', opt: 'HOT · ICE · 샷 추가' },
+    { id: 'caramel', name: '카라멜 마끼아또', opt: 'HOT · ICE · 시럽 추가' }
   ],
-  tea: [
-    { id: 'chamomile', name: '캐모마일', opt: 'HOT' },
-    { id: 'peppermint', name: '페퍼민트', opt: 'HOT' },
-    { id: 'earlgrey', name: '얼그레이', opt: 'ICE · HOT' },
-    { id: 'yuja', name: '유자차', opt: 'ICE · HOT · 연하게' }
+  non_coffee: [
+    { id: 'choco', name: '초코라떼', opt: 'HOT · ICE · 연하게' },
+    { id: 'greentea_latte', name: '녹차라떼', opt: 'HOT · ICE · 연하게' },
+    { id: 'pumpkin', name: '단호박라떼', opt: 'HOT · ICE · 연하게' },
+    { id: 'yuja', name: '유자차', opt: 'HOT · ICE · 연하게' },
+    { id: 'ginger', name: '생강차', opt: 'HOT · ICE · 연하게' },
+    { id: 'grapefruit', name: '자몽차', opt: 'HOT · ICE · 연하게' },
+    { id: 'chamomile', name: '캐모마일', opt: 'HOT · ICE' },
+    { id: 'rooibos', name: '루이보스', opt: 'HOT · ICE' },
+    { id: 'greentea', name: '녹차', opt: 'HOT · ICE' }
   ],
-  ade: [
-    { id: 'choco', name: '초코라떼', opt: 'ICE · HOT · 연하게' },
-    { id: 'strawberry', name: '딸기라떼', opt: 'ICE' },
-    { id: 'lemonade', name: '레몬에이드', opt: 'ICE · 시럽' },
-    { id: 'icetea', name: '복숭아 아이스티', opt: 'ICE' }
+  cold: [
+    { id: 'lemon_tea', name: '레몬 아이스티', opt: 'ICE' },
+    { id: 'peach_tea', name: '복숭아 아이스티', opt: 'ICE' },
+    { id: 'asatchu', name: '아삿츄', opt: 'ICE' },
+    { id: 'caprisun', name: '카프리썬', opt: 'ICE' }
   ]
 }
 
@@ -150,7 +155,7 @@ class Component extends DCLogic {
     const cat = this.state.cat
     const cart = this.state.cart
     const count = this.total(cart)
-    const cats = [{ id: 'coffee', label: '커피' }, { id: 'tea', label: '차' }, { id: 'ade', label: '음료' }].map((c) => ({
+    const cats = [{ id: 'coffee', label: '커피' }, { id: 'non_coffee', label: '논커피' }, { id: 'cold', label: '음료' }].map((c) => ({
       id: c.id,
       label: c.label,
       bg: c.id === cat ? '#FFFFFF' : 'transparent',
