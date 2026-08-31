@@ -27,6 +27,7 @@
 - 시간 계산은 모두 `Asia/Seoul` 기준이다. 마감 판단에 클라이언트 시계를 쓰지 않는다.
 - 메뉴와 가격은 `한신카페메뉴판.jpeg`(2025 한신교회 DRINKS MENU)를 그대로 따른다. 메뉴를 지어내지 않는다. ICE 는 커피·논커피에서 +1,000원, COLD DRINKS 는 ICE 전용이다.
 - 메뉴판의 계좌번호와 예금주는 개인정보다. 코드·시드·디자인 어디에도 넣지 않는다.
+- Supabase 는 기존 `youth-hanshin` 프로젝트를 그대로 쓴다. **새로 만드는 모든 테이블과 뷰의 이름은 `_v2` 로 끝난다.** v1 스키마(`accounts`, `cafe_menu_items`, `cafe_orders`, `cafe_settings`, `event_participants`, `gift_exchange_matches`, `members`, `villages`)는 읽지도 고치지도 않는다.
 - 디자인: 컨테이너에 테두리를 두르지 않고 그림자를 쓰지 않는다. 층위는 면의 밝기로 만든다. 헤어라인은 그룹 리스트 안쪽에만 쓴다. 글자 크기는 32·24·22·20·17·15·14·13·12·11 열 단계만 쓴다.
 
 ## File Structure
@@ -573,7 +574,7 @@ npx supabase init
 npx supabase start
 ```
 
-`npx supabase status` 출력의 `API URL`, `anon key`, `service_role key`를 `.env.test`에 적는다:
+`supabase status` 출력의 `API URL`, `anon key`, `service_role key`를 `.env.test`에 적는다:
 
 ```
 SUPABASE_URL=http://127.0.0.1:54321
@@ -624,25 +625,25 @@ import { expect, test } from 'vitest'
 import { serviceClient } from './client'
 
 test('메뉴판 그대로 19개가 세 카테고리로 들어간다', async () => {
-  const { data, error } = await serviceClient().from('menus').select('category, name, price, ice_price_delta')
+  const { data, error } = await serviceClient().from('menus_v2').select('category, name, price, ice_price_delta')
   expect(error).toBeNull()
   expect(data!).toHaveLength(19)
   expect(new Set(data!.map((m) => m.category))).toEqual(new Set(['coffee', 'non_coffee', 'cold']))
 })
 
 test('아메리카노는 1000원이고 ICE 는 1000원을 더 받는다', async () => {
-  const { data } = await serviceClient().from('menus').select('price, ice_price_delta').eq('name', '아메리카노').single()
+  const { data } = await serviceClient().from('menus_v2').select('price, ice_price_delta').eq('name', '아메리카노').single()
   expect(data!.price).toBe(1000)
   expect(data!.ice_price_delta).toBe(1000)
 })
 
 test('COLD DRINKS 는 ICE 추가금이 없다', async () => {
-  const { data } = await serviceClient().from('menus').select('ice_price_delta').eq('category', 'cold')
+  const { data } = await serviceClient().from('menus_v2').select('ice_price_delta').eq('category', 'cold')
   expect(data!.every((m) => m.ice_price_delta === 0)).toBe(true)
 })
 
 test('기본 주문 시간대는 주일 10:00-14:30 이다', async () => {
-  const { data } = await serviceClient().from('cafe_settings').select('*').single()
+  const { data } = await serviceClient().from('cafe_settings_v2').select('*').single()
   expect(data!.weekday).toBe(7)
   expect(data!.opens_at).toBe('10:00:00')
   expect(data!.closes_at).toBe('14:30:00')
@@ -652,7 +653,7 @@ test('기본 주문 시간대는 주일 10:00-14:30 이다', async () => {
 - [ ] **Step 4: 테스트 실패 확인**
 
 Run: `npm run test:db`
-Expected: FAIL — `relation "public.menus" does not exist`
+Expected: FAIL — `relation "public.menus_v2" does not exist`
 
 - [ ] **Step 5: 마이그레이션 작성**
 
@@ -663,16 +664,16 @@ create type public.menu_category as enum ('coffee', 'non_coffee', 'cold');
 create type public.order_item_status as enum ('ordered', 'cancelled');
 create type public.app_role as enum ('admin', 'pastor', 'staff', 'youth');
 
-create table public.cohorts (
+create table public.cohorts_v2 (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   year int not null,
   is_active boolean not null default false,
   created_at timestamptz not null default now()
 );
-create unique index cohorts_one_active on public.cohorts (is_active) where is_active;
+create unique index cohorts_v2_one_active on public.cohorts_v2 (is_active) where is_active;
 
-create table public.profiles (
+create table public.profiles_v2 (
   id uuid primary key references auth.users on delete cascade,
   name text not null,
   gender text,
@@ -686,7 +687,7 @@ create table public.profiles (
   created_at timestamptz not null default now()
 );
 
-create table public.menus (
+create table public.menus_v2 (
   id uuid primary key default gen_random_uuid(),
   category public.menu_category not null,
   name text not null,
@@ -697,33 +698,33 @@ create table public.menus (
   sort_order int not null default 0
 );
 
-create table public.cafe_settings (
+create table public.cafe_settings_v2 (
   id boolean primary key default true check (id),
   weekday int not null check (weekday between 1 and 7),
   opens_at time not null,
   closes_at time not null
 );
 
-create table public.cafe_closures (
+create table public.cafe_closures_v2 (
   closed_on date primary key,
   reason text
 );
 
-create table public.orders (
+create table public.orders_v2 (
   id uuid primary key default gen_random_uuid(),
-  cohort_id uuid references public.cohorts on delete set null,
-  profile_id uuid references public.profiles on delete cascade,
+  cohort_id uuid references public.cohorts_v2 on delete set null,
+  profile_id uuid references public.profiles_v2 on delete cascade,
   guest_token uuid,
   service_date date not null,
   created_at timestamptz not null default now(),
-  constraint orders_owner check (num_nonnulls(profile_id, guest_token) = 1)
+  constraint orders_v2_owner check (num_nonnulls(profile_id, guest_token) = 1)
 );
-create index orders_guest_token_idx on public.orders (guest_token) where guest_token is not null;
+create index orders_v2_guest_token_idx on public.orders_v2 (guest_token) where guest_token is not null;
 
-create table public.order_items (
+create table public.order_items_v2 (
   id uuid primary key default gen_random_uuid(),
-  order_id uuid not null references public.orders on delete cascade,
-  menu_id uuid references public.menus on delete set null,
+  order_id uuid not null references public.orders_v2 on delete cascade,
+  menu_id uuid references public.menus_v2 on delete set null,
   menu_name text not null,
   option_label text not null default '',
   options jsonb not null default '{}'::jsonb,
@@ -732,23 +733,23 @@ create table public.order_items (
   cancelled_at timestamptz,
   created_at timestamptz not null default now()
 );
-create index order_items_order_idx on public.order_items (order_id);
+create index order_items_v2_order_idx on public.order_items_v2 (order_id);
 
 create function public.active_cohort_id() returns uuid
 language sql stable security definer set search_path = public as $$
-  select id from public.cohorts where is_active limit 1;
+  select id from public.cohorts_v2 where is_active limit 1;
 $$;
 ```
 
 `supabase/seed.sql`:
 
 ```sql
-insert into public.cohorts (name, year, is_active) values ('3기', 2026, true);
+insert into public.cohorts_v2 (name, year, is_active) values ('3기', 2026, true);
 
-insert into public.cafe_settings (weekday, opens_at, closes_at) values (7, '10:00', '14:30');
+insert into public.cafe_settings_v2 (weekday, opens_at, closes_at) values (7, '10:00', '14:30');
 
 -- 2025 한신교회 DRINKS MENU 그대로. ICE 는 커피·논커피에서 +1,000, COLD DRINKS 는 ICE 전용이라 추가금이 없다.
-insert into public.menus (category, name, price, ice_price_delta, options, sort_order) values
+insert into public.menus_v2 (category, name, price, ice_price_delta, options, sort_order) values
   ('coffee', '아메리카노', 1000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 1),
   ('coffee', '카페라떼', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 2),
   ('coffee', '카푸치노', 2000, 1000, '{"temperature":["hot","ice"],"shot":2,"light":true,"syrup":true}', 3),
@@ -792,7 +793,7 @@ git commit -m "feat: Supabase 스키마 1차와 시드"
 
 **Interfaces:**
 - Consumes: Task 4의 테이블
-- Produces: 뷰 `public.menus_public(id, category, name, options, sort_order)`, 헬퍼 `public.is_admin_or_staff() returns boolean`
+- Produces: 뷰 `public.menus_public_v2(id, category, name, options, sort_order)`, 헬퍼 `public.is_admin_or_staff() returns boolean`
 
 - [ ] **Step 1: 실패하는 테스트 작성**
 
@@ -803,12 +804,12 @@ import { expect, test } from 'vitest'
 import { anonClient } from './client'
 
 test('게스트는 menus 테이블을 읽지 못한다', async () => {
-  const { data } = await anonClient().from('menus').select('id, price')
+  const { data } = await anonClient().from('menus_v2').select('id, price')
   expect(data ?? []).toHaveLength(0)
 })
 
 test('게스트는 menus_public 으로 메뉴를 읽고 가격 컬럼은 없다', async () => {
-  const { data, error } = await anonClient().from('menus_public').select('*')
+  const { data, error } = await anonClient().from('menus_public_v2').select('*')
   expect(error).toBeNull()
   expect(data!).toHaveLength(19)
   expect(Object.keys(data![0])).not.toContain('price')
@@ -816,7 +817,7 @@ test('게스트는 menus_public 으로 메뉴를 읽고 가격 컬럼은 없다'
 })
 
 test('게스트는 주문 테이블을 직접 읽지 못한다', async () => {
-  const { data } = await anonClient().from('order_items').select('id')
+  const { data } = await anonClient().from('order_items_v2').select('id')
   expect(data ?? []).toHaveLength(0)
 })
 ```
@@ -824,59 +825,59 @@ test('게스트는 주문 테이블을 직접 읽지 못한다', async () => {
 - [ ] **Step 2: 테스트 실패 확인**
 
 Run: `npm run test:db -- rls`
-Expected: FAIL — 두 번째 테스트가 `relation "public.menus_public" does not exist`
+Expected: FAIL — 두 번째 테스트가 `relation "public.menus_public_v2" does not exist`
 
 - [ ] **Step 3: RLS 마이그레이션 작성**
 
 `supabase/migrations/0002_rls.sql`:
 
 ```sql
-alter table public.cohorts       enable row level security;
-alter table public.profiles      enable row level security;
-alter table public.menus         enable row level security;
-alter table public.cafe_settings enable row level security;
-alter table public.cafe_closures enable row level security;
-alter table public.orders        enable row level security;
-alter table public.order_items   enable row level security;
+alter table public.cohorts_v2       enable row level security;
+alter table public.profiles_v2      enable row level security;
+alter table public.menus_v2         enable row level security;
+alter table public.cafe_settings_v2 enable row level security;
+alter table public.cafe_closures_v2 enable row level security;
+alter table public.orders_v2        enable row level security;
+alter table public.order_items_v2   enable row level security;
 
 create function public.is_admin_or_staff() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
-    select 1 from public.profiles
+    select 1 from public.profiles_v2
     where id = auth.uid() and role in ('admin', 'pastor', 'staff')
   );
 $$;
 
 -- 가격이 없는 공개 뷰. 뷰 소유자 권한으로 읽으므로 menus 의 RLS 를 우회한다.
-create view public.menus_public as
+create view public.menus_public_v2 as
   select id, category, name, options, sort_order
-  from public.menus
+  from public.menus_v2
   where is_active
   order by sort_order;
 
-grant select on public.menus_public to anon, authenticated;
+grant select on public.menus_public_v2 to anon, authenticated;
 
-create policy "관리자만 메뉴 원본을 읽는다" on public.menus
+create policy "관리자만 메뉴 원본을 읽는다" on public.menus_v2
   for select to authenticated using (public.is_admin_or_staff());
 
-create policy "주문 시간은 누구나 읽는다" on public.cafe_settings
+create policy "주문 시간은 누구나 읽는다" on public.cafe_settings_v2
   for select to anon, authenticated using (true);
 
-create policy "휴무일은 누구나 읽는다" on public.cafe_closures
+create policy "휴무일은 누구나 읽는다" on public.cafe_closures_v2
   for select to anon, authenticated using (true);
 
-create policy "본인 주문만 읽는다" on public.orders
+create policy "본인 주문만 읽는다" on public.orders_v2
   for select to authenticated using (profile_id = auth.uid());
 
-create policy "본인 주문 항목만 읽는다" on public.order_items
+create policy "본인 주문 항목만 읽는다" on public.order_items_v2
   for select to authenticated using (
-    exists (select 1 from public.orders o where o.id = order_id and o.profile_id = auth.uid())
+    exists (select 1 from public.orders_v2 o where o.id = order_id and o.profile_id = auth.uid())
   );
 
-create policy "본인 프로필만 읽는다" on public.profiles
+create policy "본인 프로필만 읽는다" on public.profiles_v2
   for select to authenticated using (id = auth.uid() or public.is_admin_or_staff());
 
-create policy "기수는 로그인 사용자가 읽는다" on public.cohorts
+create policy "기수는 로그인 사용자가 읽는다" on public.cohorts_v2
   for select to authenticated using (true);
 ```
 
@@ -918,12 +919,12 @@ async function todayIsodow(): Promise<number> {
 }
 
 beforeEach(async () => {
-  await serviceClient().from('cafe_closures').delete().gte('closed_on', '1900-01-01')
+  await serviceClient().from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
 })
 
 test('설정된 요일과 시간 안이면 열려 있다', async () => {
   const isodow = await todayIsodow()
-  await serviceClient().from('cafe_settings').update({ weekday: isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
+  await serviceClient().from('cafe_settings_v2').update({ weekday: isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
   const { data } = await anonClient().rpc('cafe_status')
   expect(data.is_open).toBe(true)
 })
@@ -931,16 +932,16 @@ test('설정된 요일과 시간 안이면 열려 있다', async () => {
 test('다른 요일이면 닫혀 있다', async () => {
   const isodow = await todayIsodow()
   const other = isodow === 7 ? 1 : isodow + 1
-  await serviceClient().from('cafe_settings').update({ weekday: other, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
+  await serviceClient().from('cafe_settings_v2').update({ weekday: other, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
   const { data } = await anonClient().rpc('cafe_status')
   expect(data.is_open).toBe(false)
 })
 
 test('임시 휴무일이면 시간 안이어도 닫혀 있다', async () => {
   const isodow = await todayIsodow()
-  await serviceClient().from('cafe_settings').update({ weekday: isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
+  await serviceClient().from('cafe_settings_v2').update({ weekday: isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
   const { data: status } = await anonClient().rpc('cafe_status')
-  await serviceClient().from('cafe_closures').insert({ closed_on: String(status.server_time).slice(0, 10), reason: '수련회' })
+  await serviceClient().from('cafe_closures_v2').insert({ closed_on: String(status.server_time).slice(0, 10), reason: '수련회' })
   const { data } = await anonClient().rpc('cafe_status')
   expect(data.is_open).toBe(false)
   expect(data.is_closed_today).toBe(true)
@@ -961,13 +962,13 @@ create or replace function public.cafe_is_open(at timestamptz default now())
 returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
-      select 1 from public.cafe_settings s
+      select 1 from public.cafe_settings_v2 s
       where s.weekday = extract(isodow from timezone('Asia/Seoul', at))::int
         and timezone('Asia/Seoul', at)::time >= s.opens_at
         and timezone('Asia/Seoul', at)::time < s.closes_at
     )
     and not exists (
-      select 1 from public.cafe_closures c
+      select 1 from public.cafe_closures_v2 c
       where c.closed_on = timezone('Asia/Seoul', at)::date
     );
 $$;
@@ -983,10 +984,10 @@ language sql stable security definer set search_path = public as $$
     'today_isodow', extract(isodow from timezone('Asia/Seoul', now()))::int,
     'closes_in_seconds', greatest(0, extract(epoch from (s.closes_at - timezone('Asia/Seoul', now())::time))::int),
     'is_closed_today', exists (
-      select 1 from public.cafe_closures c where c.closed_on = timezone('Asia/Seoul', now())::date
+      select 1 from public.cafe_closures_v2 c where c.closed_on = timezone('Asia/Seoul', now())::date
     )
   )
-  from public.cafe_settings s;
+  from public.cafe_settings_v2 s;
 $$;
 
 grant execute on function public.cafe_status() to anon, authenticated;
@@ -1029,13 +1030,13 @@ const TOKEN = '11111111-1111-1111-1111-111111111111'
 async function open() {
   const anon = anonClient()
   const { data } = await anon.rpc('cafe_status')
-  await serviceClient().from('cafe_settings')
+  await serviceClient().from('cafe_settings_v2')
     .update({ weekday: data.today_isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
-  await serviceClient().from('cafe_closures').delete().gte('closed_on', '1900-01-01')
+  await serviceClient().from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
 }
 
 async function americano(): Promise<string> {
-  const { data } = await serviceClient().from('menus').select('id').eq('name', '아메리카노').single()
+  const { data } = await serviceClient().from('menus_v2').select('id').eq('name', '아메리카노').single()
   return data!.id
 }
 
@@ -1049,7 +1050,7 @@ test('열려 있으면 주문과 항목이 만들어지고 메뉴명이 스냅�
   })
   expect(error).toBeNull()
 
-  const { data: items } = await serviceClient().from('order_items').select('*').eq('order_id', orderId)
+  const { data: items } = await serviceClient().from('order_items_v2').select('*').eq('order_id', orderId)
   expect(items).toHaveLength(1)
   expect(items![0].menu_name).toBe('아메리카노')
   expect(items![0].option_label).toBe('ICE · 샷 1')
@@ -1059,7 +1060,7 @@ test('열려 있으면 주문과 항목이 만들어지고 메뉴명이 스냅�
 
 test('마감 뒤에는 주문하지 못한다', async () => {
   const menuId = await americano()
-  await serviceClient().from('cafe_settings').update({ opens_at: '00:00', closes_at: '00:01' }).eq('id', true)
+  await serviceClient().from('cafe_settings_v2').update({ opens_at: '00:00', closes_at: '00:01' }).eq('id', true)
   const { error } = await anonClient().rpc('place_order', {
     p_items: [{ menu_id: menuId, option_label: 'ICE', options: {}, quantity: 1 }],
     p_guest_token: TOKEN,
@@ -1097,7 +1098,7 @@ language plpgsql security definer set search_path = public as $$
 declare
   v_order_id uuid;
   v_item jsonb;
-  v_menu public.menus%rowtype;
+  v_menu public.menus_v2%rowtype;
 begin
   if not public.cafe_is_open() then
     raise exception 'ORDER_WINDOW_CLOSED';
@@ -1109,7 +1110,7 @@ begin
     raise exception 'EMPTY_CART';
   end if;
 
-  insert into public.orders (cohort_id, profile_id, guest_token, service_date)
+  insert into public.orders_v2 (cohort_id, profile_id, guest_token, service_date)
   values (
     public.active_cohort_id(),
     auth.uid(),
@@ -1119,12 +1120,12 @@ begin
   returning id into v_order_id;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
-    select * into v_menu from public.menus where id = (v_item->>'menu_id')::uuid and is_active;
+    select * into v_menu from public.menus_v2 where id = (v_item->>'menu_id')::uuid and is_active;
     if not found then
       raise exception 'MENU_NOT_FOUND';
     end if;
 
-    insert into public.order_items (order_id, menu_id, menu_name, option_label, options, quantity)
+    insert into public.order_items_v2 (order_id, menu_id, menu_name, option_label, options, quantity)
     values (
       v_order_id,
       v_menu.id,
@@ -1180,13 +1181,13 @@ const OTHER = '33333333-3333-3333-3333-333333333333'
 
 async function open() {
   const { data } = await anonClient().rpc('cafe_status')
-  await serviceClient().from('cafe_settings')
+  await serviceClient().from('cafe_settings_v2')
     .update({ weekday: data.today_isodow, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
-  await serviceClient().from('cafe_closures').delete().gte('closed_on', '1900-01-01')
+  await serviceClient().from('cafe_closures_v2').delete().gte('closed_on', '1900-01-01')
 }
 
 async function order(token: string) {
-  const { data: menu } = await serviceClient().from('menus').select('id').eq('name', '카페라떼').single()
+  const { data: menu } = await serviceClient().from('menus_v2').select('id').eq('name', '카페라떼').single()
   await anonClient().rpc('place_order', {
     p_items: [{ menu_id: menu!.id, option_label: 'ICE', options: {}, quantity: 1 }],
     p_guest_token: token,
@@ -1228,7 +1229,7 @@ test('자기 항목은 취소되고 상태가 바뀐다', async () => {
 test('마감 뒤에는 취소하지 못한다', async () => {
   await order(MINE)
   const { data } = await anonClient().rpc('get_guest_orders', { p_guest_token: MINE })
-  await serviceClient().from('cafe_settings').update({ opens_at: '00:00', closes_at: '00:01' }).eq('id', true)
+  await serviceClient().from('cafe_settings_v2').update({ opens_at: '00:00', closes_at: '00:01' }).eq('id', true)
   const { error } = await anonClient().rpc('cancel_order_item', {
     p_item_id: data![0].item_id,
     p_guest_token: MINE,
@@ -1258,8 +1259,8 @@ returns table (
 )
 language sql stable security definer set search_path = public as $$
   select i.id, i.menu_name, i.option_label, i.quantity, i.status, i.created_at
-  from public.order_items i
-  join public.orders o on o.id = i.order_id
+  from public.order_items_v2 i
+  join public.orders_v2 o on o.id = i.order_id
   where o.guest_token = p_guest_token
     and o.service_date = timezone('Asia/Seoul', now())::date
   order by i.created_at;
@@ -1276,8 +1277,8 @@ begin
 
   select exists (
     select 1
-    from public.order_items i
-    join public.orders o on o.id = i.order_id
+    from public.order_items_v2 i
+    join public.orders_v2 o on o.id = i.order_id
     where i.id = p_item_id
       and o.service_date = timezone('Asia/Seoul', now())::date
       and (
@@ -1290,7 +1291,7 @@ begin
     raise exception 'NOT_YOUR_ORDER';
   end if;
 
-  update public.order_items
+  update public.order_items_v2
   set status = 'cancelled', cancelled_at = now()
   where id = p_item_id;
 end $$;
@@ -1424,7 +1425,7 @@ export type CafeStatus = {
 }
 
 export async function fetchMenus(): Promise<Menu[]> {
-  const { data, error } = await supabase.from('menus_public').select('*')
+  const { data, error } = await supabase.from('menus_public_v2').select('*')
   if (error) throw error
   return data as Menu[]
 }
@@ -2315,7 +2316,7 @@ test('order_items 변경을 구독하고 언마운트에서 해제한다', () =>
 
   expect(on).toHaveBeenCalledWith(
     'postgres_changes',
-    { event: '*', schema: 'public', table: 'order_items' },
+    { event: '*', schema: 'public', table: 'order_items_v2' },
     expect.any(Function),
   )
   unmount()
@@ -2333,7 +2334,7 @@ Expected: FAIL — `Failed to resolve import "./useOrderRealtime"`
 `supabase/migrations/0006_realtime.sql`:
 
 ```sql
-alter publication supabase_realtime add table public.order_items;
+alter publication supabase_realtime add table public.order_items_v2;
 ```
 
 `src/features/cafe/useOrderRealtime.ts`:
@@ -2346,7 +2347,7 @@ export function useOrderRealtime(onChange: () => void): void {
   useEffect(() => {
     const channel = supabase
       .channel('order-items')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => onChange())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items_v2' }, () => onChange())
       .subscribe()
     return () => {
       void supabase.removeChannel(channel)
@@ -2433,7 +2434,7 @@ test('게스트가 주문하고 취소한다', async ({ page }) => {
 
 - [ ] **Step 3: 실행해서 실패 지점 확인**
 
-Run: `npx supabase start && npm run e2e`
+Run: `supabase start && npm run e2e`
 Expected: 주문 시간대 밖이면 마감 배너에서 실패한다. 로컬 확인용으로 `cafe_settings`를 오늘 요일·`00:00~23:59`로 바꾼 뒤 다시 실행한다.
 
 - [ ] **Step 4: 통과 확인**
@@ -2449,9 +2450,11 @@ Expected: PASS 1개
 { "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
 ```
 
-Vercel 프로젝트에 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`를 넣는다. 운영 Supabase에는 `npx supabase link` 후 `npx supabase db push`로 마이그레이션을 올리고, `cohorts`·`cafe_settings`·`menus` 초기 데이터를 한 번 넣는다.
+Vercel 프로젝트에 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`를 넣는다.
 
-`README.md`에 로컬 실행 순서(`npx supabase start` → `.env.local` 작성 → `npm run dev`)와 테스트 명령 세 가지(`npm test`, `npm run test:db`, `npm run e2e`)를 적는다.
+> **운영 DB 반영은 여기서 멈춘다.** 마이그레이션 대상인 `youth-hanshin` 프로젝트는 v1 이 지금 쓰고 있는 운영 데이터베이스다. `supabase link` 와 `supabase db push` 는 개발자의 명시적 승인을 받은 뒤에만 실행한다. 구현자는 여기까지 준비만 하고 승인을 요청한다. 승인 후 절차: `supabase link --project-ref <youth-hanshin ref>` → `supabase db push` → `cohorts_v2`·`cafe_settings_v2`·`menus_v2` 초기 데이터 1회 입력. 모든 마이그레이션은 새 `_v2` 객체만 만들고 v1 객체는 건드리지 않는다.
+
+`README.md`에 로컬 실행 순서(`supabase start` → `.env.local` 작성 → `npm run dev`)와 테스트 명령 세 가지(`npm test`, `npm run test:db`, `npm run e2e`)를 적는다.
 
 - [ ] **Step 6: 커밋**
 

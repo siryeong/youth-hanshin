@@ -29,25 +29,25 @@
 
 | 테이블 | 책임 |
 |---|---|
-| `profiles` | 이름·성별·생년월일·휴대폰, 항목별 공개 플래그, 역할, 마지막 접속 시각 |
-| `cohorts` | 기수. 편성·출석·주문 기록의 보관 단위 |
-| `villages` | 기수에 속한 마을 |
-| `village_members` | 기수별 인원 배정과 이장 여부. `village_id`가 null이면 미배정 |
-| `menus` | 메뉴와 가격, 메뉴별 사용 가능 옵션(jsonb) |
-| `cafe_settings` / `cafe_closures` | 주문 가능 요일·시각 / 임시 휴무일 |
-| `orders` / `order_items` | 주문 묶음 / 항목. 항목에 주문 당시 메뉴명·옵션을 스냅샷으로 남긴다 |
-| `attendance` | 주일 기준 예배·마을모임 출석 |
-| `prayer_requests` / `village_posts` / `announcements` | 기도제목 / 마을 소식 / 전체 소식 |
-| `push_subscriptions` | 웹 푸시 구독 |
+| `profiles_v2` | 이름·성별·생년월일·휴대폰, 항목별 공개 플래그, 역할, 마지막 접속 시각 |
+| `cohorts_v2` | 기수. 편성·출석·주문 기록의 보관 단위 |
+| `villages_v2` | 기수에 속한 마을 |
+| `village_members_v2` | 기수별 인원 배정과 이장 여부. `village_id`가 null이면 미배정 |
+| `menus_v2` | 메뉴와 가격, 메뉴별 사용 가능 옵션(jsonb) |
+| `cafe_settings_v2` / `cafe_closures_v2` | 주문 가능 요일·시각 / 임시 휴무일 |
+| `orders_v2` / `order_items_v2` | 주문 묶음 / 항목. 항목에 주문 당시 메뉴명·옵션을 스냅샷으로 남긴다 |
+| `attendance_v2` | 주일 기준 예배·마을모임 출석 |
+| `prayer_requests_v2` / `village_posts_v2` / `announcements_v2` | 기도제목 / 마을 소식 / 전체 소식 |
+| `push_subscriptions_v2` | 웹 푸시 구독 |
 
-**이장은 역할이 아니라 배정이다.** `village_members.is_leader`로 표현한다. "마을을 옮긴 이장은 이장 자격을 잃는다"를 트리거 한 줄로 보장할 수 있고, `profiles.role`에 두면 마을 이동과 역할 해제를 애플리케이션이 맞춰야 한다. `profiles.role`은 `admin` / `pastor` / `staff` / `youth` 네 개만 둔다.
+**이장은 역할이 아니라 배정이다.** `village_members_v2.is_leader`로 표현한다. "마을을 옮긴 이장은 이장 자격을 잃는다"를 트리거 한 줄로 보장할 수 있고, `profiles_v2.role`에 두면 마을 이동과 역할 해제를 애플리케이션이 맞춰야 한다. `profiles_v2.role`은 `admin` / `pastor` / `staff` / `youth` 네 개만 둔다.
 
 ## 권한 모델
 
 - 모든 테이블에 RLS를 켠다. 판단 로직은 `SECURITY DEFINER` 헬퍼 함수(`is_admin_or_staff()`, `is_pastor()`, `is_leader_of(village)`, `active_cohort_id()`)에 모아 정책에서 호출한다.
 - **쓰기 중 시간·권한 검증이 필요한 것은 RPC로 감싼다.** 주문 제출·취소는 `place_order` / `cancel_order_item`을 거친다. 마감 검증을 클라이언트 시계에 맡기지 않기 위해서다.
 - **게스트는 테이블에 직접 접근하지 않는다.** `anon`에는 RPC 실행 권한만 준다(`place_order`, `get_guest_orders`, `cancel_order_item`). 확정한 식별 방식: 최초 주문 시 UUID를 발급해 localStorage에 저장하고 주문 행에 함께 넣는다. RPC 인자의 토큰이 일치할 때만 조회·취소를 허용하고, 유효 범위는 그날 마감 시각까지다.
-- **가격 비노출은 뷰로 처리한다.** `menus`는 관리자만 select 하고, 청년·게스트는 가격 컬럼이 없는 `menus_public` 뷰만 본다. 컬럼을 숨기는 일을 UI에 맡기지 않는다.
+- **가격 비노출은 뷰로 처리한다.** `menus_v2`는 관리자만 select 하고, 청년·게스트는 가격 컬럼이 없는 `menus_public_v2` 뷰만 본다. 컬럼을 숨기는 일을 UI에 맡기지 않는다.
 - **개인정보 마스킹도 뷰로 처리한다.** 마을원 명단은 공개 플래그를 적용한 뷰로 내려간다. 관리자용 뷰는 원본을 내려주고 마스킹 해제는 화면 토글로 한다.
 
 ## 디자인 시스템 → 코드 매핑
@@ -102,7 +102,9 @@ PWA 설치, 웹 푸시 구독 관리, 마을 소식·전체 소식 발행 시 Ed
 
 ## 이번에 확정한 것
 
-- **Supabase는 새 프로젝트로 만든다.** 스키마와 RLS를 처음부터 설계하고 기존 서비스에 영향을 주지 않기 위해서다. 기존 주문 데이터를 옮길 필요가 생기면 1단계 이후 별도 이관 작업으로 다룬다.
+- **Supabase는 기존 `youth-hanshin` 프로젝트를 그대로 쓴다.** 카카오 로그인 계정(`auth.users`)을 v1 과 공유하므로 사용자가 다시 가입하지 않아도 되고, 필요하면 v1 주문 데이터를 같은 DB 안에서 옮길 수 있다.
+- **새로 만드는 모든 테이블과 뷰의 이름은 `_v2` 로 끝난다.** 한 스키마 안에 v1 과 v2 가 함께 있으므로 이름만 보고 어느 쪽인지 알 수 있어야 한다. v1 의 `cafe_settings` 와 `villages` 는 이름이 겹치기도 한다. v1 객체(`accounts`, `cafe_menu_items`, `cafe_orders`, `cafe_settings`, `event_participants`, `gift_exchange_matches`, `members`, `villages`)는 읽지도 고치지도 않는다.
+- **운영 DB 마이그레이션은 개발자 승인 뒤에만 실행한다.** 대상 프로젝트가 v1 의 운영 데이터베이스다. 로컬 개발은 `supabase start` 로 띄운 로컬 DB 만 쓴다.
 - **게스트 식별은 익명 토큰 방식으로 한다.** Supabase 익명 로그인은 계정이 계속 쌓여 정리 작업이 필요하고, 이 앱의 게스트는 그날 하루만 자기 주문을 보면 된다.
 
 ## 남은 미결정
