@@ -2304,6 +2304,48 @@ test('담고 제출하면 placeOrder 를 부르고 장바구니를 비운다', a
   expect(await screen.findByText('주문했어요')).toBeInTheDocument()
 })
 
+test('주문에 성공하면 장바구니가 빈다', async () => {
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+  expect(screen.getByRole('button', { name: /장바구니 1개/ })).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('button', { name: /주문하기/ }))
+
+  expect(await screen.findByText('주문했어요')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '주문하기' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /장바구니 1개/ })).not.toBeInTheDocument()
+})
+
+test('마감으로 주문이 거절되면 그 이유를 보여준다', async () => {
+  vi.mocked(api.placeOrder).mockRejectedValue(new Error('ORDER_WINDOW_CLOSED'))
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+  await userEvent.click(screen.getByRole('button', { name: /주문하기/ }))
+
+  expect(await screen.findByText('마감돼서 주문할 수 없어요')).toBeInTheDocument()
+})
+
+test('다른 이유로 실패하면 일반 문구를 보여준다', async () => {
+  vi.mocked(api.placeOrder).mockRejectedValue(new Error('network down'))
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+  await userEvent.click(screen.getByRole('button', { name: /주문하기/ }))
+
+  expect(await screen.findByText('주문하지 못했어요')).toBeInTheDocument()
+})
+
+test('마감이면 메뉴를 눌러도 옵션 시트가 열리지 않고 이유를 알려준다', async () => {
+  vi.mocked(api.fetchCafeStatus).mockResolvedValue({ ...openStatus, is_open: false, closes_in_seconds: 0 })
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  expect(await screen.findByText('마감돼서 담을 수 없어요')).toBeInTheDocument()
+})
+
 test('마감이면 주문 버튼을 막고 이유를 보여준다', async () => {
   vi.mocked(api.fetchCafeStatus).mockResolvedValue({ ...openStatus, is_open: false, closes_in_seconds: 0 })
   renderWithQuery(<OrderPage />)
@@ -2361,7 +2403,7 @@ export function StatusBanner({ status }: { status?: CafeStatus }) {
 `src/features/cafe/OrderPage.tsx`:
 
 ```tsx
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { getGuestToken } from '../../lib/guestToken'
@@ -2378,7 +2420,16 @@ export function OrderPage() {
   const [category, setCategory] = useState<MenuCategory>('coffee')
   const [picked, setPicked] = useState<Menu | null>(null)
   const [toast, setToast] = useState('')
+  const toastTimer = useRef<number | undefined>(undefined)
   const cart = useCart()
+
+  // 토스트는 스스로 사라져야 한다. 안 그러면 "담았어요" 가 주문을 마친 뒤에도 화면에 남는다.
+  const showToast = (text: string) => {
+    setToast(text)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 2500)
+  }
+  useEffect(() => () => window.clearTimeout(toastTimer.current), [])
   const status = useCafeStatus()
   const queryClient = useQueryClient()
   const menus = useQuery({ queryKey: ['menus'], queryFn: fetchMenus })
@@ -2387,11 +2438,11 @@ export function OrderPage() {
     mutationFn: () => placeOrder(cart.lines, getGuestToken()),
     onSuccess: () => {
       cart.clear()
-      setToast('주문했어요')
+      showToast('주문했어요')
       queryClient.invalidateQueries({ queryKey: ['guest-orders'] })
     },
     onError: (error: Error) => {
-      setToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
+      showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
       queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
     },
   })
@@ -2407,18 +2458,34 @@ export function OrderPage() {
 
       <StatusBanner status={status.data} />
       <CategoryTabs value={category} onChange={setCategory} />
-      <MenuGrid menus={visible} counts={cart.counts} onPick={(menu) => isOpen && setPicked(menu)} />
+      <MenuGrid
+        menus={visible}
+        counts={cart.counts}
+        onPick={(menu) => {
+          // 마감 후 카드를 눌렀을 때 아무 일도 안 일어나면 화면이 죽은 것처럼 보인다
+          if (!isOpen) {
+            showToast('마감돼서 담을 수 없어요')
+            return
+          }
+          setPicked(menu)
+        }}
+      />
 
       {toast && <p className={styles.toast}>{toast}</p>}
 
       <footer className={styles.footer}>
-        <Button
-          size="lg"
-          disabled={!isOpen || cart.total === 0 || submit.isPending}
-          onClick={() => submit.mutate()}
-        >
-          {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
-        </Button>
+        <div className={styles.footerInner}>
+          <Button
+            size="lg"
+            disabled={!isOpen || cart.total === 0 || submit.isPending}
+            onClick={() => {
+              // disabled 는 리렌더가 끝나야 걸린다. 연타로 두 번 나가지 않게 여기서도 막는다.
+              if (!submit.isPending) submit.mutate()
+            }}
+          >
+            {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
+          </Button>
+        </div>
       </footer>
 
       {picked && (
@@ -2427,7 +2494,7 @@ export function OrderPage() {
           onClose={() => setPicked(null)}
           onAdd={(line) => {
             cart.add(line)
-            setToast(`${line.menu_name} 담았어요`)
+            showToast(`${line.menu_name} 담았어요`)
           }}
         />
       )}
@@ -2444,8 +2511,9 @@ export function OrderPage() {
 .title { font-size: var(--text-screen); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
 @media (min-width: 1024px) { .title { font-size: var(--text-title-lg); } }
 .toast { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); background: var(--text); color: var(--surface); font-size: var(--text-caption); }
-.footer { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--space-3) var(--space-5) var(--space-4); background: var(--bg); display: flex; }
-.footer > * { flex: 1; }
+.footer { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--space-3) var(--space-5) var(--space-4); background: var(--bg); }
+.footerInner { display: flex; max-width: 1280px; margin: 0 auto; }
+.footerInner > * { flex: 1; }
 ```
 
 `src/App.tsx`는 화면만 고른다. QueryClientProvider 는 `main.tsx` 하나에만 둔다 — App 안에 또 만들면 바깥 provider 를 가려 `staleTime` 설정이 죽는다:
