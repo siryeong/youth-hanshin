@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { getGuestToken } from '../../lib/guestToken'
@@ -5,14 +6,26 @@ import { useToast } from '../../lib/useToast'
 import { cancelOrderItem, fetchGuestOrders } from './api'
 import { StatusBanner } from './StatusBanner'
 import { useCafeStatus } from './useCafeStatus'
+import { useOrderRealtime } from './useOrderRealtime'
 import styles from './MyOrdersPage.module.css'
 
 export function MyOrdersPage() {
   const token = getGuestToken()
   const status = useCafeStatus()
   const queryClient = useQueryClient()
-  const orders = useQuery({ queryKey: ['guest-orders', token], queryFn: () => fetchGuestOrders(token) })
+  const orders = useQuery({
+    queryKey: ['guest-orders', token],
+    queryFn: () => fetchGuestOrders(token),
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
   const { toast, showToast } = useToast()
+
+  const invalidate = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ['guest-orders'] }),
+    [queryClient],
+  )
+  useOrderRealtime(invalidate)
 
   const cancel = useMutation({
     mutationFn: (itemId: string) => cancelOrderItem(itemId, token),
