@@ -244,6 +244,7 @@ Expected: FAIL — `Failed to resolve import "./theme"`
   --radius-sheet: 22px; --radius-pill: 999px;
 
   --control-lg: 48px; --control: 44px; --control-pc: 40px; --control-sm: 34px;
+  --tabbar-h: 64px;
 
   --dur-fast: 120ms; --dur-base: 180ms; --dur-sheet: 260ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -2586,7 +2587,8 @@ git commit -m "feat: 주문 화면 조립과 제출"
 
 **Files:**
 - Create: `src/features/cafe/MyOrdersPage.tsx`, `src/features/cafe/MyOrdersPage.module.css`
-- Modify: `src/App.tsx`(라우터 도입), `src/main.tsx`
+- Create: `src/Shell.tsx`, `src/Shell.module.css`
+- Modify: `src/App.tsx`(라우터 도입), `src/features/cafe/OrderPage.module.css`(푸터 위치 한 줄), `src/styles/tokens.css`(`--tabbar-h` 한 줄)
 - Test: `src/features/cafe/MyOrdersPage.test.tsx`
 
 **Interfaces:**
@@ -2728,7 +2730,67 @@ export function MyOrdersPage() {
 .empty { padding: var(--space-8); text-align: center; color: var(--text-muted); font-size: var(--text-caption); }
 ```
 
-라우터는 `src/App.tsx`에서 `createBrowserRouter`로 `/`(OrderPage)와 `/orders`(MyOrdersPage)를 연결하고, 하단 탭으로 오간다.
+화면이 둘이 되므로 라우터와 하단 탭을 넣는다. 1단계에는 주문과 내 주문 두 개만 둔다 — 내 마을과 내 정보는 로그인이 필요해 2단계 몫이다.
+
+`src/Shell.tsx`:
+
+```tsx
+import { NavLink, Outlet } from 'react-router-dom'
+import styles from './Shell.module.css'
+
+const tabClass = ({ isActive }: { isActive: boolean }) =>
+  isActive ? `${styles.tab} ${styles.on}` : styles.tab
+
+export function Shell() {
+  return (
+    <div className={styles.shell}>
+      <Outlet />
+      <nav className={styles.tabs} aria-label="주요 메뉴">
+        <NavLink to="/" end className={tabClass}>
+          주문
+        </NavLink>
+        <NavLink to="/orders" className={tabClass}>
+          내 주문
+        </NavLink>
+      </nav>
+    </div>
+  )
+}
+```
+
+`src/Shell.module.css`:
+
+```css
+.shell { min-height: 100dvh; padding-bottom: var(--tabbar-h); }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabbar-h); display: flex; background: var(--surface); }
+.tab { flex: 1; display: grid; place-items: center; font-size: var(--text-nano); font-weight: 500; color: var(--text-muted); text-decoration: none; }
+.on { color: var(--text); font-weight: 600; }
+```
+
+`src/App.tsx`:
+
+```tsx
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { MyOrdersPage } from './features/cafe/MyOrdersPage'
+import { OrderPage } from './features/cafe/OrderPage'
+import { Shell } from './Shell'
+
+const router = createBrowserRouter([
+  {
+    element: <Shell />,
+    children: [
+      { path: '/', element: <OrderPage /> },
+      { path: '/orders', element: <MyOrdersPage /> },
+    ],
+  },
+])
+
+export function App() {
+  return <RouterProvider router={router} />
+}
+```
+
+주문 화면의 고정 푸터가 탭바 위에 앉도록 `src/features/cafe/OrderPage.module.css` 의 `.footer` 한 줄만 고친다 — `bottom: 0` → `bottom: var(--tabbar-h)`. 다른 줄은 건드리지 않는다.
 
 - [ ] **Step 4: 테스트 통과 확인**
 
