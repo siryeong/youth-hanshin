@@ -2267,7 +2267,7 @@ git commit -m "feat: 옵션 선택 시트와 장바구니"
 `src/features/cafe/OrderPage.test.tsx`:
 
 ```tsx
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithQuery } from '../../test/renderWithQuery'
 import { OrderPage } from './OrderPage'
@@ -2346,6 +2346,28 @@ test('마감이면 메뉴를 눌러도 옵션 시트가 열리지 않고 이유�
   expect(await screen.findByText('마감돼서 담을 수 없어요')).toBeInTheDocument()
 })
 
+test('연타해도 주문은 한 번만 나간다', async () => {
+  // 두 클릭이 리렌더 사이에 들어오는 상황을 재현한다
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+
+  const button = screen.getByRole('button', { name: /주문하기/ })
+  fireEvent.click(button)
+  fireEvent.click(button)
+
+  await waitFor(() => expect(api.placeOrder).toHaveBeenCalledTimes(1))
+})
+
+test('토스트는 잠시 뒤 스스로 사라진다', async () => {
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+
+  const toast = await screen.findByText('아메리카노 담았어요')
+  await waitForElementToBeRemoved(toast, { timeout: 4000 })
+})
+
 test('마감이면 주문 버튼을 막고 이유를 보여준다', async () => {
   vi.mocked(api.fetchCafeStatus).mockResolvedValue({ ...openStatus, is_open: false, closes_in_seconds: 0 })
   renderWithQuery(<OrderPage />)
@@ -2421,6 +2443,9 @@ export function OrderPage() {
   const [picked, setPicked] = useState<Menu | null>(null)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | undefined>(undefined)
+  // disabled 는 리렌더가 끝나야 걸린다. 같은 렌더의 isPending 을 다시 읽어봐야 값이 같으므로
+  // 연타를 막지 못한다. 렌더와 무관하게 동기적으로 세우는 플래그가 필요하다.
+  const submitting = useRef(false)
   const cart = useCart()
 
   // 토스트는 스스로 사라져야 한다. 안 그러면 "담았어요" 가 주문을 마친 뒤에도 화면에 남는다.
@@ -2444,6 +2469,9 @@ export function OrderPage() {
     onError: (error: Error) => {
       showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
       queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
+    },
+    onSettled: () => {
+      submitting.current = false
     },
   })
 
@@ -2479,8 +2507,9 @@ export function OrderPage() {
             size="lg"
             disabled={!isOpen || cart.total === 0 || submit.isPending}
             onClick={() => {
-              // disabled 는 리렌더가 끝나야 걸린다. 연타로 두 번 나가지 않게 여기서도 막는다.
-              if (!submit.isPending) submit.mutate()
+              if (submitting.current) return
+              submitting.current = true
+              submit.mutate()
             }}
           >
             {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
