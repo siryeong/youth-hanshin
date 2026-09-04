@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { getGuestToken } from '../../lib/guestToken'
+import { useToast } from '../../lib/useToast'
 import { cancelOrderItem, fetchGuestOrders } from './api'
 import { StatusBanner } from './StatusBanner'
 import { useCafeStatus } from './useCafeStatus'
@@ -11,11 +12,15 @@ export function MyOrdersPage() {
   const status = useCafeStatus()
   const queryClient = useQueryClient()
   const orders = useQuery({ queryKey: ['guest-orders', token], queryFn: () => fetchGuestOrders(token) })
+  const { toast, showToast } = useToast()
 
   const cancel = useMutation({
     mutationFn: (itemId: string) => cancelOrderItem(itemId, token),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['guest-orders'] }),
-    onError: () => queryClient.invalidateQueries({ queryKey: ['cafe-status'] }),
+    onError: (error: Error) => {
+      showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 취소할 수 없어요' : '취소하지 못했어요')
+      queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
+    },
   })
 
   const isOpen = status.data?.is_open ?? false
@@ -30,7 +35,9 @@ export function MyOrdersPage() {
         게스트로 주문했어요. 브라우저를 닫으면 이 내역을 볼 수 없어요.
       </p>
 
-      {items.length === 0 && <p className={styles.empty}>아직 주문한 음료가 없어요</p>}
+      {toast && <p className={styles.toast}>{toast}</p>}
+
+      {!orders.isLoading && items.length === 0 && <p className={styles.empty}>아직 주문한 음료가 없어요</p>}
 
       <ul className={styles.list}>
         {items.map((item) => (

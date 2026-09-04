@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { getGuestToken } from '../../lib/guestToken'
+import { useToast } from '../../lib/useToast'
 import { fetchMenus, placeOrder, type Menu, type MenuCategory } from './api'
 import { CategoryTabs } from './CategoryTabs'
 import { MenuGrid } from './MenuGrid'
@@ -14,20 +15,12 @@ import styles from './OrderPage.module.css'
 export function OrderPage() {
   const [category, setCategory] = useState<MenuCategory>('coffee')
   const [picked, setPicked] = useState<Menu | null>(null)
-  const [toast, setToast] = useState('')
-  const toastTimer = useRef<number | undefined>(undefined)
+  const { toast, showToast } = useToast()
   // disabled 는 리렌더가 끝나야 걸린다. 같은 렌더의 isPending 을 다시 읽어봐야 값이 같으므로
   // 연타를 막지 못한다. 렌더와 무관하게 동기적으로 세우는 플래그가 필요하다.
   const submitting = useRef(false)
   const cart = useCart()
 
-  // 토스트는 스스로 사라져야 한다. 안 그러면 "담았어요" 가 주문을 마친 뒤에도 화면에 남는다.
-  const showToast = (text: string) => {
-    setToast(text)
-    window.clearTimeout(toastTimer.current)
-    toastTimer.current = window.setTimeout(() => setToast(''), 2500)
-  }
-  useEffect(() => () => window.clearTimeout(toastTimer.current), [])
   const status = useCafeStatus()
   const queryClient = useQueryClient()
   const menus = useQuery({ queryKey: ['menus'], queryFn: fetchMenus })
