@@ -2255,7 +2255,7 @@ git commit -m "feat: 옵션 선택 시트와 장바구니"
 
 **Files:**
 - Create: `src/features/cafe/useCafeStatus.ts`, `src/features/cafe/StatusBanner.tsx`, `src/features/cafe/StatusBanner.module.css`, `src/features/cafe/OrderPage.tsx`, `src/features/cafe/OrderPage.module.css`
-- Modify: `src/App.tsx`
+- Modify: `src/App.tsx`, `src/App.test.tsx`
 - Test: `src/features/cafe/OrderPage.test.tsx`
 
 **Interfaces:**
@@ -2351,10 +2351,11 @@ export function StatusBanner({ status }: { status?: CafeStatus }) {
 
 ```css
 .banner { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); font-size: var(--text-caption); font-weight: 500; }
-.open { background: #E4F0EA; color: #2F6349; }
-.warn { background: #F7ECD9; color: #8A5A15; }
+/* 상태 틴트는 토큰에서 파생한다. hex 를 박으면 다크 테마에서 따라오지 않는다. */
+.open { background: color-mix(in srgb, var(--success) 16%, var(--surface)); color: var(--success); }
+.warn { background: color-mix(in srgb, var(--warning) 18%, var(--surface)); color: var(--warning); }
 .closed { background: var(--fill); color: var(--text-muted); }
-.danger { background: #F7E3E2; color: var(--danger); }
+.danger { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); color: var(--danger); }
 ```
 
 `src/features/cafe/OrderPage.tsx`:
@@ -2447,7 +2448,28 @@ export function OrderPage() {
 .footer > * { flex: 1; }
 ```
 
-`src/App.tsx`를 `OrderPage`를 그리도록 바꾸고, Task 1의 테스트가 계속 통과하는지 확인한다.
+`src/App.tsx`는 화면만 고른다. QueryClientProvider 는 `main.tsx` 하나에만 둔다 — App 안에 또 만들면 바깥 provider 를 가려 `staleTime` 설정이 죽는다:
+
+```tsx
+import { OrderPage } from './features/cafe/OrderPage'
+
+export function App() {
+  return <OrderPage />
+}
+```
+
+`OrderPage` 가 `useQuery` 를 쓰므로 `src/App.test.tsx` 는 provider 를 씌워 렌더해야 한다. 단언은 그대로 둔다:
+
+```tsx
+import { screen } from '@testing-library/react'
+import { App } from './App'
+import { renderWithQuery } from './test/renderWithQuery'
+
+test('주문 화면 제목을 보여준다', () => {
+  renderWithQuery(<App />)
+  expect(screen.getByRole('heading', { name: '청년부 카페' })).toBeInTheDocument()
+})
+```
 
 - [ ] **Step 4: 테스트 통과 확인**
 
