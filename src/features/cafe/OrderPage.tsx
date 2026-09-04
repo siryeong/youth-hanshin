@@ -16,6 +16,9 @@ export function OrderPage() {
   const [picked, setPicked] = useState<Menu | null>(null)
   const [toast, setToast] = useState('')
   const toastTimer = useRef<number | undefined>(undefined)
+  // disabled 는 리렌더가 끝나야 걸린다. 같은 렌더의 isPending 을 다시 읽어봐야 값이 같으므로
+  // 연타를 막지 못한다. 렌더와 무관하게 동기적으로 세우는 플래그가 필요하다.
+  const submitting = useRef(false)
   const cart = useCart()
 
   // 토스트는 스스로 사라져야 한다. 안 그러면 "담았어요" 가 주문을 마친 뒤에도 화면에 남는다.
@@ -39,6 +42,9 @@ export function OrderPage() {
     onError: (error: Error) => {
       showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
       queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
+    },
+    onSettled: () => {
+      submitting.current = false
     },
   })
 
@@ -74,8 +80,9 @@ export function OrderPage() {
             size="lg"
             disabled={!isOpen || cart.total === 0 || submit.isPending}
             onClick={() => {
-              // disabled 는 리렌더가 끝나야 걸린다. 연타로 두 번 나가지 않게 여기서도 막는다.
-              if (!submit.isPending) submit.mutate()
+              if (submitting.current) return
+              submitting.current = true
+              submit.mutate()
             }}
           >
             {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}

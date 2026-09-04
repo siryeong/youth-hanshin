@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithQuery } from '../../test/renderWithQuery'
 import { OrderPage } from './OrderPage'
@@ -17,6 +17,7 @@ const openStatus: api.CafeStatus = {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   vi.mocked(api.fetchMenus).mockResolvedValue([menu])
   vi.mocked(api.fetchCafeStatus).mockResolvedValue(openStatus)
   vi.mocked(api.placeOrder).mockResolvedValue('order-1')
@@ -75,6 +76,28 @@ test('마감이면 메뉴를 눌러도 옵션 시트가 열리지 않고 이유�
 
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   expect(await screen.findByText('마감돼서 담을 수 없어요')).toBeInTheDocument()
+})
+
+test('연타해도 주문은 한 번만 나간다', async () => {
+  // 두 클릭이 리렌더 사이에 들어오는 상황을 재현한다
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+
+  const button = screen.getByRole('button', { name: /주문하기/ })
+  fireEvent.click(button)
+  fireEvent.click(button)
+
+  await waitFor(() => expect(api.placeOrder).toHaveBeenCalledTimes(1))
+})
+
+test('토스트는 잠시 뒤 스스로 사라진다', async () => {
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: /아메리카노/ }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+
+  const toast = await screen.findByText('아메리카노 담았어요')
+  await waitForElementToBeRemoved(toast, { timeout: 4000 })
 })
 
 test('마감이면 주문 버튼을 막고 이유를 보여준다', async () => {
