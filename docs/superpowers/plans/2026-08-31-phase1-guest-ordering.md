@@ -1135,6 +1135,61 @@ test('빈 장바구니는 거절한다', async () => {
   expect(error?.message).toContain('EMPTY_CART')
 })
 
+test('없는 메뉴를 담으면 거절한다', async () => {
+  const { error } = await anonClient().rpc('place_order', {
+    p_items: [{ menu_id: '00000000-0000-0000-0000-000000000000', option_label: 'ICE', options: {}, quantity: 1 }],
+    p_guest_token: TOKEN,
+  })
+  expect(error?.message).toContain('MENU_NOT_FOUND')
+})
+
+test('숨긴 메뉴는 주문하지 못한다', async () => {
+  const db = serviceClient()
+  const { data: hidden } = await db
+    .from('menus_v2')
+    .insert({
+      category: 'coffee',
+      name: '숨긴 메뉴',
+      price: 2000,
+      ice_price_delta: 1000,
+      options: { temperature: ['hot'], shot: 0, light: false, syrup: false },
+      sort_order: 98,
+      is_active: false,
+    })
+    .select('id')
+    .single()
+
+  const { error } = await anonClient().rpc('place_order', {
+    p_items: [{ menu_id: hidden!.id, option_label: 'HOT', options: {}, quantity: 1 }],
+    p_guest_token: TOKEN,
+  })
+  expect(error?.message).toContain('MENU_NOT_FOUND')
+
+  await db.from('menus_v2').delete().eq('id', hidden!.id)
+})
+
+test('수량은 1에서 9 사이로 맞춰진다', async () => {
+  const menuId = await americano()
+  const { data: orderId } = await anonClient().rpc('place_order', {
+    p_items: [
+      { menu_id: menuId, option_label: 'ICE', options: {}, quantity: 0 },
+      { menu_id: menuId, option_label: 'HOT', options: {}, quantity: 99 },
+    ],
+    p_guest_token: TOKEN,
+  })
+
+  const { data: items } = await serviceClient()
+    .from('order_items_v2')
+    .select('option_label, quantity')
+    .eq('order_id', orderId)
+    .order('option_label')
+
+  expect(items!.map((i) => [i.option_label, i.quantity])).toEqual([
+    ['HOT', 9],
+    ['ICE', 1],
+  ])
+})
+
 test('메뉴를 지워도 주문 내역은 주문 당시 이름과 옵션으로 남는다', async () => {
   const db = serviceClient()
   const { data: temp } = await db
@@ -1231,7 +1286,7 @@ grant execute on function public.place_order(jsonb, uuid) to anon, authenticated
 - [ ] **Step 4: 테스트 통과 확인**
 
 Run: `npm run test:db -- place-order`
-Expected: PASS 5개
+Expected: PASS 8개
 
 마지막 테스트는 시드된 19행을 건드리지 않도록 임시 메뉴를 새로 만들어 지운다. `db reset` 은 스위트 전체에 한 번만 돌기 때문이다.
 
