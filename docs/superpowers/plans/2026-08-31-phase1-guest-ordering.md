@@ -969,6 +969,10 @@ test('다른 요일이면 닫혀 있다', async () => {
   await serviceClient().from('cafe_settings_v2').update({ weekday: other, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
   const { data } = await anonClient().rpc('cafe_status')
   expect(data.is_open).toBe(false)
+  // 요일 때문에 닫힌 것이지 휴무일 때문이 아니다
+  expect(data.is_closed_today).toBe(false)
+  // 닫혀 있으면 남은 시간은 0 이어야 한다
+  expect(data.closes_in_seconds).toBe(0)
 })
 
 test('임시 휴무일이면 시간 안이어도 닫혀 있다', async () => {
@@ -1016,13 +1020,22 @@ language sql stable security definer set search_path = public as $$
     'closes_at', s.closes_at,
     'server_time', timezone('Asia/Seoul', now()),
     'today_isodow', extract(isodow from timezone('Asia/Seoul', now()))::int,
-    'closes_in_seconds', greatest(0, extract(epoch from (s.closes_at - timezone('Asia/Seoul', now())::time))::int),
+    -- 열려 있을 때만 남은 시간을 센다. 화요일 오전처럼 안 여는 날에도 값을 내놓으면
+    -- 이 필드를 그대로 쓰는 화면이 "마감까지 5시간"을 보여주게 된다.
+    'closes_in_seconds', case
+      when public.cafe_is_open() then greatest(0, extract(epoch from (s.closes_at - timezone('Asia/Seoul', now())::time))::int)
+      else 0
+    end,
     'is_closed_today', exists (
       select 1 from public.cafe_closures_v2 c where c.closed_on = timezone('Asia/Seoul', now())::date
     )
   )
   from public.cafe_settings_v2 s;
 $$;
+
+-- cafe_is_open 은 RPC 안에서만 쓴다. Supabase 는 PUBLIC 뿐 아니라 ALTER DEFAULT PRIVILEGES 로
+-- anon·authenticated 에도 EXECUTE 를 직접 주므로, from public 만으로는 회수되지 않는다. 세 대상을 모두 적는다.
+revoke execute on function public.cafe_is_open(timestamptz) from public, anon, authenticated;
 
 grant execute on function public.cafe_status() to anon, authenticated;
 ```
