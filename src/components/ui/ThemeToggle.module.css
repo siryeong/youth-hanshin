@@ -1,0 +1,10 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control);
+  height: var(--control);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--text);
+}

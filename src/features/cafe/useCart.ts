@@ -5,7 +5,6 @@ export function useCart() {
   const [lines, setLines] = useState<CartLine[]>([])
 
   const add = useCallback((line: CartLine) => setLines((prev) => [...prev, line]), [])
-  const removeLast = useCallback(() => setLines((prev) => prev.slice(0, -1)), [])
   const clear = useCallback(() => setLines([]), [])
 
   const counts = useMemo(() => {
@@ -16,5 +15,5 @@ export function useCart() {
 
   const total = useMemo(() => lines.reduce((sum, line) => sum + line.quantity, 0), [lines])
 
-  return { lines, counts, total, add, removeLast, clear }
+  return { lines, counts, total, add, clear }
 }

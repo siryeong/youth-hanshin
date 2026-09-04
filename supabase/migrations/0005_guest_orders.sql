@@ -1,4 +1,4 @@
-create or replace function public.get_guest_orders(p_guest_token uuid)
+create function public.get_guest_orders(p_guest_token uuid)
 returns table (
   item_id uuid,
   menu_name text,
@@ -16,7 +16,7 @@ language sql stable security definer set search_path = public as $$
   order by i.created_at;
 $$;
 
-create or replace function public.cancel_order_item(p_item_id uuid, p_guest_token uuid default null)
+create function public.cancel_order_item(p_item_id uuid, p_guest_token uuid default null)
 returns void
 language plpgsql security definer set search_path = public as $$
 declare v_owned boolean;

@@ -1,4 +1,4 @@
-create or replace function public.cafe_is_open(at timestamptz default now())
+create function public.cafe_is_open(at timestamptz default now())
 returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (
@@ -13,7 +13,7 @@ language sql stable security definer set search_path = public as $$
     );
 $$;
 
-create or replace function public.cafe_status()
+create function public.cafe_status()
 returns jsonb
 language sql stable security definer set search_path = public as $$
   select jsonb_build_object(

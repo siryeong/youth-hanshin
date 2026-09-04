@@ -1,4 +1,4 @@
-create or replace function public.place_order(p_items jsonb, p_guest_token uuid default null)
+create function public.place_order(p_items jsonb, p_guest_token uuid default null)
 returns uuid
 language plpgsql security definer set search_path = public as $$
 declare

@@ -32,7 +32,7 @@ export type CafeStatus = {
 }
 
 export async function fetchMenus(): Promise<Menu[]> {
-  const { data, error } = await supabase.from('menus_public_v2').select('*')
+  const { data, error } = await supabase.from('menus_public_v2').select('*').order('sort_order')
   if (error) throw error
   return data as Menu[]
 }

@@ -23,3 +23,14 @@ test('재방문 시 저장된 테마를 복원한다', () => {
   initTheme()
   expect(document.documentElement.getAttribute('data-theme')).toBe('light')
 })
+
+test('저장소가 막혀 있어도 던지지 않고 system 으로 물러선다', () => {
+  const spy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+    throw new Error('SecurityError')
+  })
+  try {
+    expect(readTheme()).toBe('system')
+  } finally {
+    spy.mockRestore()
+  }
+})

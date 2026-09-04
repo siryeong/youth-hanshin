@@ -48,7 +48,7 @@ export function MyOrdersPage() {
       <StatusBanner status={status.data} />
 
       <p className={styles.guestNote}>
-        게스트로 주문했어요. 브라우저를 닫으면 이 내역을 볼 수 없어요.
+        게스트로 주문했어요. 오늘 마감까지 이 브라우저에서 주문을 보고 취소할 수 있어요.
       </p>
 
       {toast && <p className={styles.toast}>{toast}</p>}

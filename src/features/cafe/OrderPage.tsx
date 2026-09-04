@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
+import { ThemeToggle } from '../../components/ui/ThemeToggle'
 import { getGuestToken } from '../../lib/guestToken'
 import { useToast } from '../../lib/useToast'
 import { fetchMenus, placeOrder, type Menu, type MenuCategory } from './api'
@@ -48,6 +49,7 @@ export function OrderPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h1 className={styles.title}>청년부 카페</h1>
+        <ThemeToggle />
       </header>
 
       <StatusBanner status={status.data} />

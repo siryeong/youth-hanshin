@@ -68,10 +68,16 @@ Vercel 프로젝트에 환경 변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KE
 1. `supabase link --project-ref <youth-hanshin ref>`
 2. `db push` 전에 v1 객체와 이름이 겹치는지 확인한다:
    - `select typname from pg_type where typname in ('menu_category','order_item_status','app_role')`
-   - `select proname from pg_proc where proname = 'active_cohort_id'`
+   - ```sql
+     select proname from pg_proc p
+       join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'
+        and proname in ('active_cohort_id','is_admin_or_staff','cafe_is_open','cafe_status','place_order','get_guest_orders','cancel_order_item');
+     ```
    - 겹치면 그 객체에 `_v2`를 붙이고 `supabase/migrations/0001_core.sql`(정의)과
      `supabase/migrations/0004_place_order.sql`(`active_cohort_id()` 호출부)을 고친 뒤 다시 확인한다.
 3. `supabase db push`
 4. `cohorts_v2`·`cafe_settings_v2`·`menus_v2` 초기 데이터를 1회 입력한다.
 
-모든 마이그레이션은 `_v2` 접미사가 붙은 새 객체만 만들고 v1 객체는 건드리지 않는다.
+테이블과 뷰는 `_v2` 접미사가 붙은 새 객체만 만들고 v1 객체는 건드리지 않는다. 함수와 enum
+타입은 접미사가 없으므로 위 사전 점검을 반드시 통과해야 한다.
