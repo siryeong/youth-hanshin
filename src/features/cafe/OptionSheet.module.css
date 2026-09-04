@@ -1,0 +1,8 @@
+.backdrop { position: fixed; inset: 0; background: rgba(23, 19, 16, 0.32); display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; padding: var(--space-4) var(--space-5) var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
+@media (min-width: 1024px) { .backdrop { align-items: center; } .sheet { border-radius: var(--radius-sheet); } }
+.title { font-size: var(--text-title-lg); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--control); }
+.label { font-size: var(--text-label); font-weight: 500; }
+.chips { display: flex; gap: var(--space-2); }
+.summary { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); background: var(--fill); font-size: var(--text-caption); color: var(--text-2); }
