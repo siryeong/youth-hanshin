@@ -214,6 +214,7 @@ Expected: FAIL — `Failed to resolve import "./theme"`
   --fill: #EAE3D6;
   --fill-strong: #DFD6C6;
   --separator: rgba(38, 30, 22, 0.07);
+  --scrim: rgba(23, 19, 16, 0.32);
   --text: #171310;
   --text-2: #4A423A;
   --text-muted: #7C7268;
@@ -257,6 +258,7 @@ Expected: FAIL — `Failed to resolve import "./theme"`
   --fill: #2C261F;
   --fill-strong: #3A332B;
   --separator: rgba(246, 241, 233, 0.10);
+  --scrim: rgba(0, 0, 0, 0.52);
   --text: #F6F1E9;
   --text-2: #CFC6BA;
   --text-muted: #9A9084;
@@ -276,6 +278,7 @@ Expected: FAIL — `Failed to resolve import "./theme"`
     --fill: #2C261F;
     --fill-strong: #3A332B;
     --separator: rgba(246, 241, 233, 0.10);
+  --scrim: rgba(0, 0, 0, 0.52);
     --text: #F6F1E9;
     --text-2: #CFC6BA;
     --text-muted: #9A9084;
@@ -1900,7 +1903,7 @@ git commit -m "feat: 메뉴 목록과 카테고리 탭"
 
 **Files:**
 - Create: `src/features/cafe/optionLabel.ts`, `src/features/cafe/useCart.ts`, `src/features/cafe/OptionSheet.tsx`, `src/features/cafe/OptionSheet.module.css`
-- Test: `src/features/cafe/optionLabel.test.ts`, `src/features/cafe/OptionSheet.test.tsx`
+- Test: `src/features/cafe/optionLabel.test.ts`, `src/features/cafe/useCart.test.ts`, `src/features/cafe/OptionSheet.test.tsx`
 
 **Interfaces:**
 - Consumes: `Menu`, `CartLine`, `Chip`, `Stepper`, `Button`
@@ -1927,12 +1930,17 @@ test('고르지 않은 옵션은 빼고 온도와 수량은 항상 넣는다', (
   expect(buildOptionLabel({ temperature: 'hot', shot: 0, light: false, syrup: false, quantity: 1 }))
     .toBe('HOT · 1잔')
 })
+
+test('모든 옵션을 고르면 정해진 순서로 잇는다', () => {
+  expect(buildOptionLabel({ temperature: 'hot', shot: 2, light: true, syrup: true, quantity: 3 }))
+    .toBe('HOT · 샷 2 · 연하게 · 시럽 · 3잔')
+})
 ```
 
 `src/features/cafe/OptionSheet.test.tsx`:
 
 ```tsx
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { OptionSheet } from './OptionSheet'
 import type { Menu } from './api'
@@ -1946,6 +1954,33 @@ test('메뉴가 쓰지 않는 옵션은 보여주지 않는다', () => {
   render(<OptionSheet menu={menu} onClose={() => {}} onAdd={() => {}} />)
   expect(screen.getByRole('button', { name: 'ICE' })).toBeInTheDocument()
   expect(screen.queryByText('시럽 추가')).not.toBeInTheDocument()
+})
+
+test('시트 안에서 시작한 조작이 배경에서 끝나도 닫히지 않는다', () => {
+  // click 의 target 은 pointerdown 과 pointerup 의 공통 조상이다. 스테퍼를 드래그하다
+  // 손을 배경에서 떼면 target 이 배경이 되어, 고르던 옵션이 통째로 날아갈 수 있다.
+  const onClose = vi.fn()
+  const { container } = render(<OptionSheet menu={menu} onClose={onClose} onAdd={() => {}} />)
+  fireEvent.pointerDown(screen.getByRole('dialog'))
+  fireEvent.click(container.firstChild as HTMLElement)
+  expect(onClose).not.toHaveBeenCalled()
+})
+
+test('배경을 눌렀다 떼면 닫는다', () => {
+  const onClose = vi.fn()
+  const { container } = render(<OptionSheet menu={menu} onClose={onClose} onAdd={() => {}} />)
+  const backdrop = container.firstChild as HTMLElement
+  fireEvent.pointerDown(backdrop)
+  fireEvent.click(backdrop)
+  expect(onClose).toHaveBeenCalledOnce()
+})
+
+test('닫기 버튼과 Escape 로 닫는다', async () => {
+  const onClose = vi.fn()
+  render(<OptionSheet menu={menu} onClose={onClose} onAdd={() => {}} />)
+  await userEvent.click(screen.getByRole('button', { name: '닫기' }))
+  await userEvent.keyboard('{Escape}')
+  expect(onClose).toHaveBeenCalledTimes(2)
 })
 
 test('고른 옵션으로 장바구니 줄을 만든다', async () => {
@@ -2012,10 +2047,48 @@ export function useCart() {
 }
 ```
 
+`src/features/cafe/useCart.test.ts`:
+
+```ts
+import { act, renderHook } from '@testing-library/react'
+import { expect, test } from 'vitest'
+import type { CartLine } from './api'
+import { useCart } from './useCart'
+
+const line = (menuId: string, quantity: number, label: string): CartLine => ({
+  menu_id: menuId,
+  menu_name: '아메리카노',
+  option_label: label,
+  options: { temperature: 'ice', shot: 0, light: false, syrup: false },
+  quantity,
+})
+
+test('같은 메뉴를 옵션만 바꿔 담으면 수량을 합쳐 센다', () => {
+  // 메뉴 카드의 배지는 줄 수가 아니라 수량 합계를 보여야 한다
+  const { result } = renderHook(() => useCart())
+  act(() => result.current.add(line('m1', 2, 'ICE · 2잔')))
+  act(() => result.current.add(line('m1', 3, 'HOT · 3잔')))
+
+  expect(result.current.lines).toHaveLength(2)
+  expect(result.current.counts).toEqual({ m1: 5 })
+  expect(result.current.total).toBe(5)
+})
+
+test('비우면 줄과 합계가 모두 사라진다', () => {
+  const { result } = renderHook(() => useCart())
+  act(() => result.current.add(line('m1', 1, 'ICE · 1잔')))
+  act(() => result.current.clear())
+
+  expect(result.current.lines).toHaveLength(0)
+  expect(result.current.counts).toEqual({})
+  expect(result.current.total).toBe(0)
+})
+```
+
 `src/features/cafe/OptionSheet.tsx`:
 
 ```tsx
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Chip } from '../../components/ui/Chip'
 import { Stepper } from '../../components/ui/Stepper'
@@ -2031,6 +2104,18 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
     syrup: false,
     quantity: 1,
   })
+
+  // 시트 안에서 시작해 배경에서 끝난 클릭은 target 이 배경이 된다. 눌린 곳까지 봐야
+  // 스테퍼를 드래그하다 고르던 옵션이 통째로 날아가지 않는다.
+  const pressedBackdrop = useRef(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const submit = () => {
     onAdd({
@@ -2049,9 +2134,24 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.sheet} role="dialog" aria-label={`${menu.name} 옵션`} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>{menu.name}</h2>
+    <div
+      className={styles.backdrop}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (pressedBackdrop.current && e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={`${menu.name} 옵션`}>
+        <div className={styles.head}>
+          <h2 className={styles.title}>{menu.name}</h2>
+          <button type="button" className={styles.close} aria-label="닫기" onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
 
         <div className={styles.row}>
           <span className={styles.label}>온도</span>
@@ -2125,10 +2225,12 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
 `src/features/cafe/OptionSheet.module.css`:
 
 ```css
-.backdrop { position: fixed; inset: 0; background: rgba(23, 19, 16, 0.32); display: flex; align-items: flex-end; justify-content: center; }
+.backdrop { position: fixed; inset: 0; background: var(--scrim); display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 480px; background: var(--surface); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0; padding: var(--space-4) var(--space-5) var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); }
 @media (min-width: 1024px) { .backdrop { align-items: center; } .sheet { border-radius: var(--radius-sheet); } }
+.head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
 .title { font-size: var(--text-title-lg); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.close { width: var(--control); height: var(--control); display: grid; place-items: center; border-radius: var(--radius-pill); background: var(--fill); color: var(--text-2); flex-shrink: 0; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: var(--control); }
 .label { font-size: var(--text-label); font-weight: 500; }
 .chips { display: flex; gap: var(--space-2); }
@@ -2138,7 +2240,7 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
 - [ ] **Step 4: 테스트 통과 확인**
 
 Run: `npm test src/features/cafe`
-Expected: PASS 7개(Task 10의 3개 포함)
+Expected: PASS 14개(Task 10의 5개 포함)
 
 - [ ] **Step 5: 커밋**
 
