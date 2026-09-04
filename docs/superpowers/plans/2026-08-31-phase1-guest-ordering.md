@@ -3086,7 +3086,20 @@ Vercel 프로젝트에 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY
 
 > **운영 DB 반영은 여기서 멈춘다.** 마이그레이션 대상인 `youth-hanshin` 프로젝트는 v1 이 지금 쓰고 있는 운영 데이터베이스다. `supabase link` 와 `supabase db push` 는 개발자의 명시적 승인을 받은 뒤에만 실행한다. 구현자는 여기까지 준비만 하고 승인을 요청한다. 승인 후 절차: `supabase link --project-ref <youth-hanshin ref>` → **`db push` 전에 v1 객체와 이름이 겹치는지 확인한다** (`select typname from pg_type where typname in ('menu_category','order_item_status','app_role')` 와 `select proname from pg_proc where proname = 'active_cohort_id'`; 결과가 있으면 그 객체에도 `_v2` 를 붙이고 마이그레이션을 고친 뒤 다시 시도한다) → `supabase db push` → `cohorts_v2`·`cafe_settings_v2`·`menus_v2` 초기 데이터 1회 입력. 모든 마이그레이션은 새 `_v2` 객체만 만들고 v1 객체는 건드리지 않는다.
 
-`README.md`에 로컬 실행 순서(`supabase start` → `.env.local` 작성 → `npm run dev`)와 테스트 명령 세 가지(`npm test`, `npm run test:db`, `npm run e2e`)를 적는다.
+`README.md`에 로컬 실행 순서와 테스트 명령을 적는다. 신규 개발자가 이 문서만 보고 세 명령을 모두 돌릴 수 있어야 한다:
+
+- `supabase start` → `supabase status` 로 URL·키 확인
+- `.env.local` 작성(`cp .env.local.example .env.local` 후 채우기) — 앱이 쓴다
+- **`.env.test` 작성(`cp .env.test.example .env.test` 후 채우기)** — `npm run test:db` 와 `npm run e2e` 가 쓴다. 이 파일이 없으면 두 명령이 불친절한 오류로 죽는다
+- `npx playwright install chromium` (E2E 첫 실행 전 1회)
+- `npm run dev`
+- 테스트 세 가지: `npm test`, `npm run test:db`, `npm run e2e`
+
+`.env.test.example` 도 함께 만든다(`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` 자리만 있는 파일).
+
+E2E 의 `globalSetup` 은 주문 창을 넓혔다가 되돌리는데, **되돌리기의 오류를 삼키면 안 된다**. 실패하면 던져서 알린다 — 조용히 실패하면 다음 `npm run test:db` 가 엉뚱하게 `schema.test.ts` 에서 깨진다.
+
+운영 반영 절차의 충돌 remediation 에는 고칠 파일 이름(`0001_core.sql`, `0004_place_order.sql`)을 적는다.
 
 - [ ] **Step 6: 커밋**
 
