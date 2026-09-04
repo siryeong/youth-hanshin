@@ -15,8 +15,12 @@ test('메뉴 이름과 담긴 수량을 보여준다', () => {
 })
 
 test('가격을 화면에 내보내지 않는다', () => {
+  // 진짜 보장은 menus_public_v2 뷰가 가격 컬럼을 주지 않는다는 것과 Menu 타입에
+  // price 필드가 없다는 것이다. 이 단언은 누군가 "2,000원" 같은 문자열을 직접
+  // 박아 넣는 경우만 잡는 얕은 그물이다. 숫자 자체는 가격의 증거가 아니므로
+  // 세 자리 숫자로 검사하지 않는다 — 수량 배지가 커지면 엉뚱하게 실패한다.
   const { container } = render(<MenuGrid menus={menus} counts={{}} onPick={() => {}} />)
-  expect(container.textContent).not.toMatch(/원|\d{3,}/)
+  expect(container.textContent).not.toMatch(/원|₩/)
 })
 
 test('메뉴를 누르면 onPick 에 그 메뉴를 넘긴다', async () => {
