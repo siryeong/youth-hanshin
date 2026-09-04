@@ -1,0 +1,5 @@
+.banner { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); font-size: var(--text-caption); font-weight: 500; }
+.open { background: color-mix(in srgb, var(--success) 16%, var(--surface)); color: var(--success); }
+.warn { background: color-mix(in srgb, var(--warning) 18%, var(--surface)); color: var(--warning); }
+.closed { background: var(--fill); color: var(--text-muted); }
+.danger { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); color: var(--danger); }
