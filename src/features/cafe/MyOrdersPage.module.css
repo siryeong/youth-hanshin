@@ -1,0 +1,11 @@
+.page { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4) var(--space-5) var(--space-8); max-width: 720px; margin: 0 auto; }
+.title { font-size: var(--text-screen); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+.guestNote { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); background: var(--fill); font-size: var(--text-caption); color: var(--text-2); }
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.item, .cancelled { display: grid; grid-template-columns: 1fr auto; gap: var(--space-1) var(--space-3); align-items: center; padding: var(--space-4); border-radius: var(--radius-card); background: var(--surface); }
+.cancelled { background: var(--fill); color: var(--text-muted); }
+.name { font-size: var(--text-subtitle); font-weight: 600; }
+.option { grid-column: 1; font-size: var(--text-caption); color: var(--text-muted); }
+.qty { grid-row: 1; grid-column: 2; font-family: var(--font-mono); font-size: var(--text-caption); }
+.badge { font-size: var(--text-micro); color: var(--text-muted); }
+.empty { padding: var(--space-8); text-align: center; color: var(--text-muted); font-size: var(--text-caption); }

@@ -34,6 +34,7 @@
   --radius-sheet: 22px; --radius-pill: 999px;
 
   --control-lg: 48px; --control: 44px; --control-pc: 40px; --control-sm: 34px;
+  --tabbar-h: 56px;
 
   --dur-fast: 120ms; --dur-base: 180ms; --dur-sheet: 260ms;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
