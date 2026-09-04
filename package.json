@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "supabase db reset && DOTENV_CONFIG_PATH=.env.test vitest run --config vitest.db.config.ts"
+    "test:db": "supabase db reset && DOTENV_CONFIG_PATH=.env.test vitest run --config vitest.db.config.ts",
+    "e2e": "DOTENV_CONFIG_PATH=.env.test playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.4",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.6",
