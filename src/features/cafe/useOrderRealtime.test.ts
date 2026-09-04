@@ -18,6 +18,11 @@ test('order_items 변경을 구독하고 언마운트에서 해제한다', () =>
     { event: '*', schema: 'public', table: 'order_items_v2' },
     expect.any(Function),
   )
+  // 잡아둔 핸들러가 실제로 onChange 를 부르는지까지 확인한다
+  const handler = on.mock.calls[0][2] as () => void
+  handler()
+  expect(onChange).toHaveBeenCalledOnce()
+
   unmount()
   expect(removeChannel).toHaveBeenCalledWith(channel)
 })

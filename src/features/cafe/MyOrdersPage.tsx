@@ -25,6 +25,9 @@ export function MyOrdersPage() {
     () => queryClient.invalidateQueries({ queryKey: ['guest-orders'] }),
     [queryClient],
   )
+  // 1단계에서 이 구독은 게스트에게 아무 이벤트도 주지 않는다 — RLS 가 막는다.
+  // 지금 화면을 최신으로 유지하는 것은 위의 refetchOnWindowFocus 와 refetchInterval 이다.
+  // 둘을 "실시간이 있으니 불필요한 중복" 으로 오해하고 지우지 말 것.
   useOrderRealtime(invalidate)
 
   const cancel = useMutation({
