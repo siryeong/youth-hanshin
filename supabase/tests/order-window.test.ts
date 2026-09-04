@@ -30,6 +30,10 @@ test('다른 요일이면 닫혀 있다', async () => {
   await serviceClient().from('cafe_settings_v2').update({ weekday: other, opens_at: '00:00', closes_at: '23:59' }).eq('id', true)
   const { data } = await anonClient().rpc('cafe_status')
   expect(data.is_open).toBe(false)
+  // 요일 때문에 닫힌 것이지 휴무일 때문이 아니다
+  expect(data.is_closed_today).toBe(false)
+  // 닫혀 있으면 남은 시간은 0 이어야 한다
+  expect(data.closes_in_seconds).toBe(0)
 })
 
 test('임시 휴무일이면 시간 안이어도 닫혀 있다', async () => {
