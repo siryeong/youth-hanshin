@@ -1,0 +1,8 @@
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+@media (min-width: 600px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.card { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; min-height: 132px; padding: var(--space-4); border-radius: var(--radius-card); background: var(--surface); text-align: left; }
+.picked { background: var(--accent-fill); color: #171310; }
+.name { font-size: var(--text-body); font-weight: 600; }
+.opt { font-size: var(--text-micro); color: var(--text-muted); }
+.count { margin-left: auto; font-family: var(--font-mono); font-size: var(--text-micro); background: var(--text); color: var(--surface); padding: 2px 8px; border-radius: var(--radius-pill); }
