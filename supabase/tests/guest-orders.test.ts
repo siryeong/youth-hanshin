@@ -58,6 +58,47 @@ test('자기 항목은 취소되고 상태가 바뀐다', async () => {
   expect(after![0].status).toBe('cancelled')
 })
 
+test('어제 주문은 보이지도 취소되지도 않는다', async () => {
+  const db = serviceClient()
+  const { data: menu } = await db.from('menus_v2').select('id').eq('name', '카페라떼').single()
+  const { data: order } = await db
+    .from('orders_v2')
+    .insert({ guest_token: MINE, service_date: '2026-01-04' })
+    .select('id')
+    .single()
+  const { data: item } = await db
+    .from('order_items_v2')
+    .insert({
+      order_id: order!.id,
+      menu_id: menu!.id,
+      menu_name: '카페라떼',
+      option_label: 'ICE',
+      quantity: 1,
+    })
+    .select('id')
+    .single()
+
+  try {
+    // service_date 가 오늘이 아니므로 목록에도, 취소에도 걸리지 않아야 한다
+    const { data: listed } = await anonClient().rpc('get_guest_orders', { p_guest_token: MINE })
+    expect((listed ?? []).some((i: { item_id: string }) => i.item_id === item!.id)).toBe(false)
+
+    const { error } = await anonClient().rpc('cancel_order_item', {
+      p_item_id: item!.id,
+      p_guest_token: MINE,
+    })
+    expect(error?.message).toContain('NOT_YOUR_ORDER')
+  } finally {
+    await db.from('orders_v2').delete().eq('id', order!.id)
+  }
+})
+
+test('토큰 없이 조회하면 아무것도 보이지 않는다', async () => {
+  await order(MINE)
+  const { data } = await anonClient().rpc('get_guest_orders', { p_guest_token: null })
+  expect(data ?? []).toHaveLength(0)
+})
+
 test('마감 뒤에는 취소하지 못한다', async () => {
   await order(MINE)
   const { data } = await anonClient().rpc('get_guest_orders', { p_guest_token: MINE })
