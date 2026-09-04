@@ -2587,7 +2587,8 @@ git commit -m "feat: 주문 화면 조립과 제출"
 
 **Files:**
 - Create: `src/features/cafe/MyOrdersPage.tsx`, `src/features/cafe/MyOrdersPage.module.css`
-- Create: `src/Shell.tsx`, `src/Shell.module.css`
+- Create: `src/Shell.tsx`, `src/Shell.module.css`, `src/Shell.test.tsx`, `src/lib/useToast.ts`
+- Modify: `src/features/cafe/OrderPage.tsx`(토스트를 훅으로 교체)
 - Modify: `src/App.tsx`(라우터 도입), `src/features/cafe/OrderPage.module.css`(푸터 위치 한 줄), `src/styles/tokens.css`(`--tabbar-h` 한 줄)
 - Test: `src/features/cafe/MyOrdersPage.test.tsx`
 
@@ -2730,6 +2731,59 @@ export function MyOrdersPage() {
 .empty { padding: var(--space-8); text-align: center; color: var(--text-muted); font-size: var(--text-caption); }
 ```
 
+취소가 실패했을 때 아무것도 보여주지 않으면 게스트에게는 버튼이 먹통으로 보인다. 주문 화면이 이미 같은 실패를 토스트로 설명하므로, 그 로직을 두 화면이 함께 쓰도록 훅으로 뺀다.
+
+`src/lib/useToast.ts`:
+
+```ts
+import { useEffect, useRef, useState } from 'react'
+
+/** 잠시 떴다 스스로 사라지는 안내 문구. 남아 있으면 화면이 굳은 것처럼 보인다. */
+export function useToast(duration = 2500) {
+  const [toast, setToast] = useState('')
+  const timer = useRef<number | undefined>(undefined)
+
+  const showToast = (text: string) => {
+    setToast(text)
+    window.clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => setToast(''), duration)
+  }
+
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+
+  return { toast, showToast }
+}
+```
+
+`OrderPage` 는 자체 토스트 상태·타이머·`showToast` 를 지우고 `const { toast, showToast } = useToast()` 로 바꾼다. 나머지 동작은 그대로다.
+
+`MyOrdersPage` 도 같은 훅을 쓰고, 취소 뮤테이션의 `onError` 에서 이유를 알려준다:
+
+```tsx
+  const { toast, showToast } = useToast()
+
+  const cancel = useMutation({
+    mutationFn: (itemId: string) => cancelOrderItem(itemId, token),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['guest-orders'] }),
+    onError: (error: Error) => {
+      showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 취소할 수 없어요' : '취소하지 못했어요')
+      queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
+    },
+  })
+```
+
+그리고 목록 위에 `{toast && <p className={styles.toast}>{toast}</p>}` 를 둔다. `.toast` 는 주문 화면과 같은 규칙이다:
+
+```css
+.toast { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); background: var(--text); color: var(--surface); font-size: var(--text-caption); }
+```
+
+불러오는 중에는 빈 상태 문구를 띄우지 않는다 — 주문한 게스트가 "아직 주문한 음료가 없어요" 를 잠깐 보게 된다:
+
+```tsx
+  {!orders.isLoading && items.length === 0 && <p className={styles.empty}>아직 주문한 음료가 없어요</p>}
+```
+
 화면이 둘이 되므로 라우터와 하단 탭을 넣는다. 1단계에는 주문과 내 주문 두 개만 둔다 — 내 마을과 내 정보는 로그인이 필요해 2단계 몫이다.
 
 `src/Shell.tsx`:
@@ -2765,6 +2819,46 @@ export function Shell() {
 .tabs { position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabbar-h); display: flex; background: var(--surface); }
 .tab { flex: 1; display: grid; place-items: center; font-size: var(--text-nano); font-weight: 500; color: var(--text-muted); text-decoration: none; }
 .on { color: var(--text); font-weight: 600; }
+```
+
+`src/Shell.test.tsx`:
+
+```tsx
+import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { Shell } from './Shell'
+import { renderWithQuery } from './test/renderWithQuery'
+
+function renderShell() {
+  const router = createMemoryRouter(
+    [
+      {
+        element: <Shell />,
+        children: [
+          { path: '/', element: <p>주문 화면</p> },
+          { path: '/orders', element: <p>내 주문 화면</p> },
+        ],
+      },
+    ],
+    { initialEntries: ['/'] },
+  )
+  return renderWithQuery(<RouterProvider router={router} />)
+}
+
+test('1단계의 탭은 주문과 내 주문 둘뿐이다', () => {
+  renderShell()
+  expect(screen.getAllByRole('link').map((tab) => tab.textContent)).toEqual(['주문', '내 주문'])
+})
+
+test('내 주문 탭을 누르면 그 화면으로 간다', async () => {
+  renderShell()
+  expect(screen.getByText('주문 화면')).toBeInTheDocument()
+
+  await userEvent.click(screen.getByRole('link', { name: '내 주문' }))
+
+  expect(await screen.findByText('내 주문 화면')).toBeInTheDocument()
+})
 ```
 
 `src/App.tsx`:
