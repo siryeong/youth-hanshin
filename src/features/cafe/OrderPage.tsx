@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { getGuestToken } from '../../lib/guestToken'
@@ -15,7 +15,16 @@ export function OrderPage() {
   const [category, setCategory] = useState<MenuCategory>('coffee')
   const [picked, setPicked] = useState<Menu | null>(null)
   const [toast, setToast] = useState('')
+  const toastTimer = useRef<number | undefined>(undefined)
   const cart = useCart()
+
+  // 토스트는 스스로 사라져야 한다. 안 그러면 "담았어요" 가 주문을 마친 뒤에도 화면에 남는다.
+  const showToast = (text: string) => {
+    setToast(text)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(''), 2500)
+  }
+  useEffect(() => () => window.clearTimeout(toastTimer.current), [])
   const status = useCafeStatus()
   const queryClient = useQueryClient()
   const menus = useQuery({ queryKey: ['menus'], queryFn: fetchMenus })
@@ -24,11 +33,11 @@ export function OrderPage() {
     mutationFn: () => placeOrder(cart.lines, getGuestToken()),
     onSuccess: () => {
       cart.clear()
-      setToast('주문했어요')
+      showToast('주문했어요')
       queryClient.invalidateQueries({ queryKey: ['guest-orders'] })
     },
     onError: (error: Error) => {
-      setToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
+      showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
       queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
     },
   })
@@ -44,18 +53,34 @@ export function OrderPage() {
 
       <StatusBanner status={status.data} />
       <CategoryTabs value={category} onChange={setCategory} />
-      <MenuGrid menus={visible} counts={cart.counts} onPick={(menu) => isOpen && setPicked(menu)} />
+      <MenuGrid
+        menus={visible}
+        counts={cart.counts}
+        onPick={(menu) => {
+          // 마감 후 카드를 눌렀을 때 아무 일도 안 일어나면 화면이 죽은 것처럼 보인다
+          if (!isOpen) {
+            showToast('마감돼서 담을 수 없어요')
+            return
+          }
+          setPicked(menu)
+        }}
+      />
 
       {toast && <p className={styles.toast}>{toast}</p>}
 
       <footer className={styles.footer}>
-        <Button
-          size="lg"
-          disabled={!isOpen || cart.total === 0 || submit.isPending}
-          onClick={() => submit.mutate()}
-        >
-          {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
-        </Button>
+        <div className={styles.footerInner}>
+          <Button
+            size="lg"
+            disabled={!isOpen || cart.total === 0 || submit.isPending}
+            onClick={() => {
+              // disabled 는 리렌더가 끝나야 걸린다. 연타로 두 번 나가지 않게 여기서도 막는다.
+              if (!submit.isPending) submit.mutate()
+            }}
+          >
+            {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
+          </Button>
+        </div>
       </footer>
 
       {picked && (
@@ -64,7 +89,7 @@ export function OrderPage() {
           onClose={() => setPicked(null)}
           onAdd={(line) => {
             cart.add(line)
-            setToast(`${line.menu_name} 담았어요`)
+            showToast(`${line.menu_name} 담았어요`)
           }}
         />
       )}

@@ -3,5 +3,6 @@
 .title { font-size: var(--text-screen); font-weight: 600; letter-spacing: -0.02em; margin: 0; }
 @media (min-width: 1024px) { .title { font-size: var(--text-title-lg); } }
 .toast { margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-field); background: var(--text); color: var(--surface); font-size: var(--text-caption); }
-.footer { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--space-3) var(--space-5) var(--space-4); background: var(--bg); display: flex; }
-.footer > * { flex: 1; }
+.footer { position: fixed; left: 0; right: 0; bottom: 0; padding: var(--space-3) var(--space-5) var(--space-4); background: var(--bg); }
+.footerInner { display: flex; max-width: 1280px; margin: 0 auto; }
+.footerInner > * { flex: 1; }
