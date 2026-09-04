@@ -1696,7 +1696,7 @@ git commit -m "feat: Supabase 클라이언트, 게스트 토큰, API 계층"
 
 **Files:**
 - Create: `src/features/cafe/CategoryTabs.tsx`, `src/features/cafe/CategoryTabs.module.css`, `src/features/cafe/MenuGrid.tsx`, `src/features/cafe/MenuGrid.module.css`, `src/test/renderWithQuery.tsx`
-- Test: `src/features/cafe/MenuGrid.test.tsx`
+- Test: `src/features/cafe/MenuGrid.test.tsx`, `src/features/cafe/CategoryTabs.test.tsx`
 
 **Interfaces:**
 - Consumes: `fetchMenus`, `Menu`
@@ -1724,8 +1724,12 @@ test('메뉴 이름과 담긴 수량을 보여준다', () => {
 })
 
 test('가격을 화면에 내보내지 않는다', () => {
+  // 진짜 보장은 menus_public_v2 뷰가 가격 컬럼을 주지 않는다는 것과 Menu 타입에
+  // price 필드가 없다는 것이다. 이 단언은 누군가 "2,000원" 같은 문자열을 직접
+  // 박아 넣는 경우만 잡는 얕은 그물이다. 숫자 자체는 가격의 증거가 아니므로
+  // 세 자리 숫자로 검사하지 않는다 — 수량 배지가 커지면 엉뚱하게 실패한다.
   const { container } = render(<MenuGrid menus={menus} counts={{}} onPick={() => {}} />)
-  expect(container.textContent).not.toMatch(/원|\d{3,}/)
+  expect(container.textContent).not.toMatch(/원|₩/)
 })
 
 test('메뉴를 누르면 onPick 에 그 메뉴를 넘긴다', async () => {
@@ -1803,6 +1807,28 @@ export function MenuGrid({
 }
 ```
 
+`src/features/cafe/CategoryTabs.test.tsx`:
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { CategoryTabs } from './CategoryTabs'
+
+test('세 카테고리를 보여주고 현재 탭을 표시한다', () => {
+  render(<CategoryTabs value="non_coffee" onChange={() => {}} />)
+  expect(screen.getByRole('tab', { name: '커피' })).toHaveAttribute('aria-selected', 'false')
+  expect(screen.getByRole('tab', { name: '논커피' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.getByRole('tab', { name: '음료' })).toHaveAttribute('aria-selected', 'false')
+})
+
+test('탭을 누르면 그 카테고리로 onChange 를 부른다', async () => {
+  const onChange = vi.fn()
+  render(<CategoryTabs value="coffee" onChange={onChange} />)
+  await userEvent.click(screen.getByRole('tab', { name: '음료' }))
+  expect(onChange).toHaveBeenCalledWith('cold')
+})
+```
+
 `src/features/cafe/CategoryTabs.module.css`:
 
 ```css
@@ -1858,8 +1884,8 @@ export function renderWithQuery(ui: ReactElement) {
 
 - [ ] **Step 4: 테스트 통과 확인**
 
-Run: `npm test src/features/cafe/MenuGrid.test.tsx`
-Expected: PASS 3개
+Run: `npm test src/features/cafe`
+Expected: PASS 5개
 
 - [ ] **Step 5: 커밋**
 
