@@ -2936,6 +2936,11 @@ test('order_items 변경을 구독하고 언마운트에서 해제한다', () =>
     { event: '*', schema: 'public', table: 'order_items_v2' },
     expect.any(Function),
   )
+  // 잡아둔 핸들러가 실제로 onChange 를 부르는지까지 확인한다
+  const handler = on.mock.calls[0][2] as () => void
+  handler()
+  expect(onChange).toHaveBeenCalledOnce()
+
   unmount()
   expect(removeChannel).toHaveBeenCalledWith(channel)
 })
@@ -2948,9 +2953,16 @@ Expected: FAIL — `Failed to resolve import "./useOrderRealtime"`
 
 - [ ] **Step 3: 구현**
 
+> **먼저 확인할 것.** Supabase 의 `postgres_changes` 는 RLS 를 따른다. 우리는 `anon` 에게 `order_items_v2` select 정책을 주지 않았고(게스트는 `security definer` RPC 로만 읽는다), 그렇다면 게스트 클라이언트는 이벤트를 하나도 받지 못한다 — 구현은 됐는데 죽어 있는 기능이 된다. 구현자는 실제 anon 클라이언트로 구독한 뒤 service 롤로 행을 바꿔 이벤트가 오는지 **직접 확인**하고 결과를 보고한다.
+>
+> 이벤트가 오지 않으면(예상되는 결과): 구독 코드와 마이그레이션은 그대로 둔다 — 2단계에서 로그인 사용자에게는 `본인 주문 항목만 읽는다` 정책이 있어 동작한다. 대신 게스트 화면이 뒤처지지 않도록 `MyOrdersPage` 의 주문 쿼리에 `refetchOnWindowFocus: true` 와 `refetchInterval: 30_000` 을 준다. 1단계에서 "즉시 반영"의 실질은 취소 뮤테이션 자신의 무효화이고, 이 둘은 다른 기기에서 바뀐 경우를 위한 그물이다.
+
 `supabase/migrations/0006_realtime.sql`:
 
 ```sql
+-- anon 은 order_items_v2 에 select 정책이 없고 postgres_changes 는 RLS 를 따르므로,
+-- 이 publication 만으로는 게스트에게 이벤트가 가지 않는다(실측 확인). 2단계에서 로그인
+-- 사용자에게 '본인 주문 항목만 읽는다' 정책이 생기면 그때부터 동작한다.
 alter publication supabase_realtime add table public.order_items_v2;
 ```
 
@@ -2980,6 +2992,9 @@ const invalidate = useCallback(
   () => queryClient.invalidateQueries({ queryKey: ['guest-orders'] }),
   [queryClient],
 )
+// 1단계에서 이 구독은 게스트에게 아무 이벤트도 주지 않는다 — RLS 가 막는다.
+// 지금 화면을 최신으로 유지하는 것은 위의 refetchOnWindowFocus 와 refetchInterval 이다.
+// 둘을 "실시간이 있으니 불필요한 중복" 으로 오해하고 지우지 말 것.
 useOrderRealtime(invalidate)
 ```
 
