@@ -20,6 +20,7 @@ export default async function globalSetup() {
   if (updateError) throw updateError
 
   return async function globalTeardown() {
-    await db.from('cafe_settings_v2').update(RESTORE).eq('id', true)
+    const { error: restoreError } = await db.from('cafe_settings_v2').update(RESTORE).eq('id', true)
+    if (restoreError) throw restoreError
   }
 }
