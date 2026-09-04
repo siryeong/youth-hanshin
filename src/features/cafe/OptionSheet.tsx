@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '../../components/ui/Button'
 import { Chip } from '../../components/ui/Chip'
 import { Stepper } from '../../components/ui/Stepper'
@@ -14,6 +14,18 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
     syrup: false,
     quantity: 1,
   })
+
+  // 시트 안에서 시작해 배경에서 끝난 클릭은 target 이 배경이 된다. 눌린 곳까지 봐야
+  // 스테퍼를 드래그하다 고르던 옵션이 통째로 날아가지 않는다.
+  const pressedBackdrop = useRef(false)
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const submit = () => {
     onAdd({
@@ -32,9 +44,24 @@ export function OptionSheet({ menu, onClose, onAdd }: { menu: Menu; onClose: () 
   }
 
   return (
-    <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.sheet} role="dialog" aria-label={`${menu.name} 옵션`} onClick={(e) => e.stopPropagation()}>
-        <h2 className={styles.title}>{menu.name}</h2>
+    <div
+      className={styles.backdrop}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (pressedBackdrop.current && e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className={styles.sheet} role="dialog" aria-modal="true" aria-label={`${menu.name} 옵션`}>
+        <div className={styles.head}>
+          <h2 className={styles.title}>{menu.name}</h2>
+          <button type="button" className={styles.close} aria-label="닫기" onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
 
         <div className={styles.row}>
           <span className={styles.label}>온도</span>
