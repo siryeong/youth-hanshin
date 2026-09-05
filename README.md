@@ -1,6 +1,6 @@
 # 청년부 통합 플랫폼
 
-교회 청년부 통합 웹 앱. 게스트 음료 주문과 2단계 카카오 로그인·내 정보·기수별 회원 주문 내역을 제공한다.
+교회 청년부 통합 웹 앱. 게스트·회원 음료 주문, 카카오 로그인·내 정보, 기수별 내 마을·출석·소식·기도제목을 제공한다.
 
 ## 로컬 개발
 
@@ -37,7 +37,8 @@ npm run dev                       # http://127.0.0.1:5173
 npm test          # 컴포넌트/유닛 테스트 (jsdom)
 npm run test:db   # DB 스키마·RLS·RPC 테스트 — supabase db reset 후 실행 (24개), .env.test 필요
 npm run e2e       # 게스트 주문→취소 E2E (Playwright, Chromium), .env.test 필요
-npm run test:ui   # 외부 인증/API를 모킹한 로그인·회원/게스트 주문 브라우저 테스트
+npm run test:ui   # 외부 인증/API를 모킹한 로그인·주문·마을 브라우저 테스트
+npm run test:db:village # 로컬 DB 트랜잭션으로 마을·인증·주문 권한 검증, 초기화·환경 파일 불필요
 ```
 
 `npm run e2e`는 `npm run dev`를 자동으로 띄우고 `.env.test`의 서비스 키로 `cafe_settings_v2`를
@@ -60,7 +61,7 @@ npm run build
 이름·성별·생년월일·휴대폰번호와 항목별 공개 설정을 저장한다. `/orders`에서는 기수별로
 본인 주문을 조회한다. 게스트 주문은 기존 브라우저의 게스트 내역으로 남는다.
 
-1. 로컬 DB에 `supabase migration up --local`로 `0008_auth_profiles.sql`까지 적용한다.
+1. 로컬 DB에 `supabase migration up --local`로 `0010_villages.sql`까지 적용한다.
 2. [Supabase 카카오 설정 가이드](https://supabase.com/docs/guides/auth/social-login/auth-kakao)에 따라
    카카오 로그인과 `profile_nickname`, `profile_image` 동의 항목을 설정한다.
 3. 카카오 앱의 Redirect URI에 대상 Supabase의 `/auth/v1/callback` 주소를 등록한다.
@@ -81,6 +82,16 @@ npm run build
 `auth.users.last_sign_in_at`을 사용한다. 공유 중인 v1 인증 테이블에 트리거를 추가하지 않는다.
 계정이나 역할이 바뀌면 장바구니·조회 캐시·화면 상태를 초기화한다. 역할은 Realtime과 30초 재조회로 갱신한다.
 
+## 내 마을
+
+`/village`에서 기수·마을을 선택해 명단, 주일별 출석, 소식과 기도제목을 조회한다.
+이장은 마을 이름과 소식을 관리하고, 최근 주일을 포함한 4주의 예배·마을모임 출석을 수정한다.
+기도제목은 소속 마을원이 등록하며 본인 글만 수정·삭제한다. 전체 관리자는 모든 마을을 조회한다.
+
+로컬 DB에는 `supabase migration up --local`로 `0010_villages.sql`까지 적용한다.
+마을과 배정 데이터가 없으면 미배정 안내를 표시한다. 기수·마을 생성과 인원 배정 UI는 4단계 범위다.
+스키마·권한 결정과 검증 방법은 [3단계 구현 문서](docs/superpowers/plans/2026-09-05-phase3-villages.md)에 기록했다.
+
 ## 배포 (Vercel)
 
 `vercel.json`은 `react-router-dom`의 `createBrowserRouter`가 쓰는 클라이언트 사이드 라우팅을
@@ -90,7 +101,7 @@ Vercel 프로젝트에 환경 변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KE
 
 ### Preview에서 로그인 테스트
 
-1. 테스트용 Supabase에 `0008_auth_profiles.sql`까지 적용하고 카카오 공급자를 설정한다.
+1. 테스트용 Supabase에 `0010_villages.sql`까지 적용하고 카카오 공급자를 설정한다.
 2. Vercel [Settings] > [Environment Variables]에서 위 두 환경 변수를 **Preview** 환경에 설정한다.
    테스트용 Supabase의 URL과 anon key를 사용한다.
 3. 변경 코드를 Preview로 배포한다. 환경 변수를 변경한 뒤에는 새 배포가 필요하다.

@@ -38,6 +38,7 @@ function AccountShell() {
           <NavLink to="/orders" className={tabClass}>
             내 주문
           </NavLink>
+          {profile && <NavLink to="/village" className={tabClass}>내 마을</NavLink>}
           <NavLink to={profile ? '/profile' : '/login'} className={tabClass}>
             {profile ? '내 정보' : '로그인'}
           </NavLink>

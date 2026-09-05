@@ -14,6 +14,7 @@ export type Profile = ProfileInput & {
   id: string
   role: 'admin' | 'pastor' | 'staff' | 'youth'
   last_seen_at: string | null
+  village_revision: number
 }
 
 export const roleLabels: Record<Profile['role'], string> = {

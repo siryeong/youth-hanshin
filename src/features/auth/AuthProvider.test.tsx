@@ -25,7 +25,7 @@ vi.mock('../../lib/supabase', () => ({ supabase: {
 vi.mock('./api', () => ({ syncProfile: vi.fn(), signOut: vi.fn() }))
 
 const profile: Profile = { id: 'first', name: '첫 사용자', role: 'youth', gender: null, birth_date: null, phone: null,
-  show_gender: false, show_birth_date: false, show_phone: false, last_seen_at: null }
+  show_gender: false, show_birth_date: false, show_phone: false, last_seen_at: null, village_revision: 0 }
 
 function Probe() {
   const { profile } = useAuth()

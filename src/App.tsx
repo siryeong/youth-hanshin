@@ -4,6 +4,7 @@ import { OrderPage } from './features/cafe/OrderPage'
 import { Shell } from './Shell'
 import { LoginPage } from './features/auth/LoginPage'
 import { ProfilePage } from './features/auth/ProfilePage'
+import { VillagePage } from './features/village/VillagePage'
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
       { path: '/orders', element: <MyOrdersPage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/profile', element: <ProfilePage /> },
+      { path: '/village', element: <VillagePage /> },
     ],
   },
 ])

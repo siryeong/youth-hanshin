@@ -1,4 +1,4 @@
-.shell { min-height: 100dvh; padding-bottom: var(--tabbar-h); }
-.tabs { position: fixed; left: 0; right: 0; bottom: 0; height: var(--tabbar-h); display: flex; background: var(--surface); }
+.shell { min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; height: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); display: flex; background: var(--surface); }
 .tab { flex: 1; display: grid; place-items: center; font-size: var(--text-nano); font-weight: 500; color: var(--text-muted); text-decoration: none; }
 .on { color: var(--text); font-weight: 600; }

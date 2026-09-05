@@ -5,7 +5,7 @@ test('카카오 PKCE 로그인·프로필·회원 주문·역할 변경·로그�
   const memberId = 'f2000000-0000-4000-8000-000000000001'
   const menuId = 'f2000000-0000-4000-8000-000000000010'
   let profile = { id: memberId, name: '테스트 청년', gender: null, birth_date: null, phone: null,
-    show_gender: false, show_birth_date: false, show_phone: false, role: 'youth', last_seen_at: '2026-09-06T00:00:00Z' }
+    show_gender: false, show_birth_date: false, show_phone: false, role: 'youth', last_seen_at: '2026-09-06T00:00:00Z', village_revision: 0 }
   let saved: Record<string, unknown> | undefined
   let placed: Record<string, unknown> | undefined
   let cancelled: Record<string, unknown> | undefined
