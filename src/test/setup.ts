@@ -12,3 +12,7 @@ window.matchMedia ??= (query: string) =>
     removeEventListener: () => {},
     dispatchEvent: () => false,
   }) as MediaQueryList
+
+// jsdom에는 dialog의 모달 동작이 없다. 포커스·레이아웃은 브라우저 테스트에서 검증한다.
+HTMLDialogElement.prototype.showModal = function () { this.open = true }
+HTMLDialogElement.prototype.close = function () { this.open = false }

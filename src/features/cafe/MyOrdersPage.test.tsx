@@ -40,3 +40,12 @@ test('마감이면 취소 버튼을 막는다', async () => {
   renderWithQuery(<MyOrdersPage />)
   expect(await screen.findByRole('button', { name: '아메리카노 주문 취소' })).toBeDisabled()
 })
+
+test('조회 실패를 빈 주문으로 표시하지 않고 재시도한다', async () => {
+  vi.mocked(api.fetchGuestOrders).mockRejectedValueOnce(new Error('offline'))
+  renderWithQuery(<MyOrdersPage />)
+  const retry = await screen.findByRole('button', { name: '주문 내역 다시 불러오기' })
+  expect(screen.queryByText('아직 주문한 음료가 없어요')).not.toBeInTheDocument()
+  await userEvent.click(retry)
+  expect(await screen.findByText('아메리카노')).toBeInTheDocument()
+})

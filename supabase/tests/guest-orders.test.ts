@@ -14,7 +14,7 @@ async function open() {
 async function order(token: string) {
   const { data: menu } = await serviceClient().from('menus_v2').select('id').eq('name', '카페라떼').single()
   await anonClient().rpc('place_order', {
-    p_items: [{ menu_id: menu!.id, option_label: 'ICE', options: {}, quantity: 1 }],
+    p_items: [{ menu_id: menu!.id, option_label: 'ICE', options: { temperature: 'ice', shot: 0, light: false, syrup: false }, quantity: 1 }],
     p_guest_token: token,
   })
 }

@@ -1,6 +1,8 @@
-import { fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, waitForElementToBeRemoved } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithQuery } from '../../test/renderWithQuery'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
+import { Shell } from '../../Shell'
 import { OrderPage } from './OrderPage'
 import * as api from './api'
 
@@ -105,4 +107,50 @@ test('마감이면 주문 버튼을 막고 이유를 보여준다', async () => 
   renderWithQuery(<OrderPage />)
   expect(await screen.findByText('오늘 주문은 마감됐어요')).toBeInTheDocument()
   expect(screen.getByRole('button', { name: /주문하기/ })).toBeDisabled()
+})
+
+test('메뉴 조회 실패를 알리고 다시 불러올 수 있다', async () => {
+  vi.mocked(api.fetchMenus).mockRejectedValueOnce(new Error('offline'))
+  renderWithQuery(<OrderPage />)
+  await userEvent.click(await screen.findByRole('button', { name: '메뉴 다시 불러오기' }))
+  expect(await screen.findByRole('button', { name: '아메리카노' })).toBeInTheDocument()
+})
+
+test('영업 상태 조회 실패를 마감으로 표시하지 않고 재시도한다', async () => {
+  vi.mocked(api.fetchCafeStatus).mockRejectedValueOnce(new Error('offline'))
+  renderWithQuery(<OrderPage />)
+  expect(await screen.findByRole('button', { name: '시간 다시 확인하기' })).toBeInTheDocument()
+  expect(screen.queryByText('오늘 주문은 마감됐어요')).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: '주문하기' })).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: '시간 다시 확인하기' }))
+  expect(await screen.findByText(/지금 주문할 수 있어요/)).toBeInTheDocument()
+})
+
+
+test('탭을 왕복해도 장바구니와 제출 잠금이 유지되고 실패 후 수정할 수 있다', async () => {
+  let rejectOrder!: (error: Error) => void
+  vi.mocked(api.placeOrder).mockImplementation(() => new Promise((_, reject) => { rejectOrder = reject }))
+  const router = createMemoryRouter([{ element: <Shell />, children: [
+    { path: '/', element: <OrderPage /> },
+    { path: '/orders', element: <p>내 주문 화면</p> },
+  ] }])
+  renderWithQuery(<RouterProvider router={router} />)
+  await userEvent.click(await screen.findByRole('button', { name: '아메리카노' }))
+  await userEvent.click(screen.getByRole('button', { name: '장바구니에 담기' }))
+  await userEvent.click(screen.getByRole('link', { name: '내 주문' }))
+  await userEvent.click(screen.getByRole('link', { name: '주문' }))
+  await userEvent.click(screen.getByRole('button', { name: /장바구니 1개/ }))
+  await userEvent.click(screen.getByRole('link', { name: '내 주문' }))
+  await userEvent.click(screen.getByRole('link', { name: '주문' }))
+  expect(screen.getByRole('button', { name: /장바구니 1개/ })).toBeDisabled()
+  expect(screen.getByRole('button', { name: /항목 삭제/ })).toBeDisabled()
+  await userEvent.click(screen.getByRole('button', { name: '아메리카노 1개 담김' }))
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  await act(async () => rejectOrder(new Error('offline')))
+  expect(screen.getByRole('button', { name: /장바구니 1개/ })).toBeEnabled()
+  await userEvent.click(screen.getByRole('button', { name: /항목 수량 늘리기/ }))
+  expect(screen.getByRole('button', { name: /장바구니 2개/ })).toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: /항목 삭제/ }))
+  expect(screen.getByRole('button', { name: '주문하기' })).toBeDisabled()
+  expect(api.placeOrder).toHaveBeenCalledOnce()
 })

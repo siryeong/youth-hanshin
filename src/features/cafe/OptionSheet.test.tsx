@@ -19,7 +19,7 @@ test('시트 안에서 시작한 조작이 배경에서 끝나도 닫히지 않�
   // 손을 배경에서 떼면 target 이 배경이 되어, 고르던 옵션이 통째로 날아갈 수 있다.
   const onClose = vi.fn()
   const { container } = render(<OptionSheet menu={menu} onClose={onClose} onAdd={() => {}} />)
-  fireEvent.pointerDown(screen.getByRole('dialog'))
+  fireEvent.pointerDown(screen.getByRole('heading'))
   fireEvent.click(container.firstChild as HTMLElement)
   expect(onClose).not.toHaveBeenCalled()
 })
@@ -37,7 +37,7 @@ test('닫기 버튼과 Escape 로 닫는다', async () => {
   const onClose = vi.fn()
   render(<OptionSheet menu={menu} onClose={onClose} onAdd={() => {}} />)
   await userEvent.click(screen.getByRole('button', { name: '닫기' }))
-  await userEvent.keyboard('{Escape}')
+  fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: false, cancelable: true }))
   expect(onClose).toHaveBeenCalledTimes(2)
 })
 

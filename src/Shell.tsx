@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
+import { CartProvider } from './features/cafe/CartProvider'
 import styles from './Shell.module.css'
 
 const tabClass = ({ isActive }: { isActive: boolean }) =>
@@ -6,16 +7,18 @@ const tabClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Shell() {
   return (
-    <div className={styles.shell}>
-      <Outlet />
-      <nav className={styles.tabs} aria-label="주요 메뉴">
-        <NavLink to="/" end className={tabClass}>
-          주문
-        </NavLink>
-        <NavLink to="/orders" className={tabClass}>
-          내 주문
-        </NavLink>
-      </nav>
-    </div>
+    <CartProvider>
+      <div className={styles.shell}>
+        <Outlet />
+        <nav className={styles.tabs} aria-label="주요 메뉴">
+          <NavLink to="/" end className={tabClass}>
+            주문
+          </NavLink>
+          <NavLink to="/orders" className={tabClass}>
+            내 주문
+          </NavLink>
+        </nav>
+      </div>
+    </CartProvider>
   )
 }

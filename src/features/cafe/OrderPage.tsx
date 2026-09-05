@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { ThemeToggle } from '../../components/ui/ThemeToggle'
-import { getGuestToken } from '../../lib/guestToken'
 import { useToast } from '../../lib/useToast'
-import { fetchMenus, placeOrder, type Menu, type MenuCategory } from './api'
+import { fetchMenus, type Menu, type MenuCategory } from './api'
+import { Cart } from './Cart'
 import { CategoryTabs } from './CategoryTabs'
 import { MenuGrid } from './MenuGrid'
 import { OptionSheet } from './OptionSheet'
@@ -17,32 +17,26 @@ export function OrderPage() {
   const [category, setCategory] = useState<MenuCategory>('coffee')
   const [picked, setPicked] = useState<Menu | null>(null)
   const { toast, showToast } = useToast()
-  // disabled 는 리렌더가 끝나야 걸린다. 같은 렌더의 isPending 을 다시 읽어봐야 값이 같으므로
-  // 연타를 막지 못한다. 렌더와 무관하게 동기적으로 세우는 플래그가 필요하다.
-  const submitting = useRef(false)
   const cart = useCart()
 
   const status = useCafeStatus()
   const queryClient = useQueryClient()
   const menus = useQuery({ queryKey: ['menus'], queryFn: fetchMenus })
 
-  const submit = useMutation({
-    mutationFn: () => placeOrder(cart.lines, getGuestToken()),
-    onSuccess: () => {
-      cart.clear()
-      showToast('주문했어요')
-      queryClient.invalidateQueries({ queryKey: ['guest-orders'] })
-    },
-    onError: (error: Error) => {
-      showToast(error.message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
-      queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
-    },
-    onSettled: () => {
-      submitting.current = false
-    },
-  })
+  const submit = async () => {
+    try {
+      if (await cart.checkout()) {
+        showToast('주문했어요')
+        void queryClient.invalidateQueries({ queryKey: ['guest-orders'] })
+      }
+    } catch (error) {
+      const message = (error as Error).message
+      showToast(message.includes('ORDER_WINDOW_CLOSED') ? '마감돼서 주문할 수 없어요' : '주문하지 못했어요')
+      void queryClient.invalidateQueries({ queryKey: ['cafe-status'] })
+    }
+  }
 
-  const isOpen = status.data?.is_open ?? false
+  const isOpen = !status.isError && (status.data?.is_open ?? false)
   const visible = (menus.data ?? []).filter((menu) => menu.category === category)
 
   return (
@@ -52,13 +46,22 @@ export function OrderPage() {
         <ThemeToggle />
       </header>
 
-      <StatusBanner status={status.data} />
+      <StatusBanner status={status.data} error={status.isError} onRetry={() => void status.refetch()} />
       <CategoryTabs value={category} onChange={setCategory} />
+      {menus.isPending && <p role="status">메뉴를 불러오는 중이에요</p>}
+      {menus.isError && <div role="alert">메뉴를 불러오지 못했어요. <Button variant="secondary" onClick={() => void menus.refetch()}>메뉴 다시 불러오기</Button></div>}
       <MenuGrid
         menus={visible}
         counts={cart.counts}
         onPick={(menu) => {
-          // 마감 후 카드를 눌렀을 때 아무 일도 안 일어나면 화면이 죽은 것처럼 보인다
+          if (cart.isPending) {
+            showToast('주문 처리 중이에요')
+            return
+          }
+          if (status.isError || status.isPending) {
+            showToast('주문 가능 시간을 확인해 주세요')
+            return
+          }
           if (!isOpen) {
             showToast('마감돼서 담을 수 없어요')
             return
@@ -67,18 +70,16 @@ export function OrderPage() {
         }}
       />
 
-      {toast && <p className={styles.toast}>{toast}</p>}
+      <Cart />
+
+      {toast && <p role="status" className={styles.toast}>{toast}</p>}
 
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <Button
             size="lg"
-            disabled={!isOpen || cart.total === 0 || submit.isPending}
-            onClick={() => {
-              if (submitting.current) return
-              submitting.current = true
-              submit.mutate()
-            }}
+            disabled={!isOpen || cart.total === 0 || cart.isPending}
+            onClick={() => void submit()}
           >
             {cart.total > 0 ? `장바구니 ${cart.total}개 · 주문하기` : '주문하기'}
           </Button>

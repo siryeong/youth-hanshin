@@ -6,3 +6,8 @@
 .footer { position: fixed; left: 0; right: 0; bottom: var(--tabbar-h); padding: var(--space-3) var(--space-5) var(--space-4); background: var(--bg); }
 .footerInner { display: flex; max-width: 1280px; margin: 0 auto; }
 .footerInner > * { flex: 1; }
+
+.cartTitle { font-size: var(--text-subtitle); }
+.cart { border: 0; padding: 0; margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
+.cartLine { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); background: var(--surface); padding: var(--space-4); border-radius: var(--radius-card); }
+.cartLine > strong, .cartLine > span { flex-basis: 100%; }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import styles from './Button.module.css'
 
 type Props = {
-  variant?: 'primary' | 'accent' | 'secondary' | 'danger'
+  variant?: 'primary' | 'secondary'
   size?: 'lg' | 'md'
   disabled?: boolean
   ariaLabel?: string

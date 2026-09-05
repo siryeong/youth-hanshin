@@ -28,7 +28,7 @@ afterEach(async () => {
 test('열려 있으면 주문과 항목이 만들어지고 메뉴명이 스냅샷으로 남는다', async () => {
   const menuId = await americano()
   const { data: orderId, error } = await anonClient().rpc('place_order', {
-    p_items: [{ menu_id: menuId, option_label: 'ICE · 샷 1', options: { temperature: 'ice', shot: 1 }, quantity: 2 }],
+    p_items: [{ menu_id: menuId, option_label: 'ICE · 샷 1', options: { temperature: 'ice', shot: 1, light: false, syrup: false }, quantity: 2 }],
     p_guest_token: TOKEN,
   })
   expect(error).toBeNull()
@@ -36,7 +36,7 @@ test('열려 있으면 주문과 항목이 만들어지고 메뉴명이 스냅�
   const { data: items } = await serviceClient().from('order_items_v2').select('*').eq('order_id', orderId)
   expect(items).toHaveLength(1)
   expect(items![0].menu_name).toBe('아메리카노')
-  expect(items![0].option_label).toBe('ICE · 샷 1')
+  expect(items![0].option_label).toBe('ICE · 샷 1 · 2잔')
   expect(items![0].quantity).toBe(2)
   expect(items![0].status).toBe('ordered')
 })
@@ -97,26 +97,48 @@ test('숨긴 메뉴는 주문하지 못한다', async () => {
   await db.from('menus_v2').delete().eq('id', hidden!.id)
 })
 
-test('수량은 1에서 9 사이로 맞춰진다', async () => {
-  const menuId = await americano()
-  const { data: orderId } = await anonClient().rpc('place_order', {
-    p_items: [
-      { menu_id: menuId, option_label: 'ICE', options: {}, quantity: 0 },
-      { menu_id: menuId, option_label: 'HOT', options: {}, quantity: 99 },
-    ],
+test.each([0, 10, 1.5, null, '2'])('잘못된 수량 %s는 거절한다', async (quantity) => {
+  const { error } = await anonClient().rpc('place_order', {
+    p_items: [{ menu_id: await americano(), options: { temperature: 'ice', shot: 0, light: false, syrup: false }, quantity }],
     p_guest_token: TOKEN,
   })
+  expect(error?.message).toContain('INVALID_QUANTITY')
+})
 
-  const { data: items } = await serviceClient()
-    .from('order_items_v2')
-    .select('option_label, quantity')
-    .eq('order_id', orderId)
-    .order('option_label')
+test.each([
+  null,
+  {},
+  { temperature: 'ice', shot: '1', light: false, syrup: false },
+  { temperature: 'ice', shot: 0.5, light: false, syrup: false },
+  { temperature: 'ice', shot: 3, light: false, syrup: false },
+  { temperature: 'ice', shot: -1, light: false, syrup: false },
+  { temperature: 'warm', shot: 0, light: false, syrup: false },
+  { temperature: 'ice', shot: 0, light: 'false', syrup: false },
+  { temperature: 'ice', shot: 0, light: false, syrup: false, unknown: true },
+])('잘못된 옵션은 거절한다: %j', async (options) => {
+  const { error } = await anonClient().rpc('place_order', {
+    p_items: [{ menu_id: await americano(), options, quantity: 1 }], p_guest_token: TOKEN,
+  })
+  expect(error?.message).toContain('INVALID_OPTIONS')
+})
 
-  expect(items!.map((i) => [i.option_label, i.quantity])).toEqual([
-    ['HOT', 9],
-    ['ICE', 1],
-  ])
+test('ICE 전용 메뉴의 HOT·샷·연하게·시럽을 거절하고 주문 전체를 롤백한다', async () => {
+  const db = serviceClient()
+  const { data: cold } = await db.from('menus_v2').select('id').eq('name', '레몬 아이스티').single()
+  const token = crypto.randomUUID()
+  const base = { temperature: 'ice', shot: 0, light: false, syrup: false }
+  for (const change of [{ temperature: 'hot' }, { shot: 1 }, { light: true }, { syrup: true }]) {
+    const { error } = await anonClient().rpc('place_order', {
+      p_items: [
+        { menu_id: await americano(), options: base, quantity: 1 },
+        { menu_id: cold!.id, options: { ...base, ...change }, quantity: 1 },
+      ], p_guest_token: token,
+    })
+    expect(error?.message).toContain('INVALID_OPTIONS')
+  }
+  const { data, error } = await db.from('orders_v2').select('id').eq('guest_token', token)
+  expect(error).toBeNull()
+  expect(data).toEqual([])
 })
 
 test('메뉴를 지워도 주문 내역은 주문 당시 이름과 옵션으로 남는다', async () => {
@@ -135,7 +157,7 @@ test('메뉴를 지워도 주문 내역은 주문 당시 이름과 옵션으로 
     .single()
 
   const { data: orderId } = await anonClient().rpc('place_order', {
-    p_items: [{ menu_id: temp!.id, option_label: 'HOT · 1잔', options: { temperature: 'hot' }, quantity: 1 }],
+    p_items: [{ menu_id: temp!.id, option_label: 'HOT · 1잔', options: { temperature: 'hot', shot: 0, light: false, syrup: false }, quantity: 1 }],
     p_guest_token: TOKEN,
   })
 
