@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CartProvider } from './features/cafe/CartProvider'
 import { useAuth } from './features/auth/useAuth'
+import { useLiveData } from './lib/useLiveData'
 import styles from './Shell.module.css'
 
 const tabClass = ({ isActive }: { isActive: boolean }) =>
@@ -29,6 +30,7 @@ function AccountShell() {
   return (
     <QueryClientProvider client={client}>
     <CartProvider>
+      <LiveData />
       <div className={styles.shell}>
         <Outlet />
         <nav className={styles.tabs} aria-label="주요 메뉴">
@@ -39,6 +41,8 @@ function AccountShell() {
             내 주문
           </NavLink>
           {profile && <NavLink to="/village" className={tabClass}>내 마을</NavLink>}
+          {profile && <NavLink to="/announcements" className={tabClass}>전체 소식</NavLink>}
+          {profile && <NavLink to="/operations" className={tabClass}>운영</NavLink>}
           <NavLink to={profile ? '/profile' : '/login'} className={tabClass}>
             {profile ? '내 정보' : '로그인'}
           </NavLink>
@@ -47,4 +51,9 @@ function AccountShell() {
     </CartProvider>
     </QueryClientProvider>
   )
+}
+
+function LiveData() {
+  useLiveData()
+  return null
 }

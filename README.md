@@ -1,6 +1,6 @@
 # 청년부 통합 플랫폼
 
-교회 청년부 통합 웹 앱. 게스트·회원 음료 주문, 카카오 로그인·내 정보, 기수별 내 마을·출석·소식·기도제목을 제공한다.
+교회 청년부 통합 웹 앱. 음료 주문, 카카오 로그인·내 정보, 기수별 마을·출석·기도제목, 청년부·카페 운영과 전체 소식을 제공한다.
 
 ## 로컬 개발
 
@@ -37,8 +37,8 @@ npm run dev                       # http://127.0.0.1:5173
 npm test          # 컴포넌트/유닛 테스트 (jsdom)
 npm run test:db   # DB 스키마·RLS·RPC 테스트 — supabase db reset 후 실행 (24개), .env.test 필요
 npm run e2e       # 게스트 주문→취소 E2E (Playwright, Chromium), .env.test 필요
-npm run test:ui   # 외부 인증/API를 모킹한 로그인·주문·마을 브라우저 테스트
-npm run test:db:village # 로컬 DB 트랜잭션으로 마을·인증·주문 권한 검증, 초기화·환경 파일 불필요
+npm run test:ui   # 외부 인증/API를 모킹한 로그인·주문·마을·운영 브라우저 테스트
+npm run test:db:local # 로컬 DB 트랜잭션으로 마을·운영·인증·주문 권한 검증, 초기화·환경 파일 불필요
 ```
 
 `npm run e2e`는 `npm run dev`를 자동으로 띄우고 `.env.test`의 서비스 키로 `cafe_settings_v2`를
@@ -61,7 +61,7 @@ npm run build
 이름·성별·생년월일·휴대폰번호와 항목별 공개 설정을 저장한다. `/orders`에서는 기수별로
 본인 주문을 조회한다. 게스트 주문은 기존 브라우저의 게스트 내역으로 남는다.
 
-1. 로컬 DB에 `supabase migration up --local`로 `0010_villages.sql`까지 적용한다.
+1. 로컬 DB에 `supabase migration up --local`로 `0011_operations.sql`까지 적용한다.
 2. [Supabase 카카오 설정 가이드](https://supabase.com/docs/guides/auth/social-login/auth-kakao)에 따라
    카카오 로그인과 `profile_nickname`, `profile_image` 동의 항목을 설정한다.
 3. 카카오 앱의 Redirect URI에 대상 Supabase의 `/auth/v1/callback` 주소를 등록한다.
@@ -76,7 +76,7 @@ npm run build
 
 신규 사용자는 `youth` 역할로 생성한다. 관리자는 동일한 카카오 로그인 경로를 사용하며,
 승인된 DB 작업으로 해당 사용자의 `profiles_v2.role`을 `admin`으로 지정해야 한다.
-역할 변경 화면과 관리자 운영 기능은 4단계 범위다.
+`/operations/people`에서 목회자가 임원 역할을 지정·해제한다. 목회자·시스템 관리자 역할은 화면에서 변경할 수 없다.
 
 프로필은 v2 최초 접근 시 생성한다. 기존 이름·공개 설정·역할은 유지하고, 마지막 로그인 시각은
 `auth.users.last_sign_in_at`을 사용한다. 공유 중인 v1 인증 테이블에 트리거를 추가하지 않는다.
@@ -88,9 +88,22 @@ npm run build
 이장은 마을 이름과 소식을 관리하고, 최근 주일을 포함한 4주의 예배·마을모임 출석을 수정한다.
 기도제목은 소속 마을원이 등록하며 본인 글만 수정·삭제한다. 전체 관리자는 모든 마을을 조회한다.
 
-로컬 DB에는 `supabase migration up --local`로 `0010_villages.sql`까지 적용한다.
-마을과 배정 데이터가 없으면 미배정 안내를 표시한다. 기수·마을 생성과 인원 배정 UI는 4단계 범위다.
+로컬 DB에는 `supabase migration up --local`로 `0011_operations.sql`까지 적용한다.
+마을과 배정 데이터가 없으면 미배정 안내를 표시한다. `/operations/assignment`에서 기수·마을을 생성하고 인원을 배정한다.
 스키마·권한 결정과 검증 방법은 [3단계 구현 문서](docs/superpowers/plans/2026-09-05-phase3-villages.md)에 기록했다.
+
+## 운영
+
+- `/operations/people`: 전체 명단 등록·수정, 개인정보 마스킹, 이름·성별·나이순 정렬, 장기 미접속자 조회, 목회자의 임원 지정
+- `/operations/assignment`: 기수 전환, 마을 생성·삭제, 드래그 또는 선택 후 이동, 남녀 구성·평균 나이, 목회자의 이장 지정
+- `/operations/cafe`: 마을별 개인 주문 목록·메뉴 집계, 메뉴·가격·옵션 관리, 운영 시간과 임시 휴무
+- `/announcements`: 전체 소식 조회, 전체 관리자의 발행·수정·삭제
+
+장기 미접속자는 삭제하지 않는다. 마지막 접속 후 1년이 지나면 별도 목록으로 표시하고, 새 기수에서도 전체 인원과 함께 배정한다. 접속 기록이 없으면 등록 시각을 기준으로 판단한다.
+
+직접 등록한 인원은 카카오 인증 계정과 별개이며 자동 병합하지 않는다. 장기 미접속 상태가 아닌 직접 등록 명단만 삭제할 수 있다. 새 기수 생성은 기존 기수를 조회 전용으로 전환하므로 화면에서 전환을 확인한 뒤 실행한다.
+
+설계와 검증 범위는 [4단계 구현 문서](docs/superpowers/plans/2026-09-05-phase4-operations.md)에 기록했다. 운영 DB와 배포에는 아직 반영하지 않았다.
 
 ## 배포 (Vercel)
 
@@ -101,7 +114,7 @@ Vercel 프로젝트에 환경 변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KE
 
 ### Preview에서 로그인 테스트
 
-1. 테스트용 Supabase에 `0010_villages.sql`까지 적용하고 카카오 공급자를 설정한다.
+1. 테스트용 Supabase에 `0011_operations.sql`까지 적용하고 카카오 공급자를 설정한다.
 2. Vercel [Settings] > [Environment Variables]에서 위 두 환경 변수를 **Preview** 환경에 설정한다.
    테스트용 Supabase의 URL과 anon key를 사용한다.
 3. 변경 코드를 Preview로 배포한다. 환경 변수를 변경한 뒤에는 새 배포가 필요하다.

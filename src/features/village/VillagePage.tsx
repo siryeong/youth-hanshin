@@ -1,13 +1,13 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Button } from '../../components/ui/Button'
 import { ThemeToggle } from '../../components/ui/ThemeToggle'
 import { useAuth } from '../auth/useAuth'
 import { buildOptionLabel } from '../cafe/optionLabel'
-import { fetchAttendance, fetchOrderStats, fetchVillage, fetchVillages, renameVillage, type Calendar, type Village } from './api'
+import { deletePost, deletePrayer, fetchAttendance, fetchOrderStats, fetchVillage, fetchVillages, renameVillage, savePost, savePrayer, type Calendar, type Village } from './api'
 import { VillageAttendance } from './VillageAttendance'
-import { VillageBoard } from './VillageBoard'
+import { MessageBoard } from '../../components/MessageBoard'
 import styles from './VillagePage.module.css'
 
 export function VillagePage() {
@@ -17,13 +17,8 @@ export function VillagePage() {
 }
 
 function VillageDirectory() {
-  const { profile } = useAuth()
-  const client = useQueryClient()
   const [selected, setSelected] = useState('')
   const directory = useQuery({ queryKey: ['village', 'directory'], queryFn: fetchVillages, refetchInterval: 30_000 })
-  useEffect(() => {
-    void client.invalidateQueries({ queryKey: ['village'] })
-  }, [client, profile?.village_revision])
 
   if (directory.isPending) return <main className={styles.page}><p role="status">마을 정보를 불러오는 중이에요</p></main>
   if (directory.isError) return <main className={styles.page}><p role="alert">마을 정보를 불러오지 못했어요.</p><Button onClick={() => void directory.refetch()}>마을 다시 불러오기</Button></main>
@@ -111,8 +106,10 @@ function VillageContent({ village, calendar }: { village: Village; calendar: Cal
         {(leader || admin) && sunday && <VillageOrders villageId={village.id} date={date} />}
       </div>
       <div className={styles.stack}>
-        <VillageBoard kind="post" villageId={village.id} profileId={profile!.id} items={posts} canWrite={leader} refresh={refresh} />
-        <VillageBoard kind="prayer" villageId={village.id} profileId={profile!.id} items={prayers} canWrite={active && !!me} refresh={refresh} />
+        <MessageBoard label="마을 소식" withTitle profileId={profile!.id} items={posts} canWrite={leader} canManageAll
+          saveItem={(title, body, id) => savePost(village.id, title, body, id)} deleteItem={deletePost} refresh={refresh} />
+        <MessageBoard label="기도제목" withTitle={false} profileId={profile!.id} items={prayers} canWrite={active && !!me} canManageAll={false}
+          saveItem={(_title, body, id) => savePrayer(village.id, body, id)} deleteItem={deletePrayer} refresh={refresh} />
       </div>
     </div>
   </>

@@ -8,6 +8,7 @@ dist/
 !.env.*.example
 
 # 로컬 도구 산출물
+.local/
 .superpowers/
 supabase/.temp/
 supabase/.branches/
