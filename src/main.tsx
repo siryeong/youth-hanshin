@@ -5,6 +5,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import { App } from './App'
 import { initTheme } from './lib/theme'
+import { AuthProvider } from './features/auth/AuthProvider'
 
 initTheme()
 
@@ -13,7 +14,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <AuthProvider><App /></AuthProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

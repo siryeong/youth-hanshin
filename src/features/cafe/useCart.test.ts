@@ -13,7 +13,7 @@ const line = (menuId: string, quantity: number, label: string): CartLine => ({
 
 test('같은 메뉴를 옵션만 바꿔 담으면 수량을 합쳐 센다', () => {
   // 메뉴 카드의 배지는 줄 수가 아니라 수량 합계를 보여야 한다
-  const { result } = renderHook(() => useCartState())
+  const { result } = renderHook(() => useCartState(false))
   act(() => result.current.add(line('m1', 2, 'ICE · 2잔')))
   act(() => result.current.add(line('m1', 3, 'HOT · 3잔')))
 
@@ -23,7 +23,7 @@ test('같은 메뉴를 옵션만 바꿔 담으면 수량을 합쳐 센다', () =
 })
 
 test('항목을 삭제하면 줄과 합계가 모두 사라진다', () => {
-  const { result } = renderHook(() => useCartState())
+  const { result } = renderHook(() => useCartState(false))
   act(() => result.current.add(line('m1', 1, 'ICE · 1잔')))
   act(() => result.current.remove(0))
 
@@ -33,7 +33,7 @@ test('항목을 삭제하면 줄과 합계가 모두 사라진다', () => {
 })
 
 test('수량 변경은 옵션 문구와 합계에 반영되고 범위 밖 값은 무시한다', () => {
-  const { result } = renderHook(() => useCartState())
+  const { result } = renderHook(() => useCartState(false))
   act(() => result.current.add(line('m1', 1, 'ICE · 1잔')))
   act(() => result.current.setQuantity(0, 3))
   expect(result.current.lines[0].option_label).toBe('ICE · 3잔')

@@ -1,0 +1,16 @@
+.page { max-width: 560px; margin: 0 auto; padding: var(--space-5) var(--space-5) var(--space-8); display: flex; flex-direction: column; gap: var(--space-5); }
+.header, .identity { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.header h1 { margin: 0; font-size: var(--text-screen); }
+.identity { justify-content: flex-start; font-size: var(--text-title); }
+.badge { background: var(--accent-soft); color: var(--accent-text); border-radius: var(--radius-chip); padding: var(--space-1) var(--space-2); font-size: var(--text-caption); }
+.form { display: flex; flex-direction: column; gap: var(--space-5); }
+.group { margin: 0; padding: var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--surface); min-width: 0; }
+.group legend { font-size: var(--text-label); font-weight: 600; padding: 0 var(--space-2); }
+.field { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-3); font-size: var(--text-label); }
+.field input, .field select { width: 100%; min-width: 0; height: var(--control-lg); border: 0; border-radius: var(--radius-field); background: var(--fill); color: var(--text); padding: 0 var(--space-3); font: inherit; }
+.toggle { display: flex; align-items: center; justify-content: space-between; min-height: var(--control-lg); gap: var(--space-3); }
+.toggle + .toggle { border-top: 1px solid var(--separator); }
+.toggle input { width: 24px; height: 24px; accent-color: var(--accent-text); }
+.note { margin: 0; font-size: var(--text-caption); color: var(--text-muted); }
+.login { min-height: calc(100dvh - var(--tabbar-h)); justify-content: center; }
+.hero { font-size: var(--text-display); line-height: 1.3; margin: 0; }

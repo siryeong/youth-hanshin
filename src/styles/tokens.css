@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --bg: #FAF8F3;
   --surface: #FFFFFF;
   --fill: #F2EEE6;
@@ -44,6 +45,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --bg: #14120F;
   --surface: #211D18;
   --fill: #2C261F;
@@ -64,6 +66,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #14120F;
     --surface: #211D18;
     --fill: #2C261F;

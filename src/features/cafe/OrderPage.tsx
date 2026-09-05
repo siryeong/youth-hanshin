@@ -27,7 +27,7 @@ export function OrderPage() {
     try {
       if (await cart.checkout()) {
         showToast('주문했어요')
-        void queryClient.invalidateQueries({ queryKey: ['guest-orders'] })
+        void queryClient.invalidateQueries({ queryKey: ['orders'] })
       }
     } catch (error) {
       const message = (error as Error).message

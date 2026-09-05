@@ -20,9 +20,9 @@ function renderShell() {
   return renderWithQuery(<RouterProvider router={router} />)
 }
 
-test('1단계의 탭은 주문과 내 주문 둘뿐이다', () => {
+test('게스트에게 주문·내 주문·로그인 탭을 보여준다', () => {
   renderShell()
-  expect(screen.getAllByRole('link').map((tab) => tab.textContent)).toEqual(['주문', '내 주문'])
+  expect(screen.getAllByRole('link').map((tab) => tab.textContent)).toEqual(['주문', '내 주문', '로그인'])
 })
 
 test('내 주문 탭을 누르면 그 화면으로 간다', async () => {

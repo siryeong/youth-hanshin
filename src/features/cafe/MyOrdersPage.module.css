@@ -10,3 +10,5 @@
 .qty { grid-row: 1; grid-column: 2; font-family: var(--font-mono); font-size: var(--text-caption); }
 .badge { font-size: var(--text-micro); color: var(--text-muted); }
 .empty { padding: var(--space-8); text-align: center; color: var(--text-muted); font-size: var(--text-caption); }
+.filter { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-label); }
+.filter select { flex: 1; min-width: 0; min-height: var(--control); border: 0; border-radius: var(--radius-field); background: var(--fill); color: var(--text); padding: var(--space-2); font: inherit; }

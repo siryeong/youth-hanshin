@@ -3,7 +3,7 @@ import { getGuestToken } from '../../lib/guestToken'
 import { placeOrder, type CartLine } from './api'
 import { buildOptionLabel } from './optionLabel'
 
-export function useCartState() {
+export function useCartState(isSignedIn: boolean) {
   const [lines, setLines] = useState<CartLine[]>([])
   const [isPending, setPending] = useState(false)
   const submitting = useRef(false)
@@ -25,7 +25,7 @@ export function useCartState() {
     submitting.current = true
     setPending(true)
     try {
-      await placeOrder(lines, getGuestToken())
+      await placeOrder(lines, isSignedIn ? null : getGuestToken())
       setLines([])
       return true
     } finally {

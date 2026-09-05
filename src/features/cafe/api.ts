@@ -21,6 +21,19 @@ export type GuestOrderItem = {
   ordered_at: string
 }
 
+export type MemberOrderItem = GuestOrderItem & {
+  service_date: string
+  cohort_id: string | null
+  cohort_name: string
+}
+
+type MemberOrder = {
+  service_date: string
+  cohort_id: string | null
+  cohorts_v2: { name: string; year: number } | null
+  order_items_v2: (Omit<GuestOrderItem, 'item_id' | 'ordered_at'> & { id: string; created_at: string })[]
+}
+
 export type CafeStatus = {
   is_open: boolean
   opens_at: string
@@ -43,7 +56,7 @@ export async function fetchCafeStatus(): Promise<CafeStatus> {
   return data as CafeStatus
 }
 
-export async function placeOrder(items: CartLine[], guestToken: string): Promise<string> {
+export async function placeOrder(items: CartLine[], guestToken: string | null): Promise<string> {
   const { data, error } = await supabase.rpc('place_order', { p_items: items, p_guest_token: guestToken })
   if (error) throw error
   return data as string
@@ -55,7 +68,21 @@ export async function fetchGuestOrders(guestToken: string): Promise<GuestOrderIt
   return (data ?? []) as GuestOrderItem[]
 }
 
-export async function cancelOrderItem(itemId: string, guestToken: string): Promise<void> {
+export async function fetchMemberOrders(): Promise<MemberOrderItem[]> {
+  const { data, error } = await supabase.from('orders_v2')
+    .select('service_date, cohort_id, cohorts_v2(name, year), order_items_v2(id, menu_name, option_label, quantity, status, created_at)')
+    .order('service_date', { ascending: false }).order('created_at', { ascending: false })
+    .overrideTypes<MemberOrder[], { merge: false }>()
+  if (error) throw error
+  return data.flatMap((order) => order.order_items_v2.map((item) => ({
+    item_id: item.id, menu_name: item.menu_name, option_label: item.option_label,
+    quantity: item.quantity, status: item.status, ordered_at: item.created_at,
+    service_date: order.service_date, cohort_id: order.cohort_id,
+    cohort_name: order.cohorts_v2 ? `${order.cohorts_v2.year}년 ${order.cohorts_v2.name}` : '기수 미지정',
+  })))
+}
+
+export async function cancelOrderItem(itemId: string, guestToken: string | null): Promise<void> {
   const { error } = await supabase.rpc('cancel_order_item', { p_item_id: itemId, p_guest_token: guestToken })
   if (error) throw error
 }

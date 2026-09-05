@@ -1,6 +1,6 @@
 # 청년부 통합 플랫폼
 
-교회 청년부 카페 음료 주문, 마을 관리, 마을 편성을 한 곳에서 처리하는 웹 앱. 1단계는 로그인 없이 쓰는 게스트 카페 주문만 다룬다.
+교회 청년부 통합 웹 앱. 게스트 음료 주문과 2단계 카카오 로그인·내 정보·기수별 회원 주문 내역을 제공한다.
 
 ## 로컬 개발
 
@@ -34,9 +34,11 @@ npm run dev                       # http://127.0.0.1:5173
 ## 테스트
 
 ```bash
-npm test          # 컴포넌트/유닛 테스트 (jsdom, 40개)
+npm test          # 컴포넌트/유닛 테스트 (jsdom)
 npm run test:db   # DB 스키마·RLS·RPC 테스트 — supabase db reset 후 실행 (24개), .env.test 필요
+npm run test:auth:db # 실행 중인 로컬 DB의 인증·권한·회원 주문 검증. 테스트 변경은 롤백
 npm run e2e       # 게스트 주문→취소 E2E (Playwright, Chromium), .env.test 필요
+npm run test:ui   # 외부 인증/API를 모킹한 로그인·회원/게스트 주문 브라우저 테스트
 ```
 
 `npm run e2e`는 `npm run dev`를 자동으로 띄우고 `.env.test`의 서비스 키로 `cafe_settings_v2`를
@@ -53,12 +55,58 @@ npm run lint
 npm run build
 ```
 
+## 카카오 로그인 설정
+
+`/login`에서 [카카오로 시작하기]를 누르면 로그인 후 `/profile`로 이동한다. `/profile`에서는
+이름·성별·생년월일·휴대폰번호와 항목별 공개 설정을 저장한다. `/orders`에서는 기수별로
+본인 주문을 조회한다. 게스트 주문은 기존 브라우저의 게스트 내역으로 남는다.
+
+1. 로컬 DB에 `supabase migration up --local`로 `0008_auth_profiles.sql`까지 적용한다.
+2. [Supabase 카카오 설정 가이드](https://supabase.com/docs/guides/auth/social-login/auth-kakao)에 따라
+   카카오 로그인과 `profile_nickname`, `profile_image` 동의 항목을 설정한다.
+3. 카카오 앱의 Redirect URI에 대상 Supabase의 `/auth/v1/callback` 주소를 등록한다.
+   로컬은 `http://127.0.0.1:54321/auth/v1/callback`, 운영은 `https://<project-ref>.supabase.co/auth/v1/callback`이다.
+4. Supabase의 Kakao 공급자에 REST API 키와 Client Secret을 설정하고 이메일 없는 로그인을 허용한다.
+   로컬은 환경 변수 `SUPABASE_AUTH_EXTERNAL_KAKAO_CLIENT_ID`, `SUPABASE_AUTH_EXTERNAL_KAKAO_SECRET`을
+   설정한 뒤 `supabase/config.toml`의 `[auth.external.kakao].enabled`를 `true`로 바꾸고 로컬 스택을 다시 시작한다.
+5. Supabase Redirect URLs에 앱의 `/login` 주소를 등록한다. 로컬 주소는 `config.toml`에 있으며,
+   배포 환경에는 `https://<배포 도메인>/login`을 등록한다.
+
+카카오 REST API 키와 Client Secret은 브라우저의 `VITE_*` 환경 변수에 넣지 않는다. 운영 DB·인증 설정 변경은 개발자 승인 후 실행한다.
+
+신규 사용자는 `youth` 역할로 생성한다. 관리자는 동일한 카카오 로그인 경로를 사용하며,
+승인된 DB 작업으로 해당 사용자의 `profiles_v2.role`을 `admin`으로 지정해야 한다.
+역할 변경 화면과 관리자 운영 기능은 4단계 범위다.
+
+프로필은 v2 최초 접근 시 생성한다. 기존 이름·공개 설정·역할은 유지하고, 마지막 로그인 시각은
+`auth.users.last_sign_in_at`을 사용한다. 공유 중인 v1 인증 테이블에 트리거를 추가하지 않는다.
+계정이나 역할이 바뀌면 장바구니·조회 캐시·화면 상태를 초기화한다. 역할은 Realtime과 30초 재조회로 갱신한다.
+
 ## 배포 (Vercel)
 
 `vercel.json`은 `react-router-dom`의 `createBrowserRouter`가 쓰는 클라이언트 사이드 라우팅을
 위해 모든 경로를 `index.html`로 되돌린다 (`/orders` 같은 딥링크 새로고침 대응).
 
 Vercel 프로젝트에 환경 변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`를 설정한다.
+
+### Preview에서 로그인 테스트
+
+1. 테스트용 Supabase에 `0008_auth_profiles.sql`까지 적용하고 카카오 공급자를 설정한다.
+2. Vercel [Settings] > [Environment Variables]에서 위 두 환경 변수를 **Preview** 환경에 설정한다.
+   테스트용 Supabase의 URL과 anon key를 사용한다.
+3. 변경 코드를 Preview로 배포한다. 환경 변수를 변경한 뒤에는 새 배포가 필요하다.
+4. Supabase [Authentication] > [URL Configuration] > [Redirect URLs]에
+   `https://<Preview 도메인>/login`을 등록한다. 앱은 접속한 도메인을 사용하므로 Site URL을 Preview로 바꿀 필요가 없다.
+5. 카카오 Redirect URI는 `https://<테스트용 Supabase project-ref>.supabase.co/auth/v1/callback`으로 등록한다.
+6. 같은 브라우저에서 Preview의 `/login`에 접속하고 [카카오로 시작하기]를 누른다.
+   `/profile` 도착, 정보 저장·새로고침, 로그아웃을 확인한다.
+
+Preview에 Vercel Authentication이 적용되어 있으면 먼저 해당 배포에 접근할 수 있는 Vercel 계정으로 로그인한다.
+Preview 주소가 바뀌면 Supabase의 허용 주소도 추가한다. 운영 Supabase를 연결하면 Preview의 로그인·정보 수정도 운영 DB에 반영된다.
+
+설정 기준: [Supabase Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls),
+[Vercel 환경](https://vercel.com/docs/deployments/environments),
+[Vercel Authentication](https://vercel.com/docs/deployment-protection/methods-to-protect-deployments/vercel-authentication).
 
 ### 운영 데이터베이스 반영 (개발자 승인 필요)
 
