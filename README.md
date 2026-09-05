@@ -36,7 +36,6 @@ npm run dev                       # http://127.0.0.1:5173
 ```bash
 npm test          # 컴포넌트/유닛 테스트 (jsdom)
 npm run test:db   # DB 스키마·RLS·RPC 테스트 — supabase db reset 후 실행 (24개), .env.test 필요
-npm run test:auth:db # 실행 중인 로컬 DB의 인증·권한·회원 주문 검증. 테스트 변경은 롤백
 npm run e2e       # 게스트 주문→취소 E2E (Playwright, Chromium), .env.test 필요
 npm run test:ui   # 외부 인증/API를 모킹한 로그인·회원/게스트 주문 브라우저 테스트
 ```
